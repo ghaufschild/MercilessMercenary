@@ -12,6 +12,7 @@
 		3F344C4A1C763EF70027247E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C481C763EF70027247E /* Main.storyboard */; };
 		3F344C4C1C763EF70027247E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C4B1C763EF70027247E /* Assets.xcassets */; };
 		3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C4D1C763EF70027247E /* LaunchScreen.storyboard */; };
+		3F344C771C76427F0027247E /* Inventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F344C761C76427F0027247E /* Inventory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		3F344C4B1C763EF70027247E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3F344C4E1C763EF70027247E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3F344C501C763EF70027247E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3F344C761C76427F0027247E /* Inventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Inventory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 			children = (
 				3F344C441C763EF70027247E /* AppDelegate.swift */,
 				3F344C461C763EF70027247E /* ViewController.swift */,
+				3F344C761C76427F0027247E /* Inventory.swift */,
 				3F344C481C763EF70027247E /* Main.storyboard */,
 				3F344C4B1C763EF70027247E /* Assets.xcassets */,
 				3F344C4D1C763EF70027247E /* LaunchScreen.storyboard */,
@@ -136,6 +139,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F344C771C76427F0027247E /* Inventory.swift in Sources */,
 				3F344C471C763EF70027247E /* ViewController.swift in Sources */,
 				3F344C451C763EF70027247E /* AppDelegate.swift in Sources */,
 			);
@@ -287,6 +291,7 @@
 				3F344C551C763EF70027247E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
