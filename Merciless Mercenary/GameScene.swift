@@ -186,24 +186,69 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let newPoint = moveJoystick.center - currentPoint!
         let xOffset = newPoint.x
         let yOffset = newPoint.y
-        
+        let absX = abs(xOffset)
+        let absY = abs(yOffset)
         var realDest = newPoint
         
-        if xOffset > 0 && abs(xOffset) > abs(yOffset) // Left
+        if xOffset > 0 && absX > absY // Left
         {
-            realDest = CGPoint(x: player.position.x - 5, y: player.position.y)
+            if(xOffset < 2 * yOffset)
+            {
+                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y + 3.5)
+            }
+            else if(xOffset < -2 * yOffset)
+            {
+                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y - 3.5)
+            }
+            else
+            {
+                realDest = CGPoint(x: player.position.x - 5, y: player.position.y)
+            }
         }
-        else if yOffset > 0 && abs(xOffset) < abs(yOffset) // Up
+        else if yOffset > 0 && absX < absY // Up
         {
-            realDest = CGPoint(x: player.position.x, y: player.position.y + 5)
+            if(2 * xOffset > yOffset)
+            {
+                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y + 3.5)
+            }
+            else if(-2 * xOffset > yOffset)
+            {
+                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y + 3.5)
+            }
+            else
+            {
+                realDest = CGPoint(x: player.position.x, y: player.position.y + 5)
+            }
         }
-        else if xOffset < 0 && abs(xOffset) > abs(yOffset) // Right
+        else if xOffset < 0 && absX > absY // Right
         {
-            realDest = CGPoint(x: player.position.x + 5, y: player.position.y)
+            if(xOffset > 2 * yOffset)
+            {
+                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y - 3.5)
+            }
+            else if(xOffset > -2 * yOffset)
+            {
+                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y + 3.5)
+            }
+            else
+            {
+                realDest = CGPoint(x: player.position.x + 5, y: player.position.y)
+            }
         }
-        else if yOffset < 0 && abs(xOffset) < abs(yOffset) // Down
+        else if yOffset < 0 && absX < absY // Down
         {
-            realDest = CGPoint(x: player.position.x, y: player.position.y - 5)
+            if(2 * xOffset < yOffset)
+            {
+                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y - 3.5)
+            }
+            else if(-2 * xOffset < yOffset)
+            {
+                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y - 3.5)
+            }
+            else
+            {
+                realDest = CGPoint(x: player.position.x, y: player.position.y - 5)
+            }
         }
         let actionMove = SKAction.moveTo(realDest, duration: 0.1)
         //let actionMoveDone = SKAction.removeFromParent()
