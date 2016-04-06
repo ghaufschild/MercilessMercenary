@@ -2,7 +2,7 @@
 //  GameScene.swift
 //  Merciless Mercenary
 //
-//  Created by Garrett Haufschild on 4/1/16.
+//  Created by Garrett Haufschild, and Ryan Ziolkowski on 4/1/16.
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
