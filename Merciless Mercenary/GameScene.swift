@@ -55,15 +55,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
     
-    var eventees = UIEvent()
-    var touchees = Set<UITouch>()
-    
-    var moveTime = NSTimeInterval()
-    var attackTime = NSTimeInterval()
+    var moveLoc: CGPoint!
+    var attackLoc: CGPoint!
     
     var moveJoystick = SKView()
     var attackJoystick = SKView()
     
+    //View Did Load
     override func didMoveToView(view: SKView) {
         let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
         backgroundMusic.autoplayLooped = true
@@ -76,7 +74,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackJoystick.backgroundColor = UIColor.grayColor()
         self.view?.addSubview(attackJoystick)
         
-        addChild(backgroundMusic)
+        //addChild(backgroundMusic)
         // 2
         backgroundColor = SKColor.whiteColor()
         // 3
@@ -95,19 +93,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             ))
     }
     
+    
+    //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
+    
+    //Attack Function
     func createShuriken()
     {
-        // 1 - Choose one of the touches to work with
-        guard let touch = touchees.first else
-        { return }
-        let touchLocation = touch.locationInNode(self)
+        let touchLocation = attackLoc
         
         runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
         
-        // 2 - Set up initial location of projectile
         let projectile = SKSpriteNode(imageNamed: "projectile")
         projectile.position = player.position
-        
         projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
         projectile.physicsBody?.dynamic = true
         projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
@@ -115,73 +112,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
         projectile.physicsBody?.usesPreciseCollisionDetection = true
         
-        // 3 - Determine offset of location to projectile
-        let offset = touchLocation - projectile.position
-        
-        // 4 - Bail out if you are shooting down or backwards
-        // if (offset.x < 0) { return }
-        
-        // 5 - OK to add now - you've double checked position
+        let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
+        let offset = touchLocation - centerPoint
         addChild(projectile)
         
-        // 6 - Get the direction of where to shoot
         let direction = offset.normalized()
-        
-        // 7 - Make it shoot far enough to be guaranteed off screen
         let shootAmount = direction * 1000
-        
-        // 8 - Add the shoot amount to the current position
         let realDest = shootAmount + projectile.position
         
-        // 9 - Create the actions
         let actionMove = SKAction.moveTo(realDest, duration: 2.0)
         let actionMoveDone = SKAction.removeFromParent()
         projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        touchees = touches
-        eventees = event!
-        attackTimer.invalidate()
-        moveTimer.invalidate()
-        if !(touches.first?.locationInNode(self).x <= size.width * 0.2 && touches.first?.locationInNode(self).y <= size.width * 0.2)
-        {
-            attackTime = (touches.first?.timestamp)!
-            createShuriken()
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-        }
-        else
-        {
-            moveTime = (touches.first?.timestamp)!
-            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-        }
-    }
-    
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        touchees = touches
-        eventees = event!
-        for touch in (event?.allTouches())!
-        {
-            if(isInMove(touch.locationInNode(self)))
-            {
-                
-            }
-        }
-    }
-    
-    func isInMove(loc: CGPoint) -> Bool
-    {
-        return moveJoystick.bounds.contains(loc)
-    }
-    
-    func isInAttack(loc: CGPoint) -> Bool
-    {
-        return attackJoystick.bounds.contains(loc)
-    }
-    
+    //Move Function
     func move()
     {
-        var currentPoint = touchees.first?.locationInNode(self)
+        var currentPoint = moveLoc
         currentPoint!.y = self.view!.frame.maxY - currentPoint!.y
         let newPoint = moveJoystick.center - currentPoint!
         let xOffset = newPoint.x
@@ -251,27 +198,105 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-        //let actionMoveDone = SKAction.removeFromParent()
         player.runAction(actionMove)
-
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        if touches.first?.timestamp == moveTime{
-            attackTimer.invalidate()
+    /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        let firstTouch = touches.first?.locationInNode(self)
+        if(!attackTimer.valid)
+        {
+            if isInAttack(firstTouch!)
+            {
+                attackLoc = firstTouch
+                createShuriken()
+                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+            }
         }
-        else{
+        if(!moveTimer.valid)
+        {
+            if isInMove(firstTouch!)
+            {
+                moveLoc = firstTouch
+                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+            }
+        }
+    }
+    
+    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        var stopMove = true
+        var stopAttack = true
+        
+        for touch in (event?.allTouches())!
+        {
+            if(isInMove(touch.locationInNode(self)))
+            {
+                moveLoc = touch.locationInNode(self)
+                stopMove = false
+            }
+            if(isInAttack(touch.locationInNode(self)))
+            {
+                attackLoc = touch.locationInNode(self)
+                stopAttack = false
+            }
+        }
+        if(stopMove)
+        {
             moveTimer.invalidate()
         }
+        else if(!moveTimer.valid)
+        {
+            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+        }
+        if(stopAttack)
+        {
+            attackTimer.invalidate()
+        }
+        else if(!attackTimer.valid)
+        {
+            createShuriken()
+            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+        }
     }
     
-    func random() -> CGFloat {
-        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
+    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
+    {
+        if(isInMove((touches.first?.locationInNode(self))!))
+        {
+            moveTimer.invalidate()
+        }
+        if(isInAttack((touches.first?.locationInNode(self))!))
+        {
+            attackTimer.invalidate()
+        }
     }
     
-    func random(min min: CGFloat, max: CGFloat) -> CGFloat {
-        return random() * (max - min) + min
+    /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
+    
+    func isInMove(loc: CGPoint) -> Bool
+    {
+        let wid = moveJoystick.frame.width
+        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
+        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+        {
+            return true
+        }
+        return false
     }
+    
+    func isInAttack(loc: CGPoint) -> Bool
+    {
+        let wid = attackJoystick.frame.width
+        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
+        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+        {
+            return true
+        }
+        return false
+    }
+    
+    /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
     
     func addMonster() {
         
@@ -329,4 +354,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
     }
+    
+    /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
+    
+    func random() -> CGFloat {
+        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
+    }
+    
+    func random(min min: CGFloat, max: CGFloat) -> CGFloat {
+        return random() * (max - min) + min
+    }
+    
 }
