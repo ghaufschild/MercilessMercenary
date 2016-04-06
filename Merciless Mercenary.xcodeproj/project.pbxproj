@@ -13,6 +13,7 @@
 		3F344C4C1C763EF70027247E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C4B1C763EF70027247E /* Assets.xcassets */; };
 		3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C4D1C763EF70027247E /* LaunchScreen.storyboard */; };
 		3F344C771C76427F0027247E /* Inventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F344C761C76427F0027247E /* Inventory.swift */; };
+		3F416C961CB5470B00986A78 /* Scene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 3F416C951CB5470B00986A78 /* Scene.sks */; };
 		3F45E3AC1CB43CBB00C39ABE /* pew-pew-lei.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */; };
 		3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */; };
 		3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */; };
@@ -27,6 +28,7 @@
 		3F344C4E1C763EF70027247E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3F344C501C763EF70027247E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3F344C761C76427F0027247E /* Inventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Inventory.swift; sourceTree = "<group>"; };
+		3F416C951CB5470B00986A78 /* Scene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Scene.sks; sourceTree = "<group>"; };
 		3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "pew-pew-lei.caf"; sourceTree = "<group>"; };
 		3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "background-music-aac.caf"; sourceTree = "<group>"; };
 		3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 				3F344C441C763EF70027247E /* AppDelegate.swift */,
 				3F344C461C763EF70027247E /* ViewController.swift */,
 				3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */,
+				3F416C951CB5470B00986A78 /* Scene.sks */,
 				3F344C761C76427F0027247E /* Inventory.swift */,
 				3F344C481C763EF70027247E /* Main.storyboard */,
 				3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */,
@@ -135,6 +138,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F416C961CB5470B00986A78 /* Scene.sks in Resources */,
 				3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */,
 				3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */,
 				3F344C4C1C763EF70027247E /* Assets.xcassets in Resources */,

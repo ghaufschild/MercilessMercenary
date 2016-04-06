@@ -66,12 +66,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
         backgroundMusic.autoplayLooped = true
         
+        let backgroundImage = SKSpriteNode(imageNamed: "ground")
+        backgroundImage.size = self.scene!.size
+        backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
+        addChild(backgroundImage)
+        
         moveJoystick = SKView(frame: CGRect(x: 0, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        moveJoystick.backgroundColor = UIColor.grayColor()
+        moveJoystick.backgroundColor = UIColor.lightGrayColor()
+        moveJoystick.alpha = 0.25
         self.view?.addSubview(moveJoystick)
         
         attackJoystick = SKView(frame: CGRect(x: size.width * 0.8, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        attackJoystick.backgroundColor = UIColor.grayColor()
+        attackJoystick.backgroundColor = UIColor.lightGrayColor()
+        attackJoystick.alpha = 0.25
         self.view?.addSubview(attackJoystick)
         
         //addChild(backgroundMusic)
@@ -87,7 +94,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         runAction(SKAction.repeatActionForever(
             SKAction.sequence([
-                SKAction.runBlock(addMonster),
+                //SKAction.runBlock(addMonster),
                 SKAction.waitForDuration(1.0)
                 ])
             ))
