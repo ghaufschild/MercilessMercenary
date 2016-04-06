@@ -94,7 +94,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         runAction(SKAction.repeatActionForever(
             SKAction.sequence([
-                //SKAction.runBlock(addMonster),
+                SKAction.runBlock(addMonster),
                 SKAction.waitForDuration(1.0)
                 ])
             ))
@@ -144,64 +144,67 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let absY = abs(yOffset)
         var realDest = newPoint
         
+        let moveDist: CGFloat = 5
+        let diagMove: CGFloat = sqrt(moveDist/2)
+        
         if xOffset > 0 && absX > absY // Left
         {
             if(xOffset < 2 * yOffset)
             {
-                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y + 3.5)
+                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
             }
             else if(xOffset < -2 * yOffset)
             {
-                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y - 3.5)
+                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
             }
             else
             {
-                realDest = CGPoint(x: player.position.x - 5, y: player.position.y)
+                realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
             }
         }
         else if yOffset > 0 && absX < absY // Up
         {
             if(2 * xOffset > yOffset)
             {
-                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y + 3.5)
+                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
             }
             else if(-2 * xOffset > yOffset)
             {
-                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y + 3.5)
+                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
             }
             else
             {
-                realDest = CGPoint(x: player.position.x, y: player.position.y + 5)
+                realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
             }
         }
         else if xOffset < 0 && absX > absY // Right
         {
             if(xOffset > 2 * yOffset)
             {
-                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y - 3.5)
+                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
             }
             else if(xOffset > -2 * yOffset)
             {
-                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y + 3.5)
+                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
             }
             else
             {
-                realDest = CGPoint(x: player.position.x + 5, y: player.position.y)
+                realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
             }
         }
         else if yOffset < 0 && absX < absY // Down
         {
             if(2 * xOffset < yOffset)
             {
-                realDest = CGPoint(x: player.position.x + 3.5, y: player.position.y - 3.5)
+                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
             }
             else if(-2 * xOffset < yOffset)
             {
-                realDest = CGPoint(x: player.position.x - 3.5, y: player.position.y - 3.5)
+                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
             }
             else
             {
-                realDest = CGPoint(x: player.position.x, y: player.position.y - 5)
+                realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
             }
         }
         let actionMove = SKAction.moveTo(realDest, duration: 0.1)
