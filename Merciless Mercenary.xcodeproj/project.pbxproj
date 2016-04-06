@@ -108,7 +108,7 @@
 				TargetAttributes = {
 					3F344C401C763EF70027247E = {
 						CreatedOnToolsVersion = 7.2;
-						DevelopmentTeam = V8W8TTGQYQ;
+						DevelopmentTeam = ZVC8838653;
 					};
 				};
 			};
@@ -270,7 +270,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = "Merciless Mercenary/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "Merciless-Mercenary";
+				PRODUCT_BUNDLE_IDENTIFIER = MercilessMercenary;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};
@@ -284,7 +284,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = "Merciless Mercenary/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "Merciless-Mercenary";
+				PRODUCT_BUNDLE_IDENTIFIER = MercilessMercenary;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 			};
