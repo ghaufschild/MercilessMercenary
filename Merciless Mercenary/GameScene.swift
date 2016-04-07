@@ -6,6 +6,8 @@
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
+//  Coordinates (0,0) are in bottom left
+
 import SpriteKit
 
 
@@ -46,6 +48,7 @@ struct PhysicsCategory {
     static let All       : UInt32 = UInt32.max
     static let Monster   : UInt32 = 0b1       // 1
     static let Projectile: UInt32 = 0b10      // 2
+    static let Player    : UInt32 = 0b11      // 3
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -68,6 +71,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let backgroundImage = SKSpriteNode(imageNamed: "ground")
         backgroundImage.size = self.scene!.size
+        backgroundImage.zPosition = -1
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
         addChild(backgroundImage)
         
@@ -85,7 +89,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 2
         backgroundColor = SKColor.whiteColor()
         // 3
+        
+        let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        player.physicsBody = SKPhysicsBody(texture: playerText, size: playerText.size())
+        //player.physicsBody = SKPhysicsBody(rectangleOfSize: player.size)
+        player.physicsBody?.dynamic = true
+        player.physicsBody?.categoryBitMask = PhysicsCategory.Player
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+        player.physicsBody?.collisionBitMask = PhysicsCategory.None
+        player.physicsBody?.usesPreciseCollisionDetection = true
+        
         // 4
         addChild(player)
         
@@ -144,8 +158,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let absY = abs(yOffset)
         var realDest = newPoint
         
-        let moveDist: CGFloat = 5
-        let diagMove: CGFloat = sqrt(moveDist/2)
+        let moveDist: CGFloat = 10
+        let diagMove: CGFloat = moveDist/sqrt(2)
         
         if xOffset > 0 && absX > absY // Left
         {
@@ -339,9 +353,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     
-    func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
+    func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {
         projectile.removeFromParent()
-        //monster.removeFromParent()
+        monster.removeFromParent()
+    }
+    
+    func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
+        player.removeFromParent()
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -358,9 +376,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         // 2
-        if ((firstBody.categoryBitMask & PhysicsCategory.Monster != 0) &&
-            (secondBody.categoryBitMask & PhysicsCategory.Projectile != 0)) {
-            projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+        if ((firstBody.categoryBitMask == 1) &&
+            (secondBody.categoryBitMask == 2)) {
+            projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, projectile: secondBody.node as! SKSpriteNode)
+        }
+        else if((firstBody.categoryBitMask == 1) &&
+            (secondBody.categoryBitMask == 3))
+        {
+            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
         }
         
     }
