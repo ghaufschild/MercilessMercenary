@@ -73,6 +73,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundImage.size = self.scene!.size
         backgroundImage.zPosition = -1
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
+        backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
         moveJoystick = SKView(frame: CGRect(x: 0, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
@@ -221,11 +222,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
             }
         }
-        let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-        player.runAction(actionMove)
+        if self.frame.contains(realDest)
+        {
+            let actionMove = SKAction.moveTo(realDest, duration: 0.1)
+            player.runAction(actionMove)
+        }
+        else{
+            if realDest.y <= 0 // Bottom
+            {
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55
+                {
+                    player.position = CGPoint(x: size.width * 0.5, y: size.height)
+                }
+            }
+        }
     }
     
-    /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
+    /////////////////////////////////       TOUCH FUNCTIONS        ////////////////////////////////
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let firstTouch = touches.first?.locationInNode(self)
@@ -384,6 +397,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             (secondBody.categoryBitMask == 3))
         {
             playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
+        }
+        else if ((firstBody.categoryBitMask == 1) &&
+        (secondBody.categoryBitMask == 3))
+        {
+            print("lmao")
+            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
         }
         
     }
