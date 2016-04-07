@@ -238,7 +238,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    /////////////////////////////////       TOUCH FUNCTIONS        ////////////////////////////////
+    /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let firstTouch = touches.first?.locationInNode(self)
@@ -397,12 +397,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             (secondBody.categoryBitMask == 3))
         {
             playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
-        }
-        else if ((firstBody.categoryBitMask == 1) &&
-        (secondBody.categoryBitMask == 3))
-        {
-            print("lmao")
-            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
         }
         
     }
