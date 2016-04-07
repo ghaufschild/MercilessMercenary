@@ -231,7 +231,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
+    /////////////////////////////////       TOUCH FUNCTIONS        ////////////////////////////////
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let firstTouch = touches.first?.locationInNode(self)
