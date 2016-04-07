@@ -46,6 +46,7 @@ struct PhysicsCategory {
     static let All       : UInt32 = UInt32.max
     static let Monster   : UInt32 = 0b1       // 1
     static let Projectile: UInt32 = 0b10      // 2
+    static let Player    : UInt32 = 0b11      // 3
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -69,6 +70,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let backgroundImage = SKSpriteNode(imageNamed: "ground")
         backgroundImage.size = self.scene!.size
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
+        backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
         moveJoystick = SKView(frame: CGRect(x: 0, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
@@ -86,6 +88,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundColor = SKColor.whiteColor()
         // 3
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        player.physicsBody = SKPhysicsBody(circleOfRadius: player.size.width/2)
+        player.physicsBody?.dynamic = true
+        player.physicsBody?.categoryBitMask = PhysicsCategory.Player
+        player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+        player.physicsBody?.collisionBitMask = PhysicsCategory.None
+        player.physicsBody?.usesPreciseCollisionDetection = false
         // 4
         addChild(player)
         
@@ -144,8 +152,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let absY = abs(yOffset)
         var realDest = newPoint
         
-        let moveDist: CGFloat = 5
-        let diagMove: CGFloat = sqrt(moveDist/2)
+        let moveDist: CGFloat = 10
+        let diagMove: CGFloat = moveDist/sqrt(2)
         
         if xOffset > 0 && absX > absY // Left
         {
@@ -207,8 +215,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
             }
         }
-        let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-        player.runAction(actionMove)
+        if self.frame.contains(realDest)
+        {
+            let actionMove = SKAction.moveTo(realDest, duration: 0.1)
+            player.runAction(actionMove)
+        }
+        else{
+            if realDest.y <= 0 // Bottom
+            {
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55
+                {
+                    player.position = CGPoint(x: size.width * 0.5, y: size.height)
+                }
+            }
+        }
     }
     
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
@@ -341,7 +361,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
         projectile.removeFromParent()
-        //monster.removeFromParent()
+        monster.removeFromParent()
+    }
+    
+    func playerDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
+        player.removeFromParent()
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -358,9 +382,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         // 2
-        if ((firstBody.categoryBitMask & PhysicsCategory.Monster != 0) &&
-            (secondBody.categoryBitMask & PhysicsCategory.Projectile != 0)) {
+        if ((firstBody.categoryBitMask == 1) &&
+            (secondBody.categoryBitMask == 2)) {
+            print("ayy")
             projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+        }
+        else if ((firstBody.categoryBitMask == 1) &&
+        (secondBody.categoryBitMask == 3))
+        {
+            print("lmao")
+            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
         }
         
     }
