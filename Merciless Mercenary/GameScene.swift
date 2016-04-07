@@ -53,6 +53,10 @@ struct PhysicsCategory {
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
+    /////////     MAP THINGS      //////////
+    var currGridLoc = 0
+    
+    
     // 1
     let player = SKSpriteNode(imageNamed: "player")
     var attackTimer = NSTimer()

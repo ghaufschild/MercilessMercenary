@@ -25,6 +25,10 @@ class Weapon: NSObject {
     //Damage
 }
 
+class Armor: NSObject {
+    
+}
+
 //Melee vs. Range
 //Magic Resist vs. Armor
 //Block Crit Strike
