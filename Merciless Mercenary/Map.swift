@@ -13,6 +13,7 @@ class Map: NSObject {
     var realMapLoc: [Coordinate] = []
     var visited: [Coordinate] = []
     var known: [Coordinate] = []
+    var currLoc: Coordinate!
     var spawnPoint: Coordinate!
     var keyPoint: Coordinate!
     var bossPoint: Coordinate!
@@ -47,6 +48,7 @@ class Map: NSObject {
             realMapLoc.append(Coordinate(xCoor: 1, yCoor: 1))
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
             generateLocs(realMapLoc)
+            currLoc = spawnPoint
         case 2:
             realMapLoc.append(Coordinate(xCoor: 1, yCoor: 2))
             realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
@@ -82,23 +84,23 @@ class Map: NSObject {
             realMapLoc.append(Coordinate(xCoor: 6, yCoor: 1))   //KEY
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
             generateLocs(realMapLoc)
+            currLoc = spawnPoint
         default:
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 1))
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 1))
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 2))
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 3))
             realMapLoc.append(Coordinate(xCoor: 6, yCoor: 3))
             realMapLoc.append(Coordinate(xCoor: 6, yCoor: 4))
             realMapLoc.append(Coordinate(xCoor: 6, yCoor: 5))
+            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 3))
+            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 3))
+            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 3))
+            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 3))
+            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
+            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 1))
+            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 2))
+            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 1))
+            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 1))
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 5))
             realMapLoc.append(Coordinate(xCoor: 4, yCoor: 5))
             realMapLoc.append(Coordinate(xCoor: 3, yCoor: 5))
@@ -106,9 +108,10 @@ class Map: NSObject {
             realMapLoc.append(Coordinate(xCoor: 3, yCoor: 6))
             realMapLoc.append(Coordinate(xCoor: 2, yCoor: 6))
             realMapLoc.append(Coordinate(xCoor: 1, yCoor: 6))
+            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 1))
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
-            keyPoint = Coordinate(xCoor: 1, yCoor: 6)
-            bossPoint = Coordinate(xCoor: 1, yCoor: 1)
+            generateLocs(realMapLoc)
+            currLoc = spawnPoint
         }
     }
     
@@ -142,6 +145,59 @@ class Map: NSObject {
         return keyPoint
     }
     
+    func getCurr() -> Coordinate
+    {
+        return currLoc
+    }
+    
+    func getLeft(loc: Coordinate) -> Coordinate?
+    {
+        for spot in realMapLoc
+        {
+            if(loc.getCoor().x - spot.getCoor().x == 1 && loc.getCoor().y - spot.getCoor().y == 0)
+            {
+                return spot
+            }
+        }
+        return nil
+    }
+    
+    func getRight(loc: Coordinate) -> Coordinate?
+    {
+        for spot in realMapLoc
+        {
+            if(loc.getCoor().x - spot.getCoor().x == -1 && loc.getCoor().y - spot.getCoor().y == 0)
+            {
+                return spot
+            }
+        }
+        return nil
+    }
+    
+    func getUp(loc: Coordinate) -> Coordinate?
+    {
+        for spot in realMapLoc
+        {
+            if(loc.getCoor().x - spot.getCoor().x == 0 && loc.getCoor().y - spot.getCoor().y == 1)
+            {
+                return spot
+            }
+        }
+        return nil
+    }
+    
+    func getDown(loc: Coordinate) -> Coordinate?
+    {
+        for spot in realMapLoc
+        {
+            if(loc.getCoor().x - spot.getCoor().x == 0 && loc.getCoor().y - spot.getCoor().y == -1)
+            {
+                return spot
+            }
+        }
+        return nil
+    }
+    
     func getAdjacent(loc: Coordinate) -> [Coordinate]
     {
         var nextTo: [Coordinate] = []
@@ -161,6 +217,11 @@ class Map: NSObject {
         {
             visited.append(loc)
         }
+    }
+    
+    func update(loc: Coordinate)
+    {
+        currLoc = loc
     }
 }
 
