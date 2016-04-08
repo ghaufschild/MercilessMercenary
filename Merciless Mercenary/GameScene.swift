@@ -54,8 +54,7 @@ struct PhysicsCategory {
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////     MAP THINGS      //////////
-    var currGridLoc = 0
-    
+    var map = Map(version: 1)
     
     // 1
     let player = SKSpriteNode(imageNamed: "player")
