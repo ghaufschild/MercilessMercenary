@@ -396,14 +396,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
-    
-    func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {
+    func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
         projectile.removeFromParent()
         monster.removeFromParent()
     }
     
-    func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
-        player.removeFromParent()
+    func playerDidCollideWithMonster(monster:SKSpriteNode, player:SKSpriteNode) {
+        monster.removeFromParent()
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -421,9 +420,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 2
         if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 2)) {
-            projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, projectile: secondBody.node as! SKSpriteNode)
+            projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
         }
-        else if((firstBody.categoryBitMask == 1) &&
+        else if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 3))
         {
             playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
