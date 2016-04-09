@@ -53,6 +53,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // 1
     let player = SKSpriteNode(imageNamed: "player")
+    
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
     
@@ -83,7 +84,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackJoystick.alpha = 0.25
         self.view?.addSubview(attackJoystick)
         
-        //addChild(backgroundMusic)
+        addChild(backgroundMusic)
         // 2
         backgroundColor = SKColor.whiteColor()
         // 3
@@ -215,19 +216,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
             }
         }
-        if self.frame.contains(realDest)
+        
+        realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
+        realDest.x = min(size.width, realDest.x)
+        realDest.y = max(0, realDest.y)
+        realDest.y = min(size.height, realDest.y)
+        
+        var door = false
+        if realDest.y <= 0 // Bottom
         {
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 // In the middle
+            {
+                player.position = CGPoint(x: size.width * 0.5, y: size.height)
+                door = true
+            }
+        }
+        else if realDest.y >= size.height // Top
+        {
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 // In the middle
+            {
+                player.position = CGPoint(x: size.width * 0.5, y: 0)
+                door = true
+            }
+        }
+        else if realDest.x <= 0 // Left
+        {
+            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 // In the middle
+            {
+                player.position = CGPoint(x: size.width, y: size.height * 0.5)
+                door = true
+            }
+        }
+        else if realDest.x >= size.width // Right
+        {
+            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 // In the middle
+            {
+                player.position = CGPoint(x: 0, y: size.height * 0.5)
+                door = true
+            }
+        }
+        if !door{
             let actionMove = SKAction.moveTo(realDest, duration: 0.1)
             player.runAction(actionMove)
-        }
-        else{
-            if realDest.y <= 0 // Bottom
-            {
-                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55
-                {
-                    player.position = CGPoint(x: size.width * 0.5, y: size.height)
-                }
-            }
+            realDest.y = realDest.y + player.size.height/2
         }
     }
     
@@ -358,18 +389,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
-    
     func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
         projectile.removeFromParent()
         monster.removeFromParent()
     }
     
-    func playerDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
-        player.removeFromParent()
+    func playerDidCollideWithMonster(monster:SKSpriteNode, player:SKSpriteNode) {
+        monster.removeFromParent()
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
-        
         // 1
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
@@ -384,14 +413,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 2
         if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 2)) {
-            print("ayy")
             projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
         }
         else if ((firstBody.categoryBitMask == 1) &&
-        (secondBody.categoryBitMask == 3))
+            (secondBody.categoryBitMask == 3))
         {
-            print("lmao")
-            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
         }
         
     }
