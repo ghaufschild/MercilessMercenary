@@ -16,6 +16,9 @@
 		3F45E3AC1CB43CBB00C39ABE /* pew-pew-lei.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */; };
 		3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */; };
 		3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */; };
+		3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD71CB69EDB00F6BB4C /* Map.swift */; };
+		3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD91CB69F8800F6BB4C /* Settings.swift */; };
+		3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BDB1CB6A00C00F6BB4C /* Character.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +33,9 @@
 		3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "pew-pew-lei.caf"; sourceTree = "<group>"; };
 		3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "background-music-aac.caf"; sourceTree = "<group>"; };
 		3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		3FE64BD71CB69EDB00F6BB4C /* Map.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Map.swift; sourceTree = "<group>"; };
+		3FE64BD91CB69F8800F6BB4C /* Settings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		3FE64BDB1CB6A00C00F6BB4C /* Character.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Character.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,7 +71,10 @@
 				3F344C441C763EF70027247E /* AppDelegate.swift */,
 				3F344C461C763EF70027247E /* ViewController.swift */,
 				3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */,
+				3FE64BD71CB69EDB00F6BB4C /* Map.swift */,
+				3FE64BD91CB69F8800F6BB4C /* Settings.swift */,
 				3F344C761C76427F0027247E /* Inventory.swift */,
+				3FE64BDB1CB6A00C00F6BB4C /* Character.swift */,
 				3F344C481C763EF70027247E /* Main.storyboard */,
 				3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */,
 				3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */,
@@ -150,6 +159,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */,
+				3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */,
+				3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */,
 				3F344C771C76427F0027247E /* Inventory.swift in Sources */,
 				3F344C471C763EF70027247E /* ViewController.swift in Sources */,
 				3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */,
