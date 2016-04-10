@@ -7,6 +7,7 @@
 //
 
 //  Coordinates (0,0) are in bottom left
+//  SKVIEW changes (0, 0) place based off width and height
 
 import SpriteKit
 
@@ -54,19 +55,22 @@ struct PhysicsCategory {
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////     MAP THINGS      //////////
-    var map = Map(version: 1)
+    var map = Map(version: 1)       //Still needs more work, aka graphics
     
     // 1
     let player = SKSpriteNode(imageNamed: "player")
+    var canDoStuff: Bool = true     //For checking for transitions, eventually move elsewhere
     
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
+    var transTimer = NSTimer()
     
     var moveLoc: CGPoint!
     var attackLoc: CGPoint!
     
     var moveJoystick = SKView()
     var attackJoystick = SKView()
+    var transitionView = SKView()
     
     //View Did Load
     override func didMoveToView(view: SKView) {
@@ -80,19 +84,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
+        let test1 = SKView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.width))
+        test1.backgroundColor = UIColor.greenColor()
+        //self.view?.addSubview(test1)
+        let test2 = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2, height: size.width))
+        test2.backgroundColor = UIColor.blueColor()
+        //self.view?.addSubview(test2)
+        let test3 = SKView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.width * 2))
+        test3.backgroundColor = UIColor.yellowColor()
+        //self.view?.addSubview(test3)
+        
         moveJoystick = SKView(frame: CGRect(x: 0, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        moveJoystick.backgroundColor = UIColor.lightGrayColor()
-        moveJoystick.alpha = 0.25
+        moveJoystick.layer.backgroundColor = SKColor.blackColor().CGColor
+        moveJoystick.layer.borderColor = SKColor.blueColor().CGColor
+        moveJoystick.layer.borderWidth = 25
+        moveJoystick.alpha = 1
         self.view?.addSubview(moveJoystick)
         
         attackJoystick = SKView(frame: CGRect(x: size.width * 0.8, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        attackJoystick.backgroundColor = UIColor.lightGrayColor()
+        attackJoystick.backgroundColor = UIColor.redColor()
         attackJoystick.alpha = 0.25
         self.view?.addSubview(attackJoystick)
         
         addChild(backgroundMusic)
         // 2
-        backgroundColor = SKColor.whiteColor()
+        backgroundColor = SKColor.blackColor()
         // 3
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
@@ -125,6 +141,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //Attack Function
     func createShuriken()
     {
+        if(canDoStuff)
+        {
         let touchLocation = attackLoc
         
         runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
@@ -149,11 +167,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let actionMove = SKAction.moveTo(realDest, duration: 2.0)
         let actionMoveDone = SKAction.removeFromParent()
         projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+        }
     }
     
     //Move Function
     func move()
     {
+        if canDoStuff
+        {
+        print(map.getCurr())
         var currentPoint = moveLoc
         currentPoint!.y = self.view!.frame.maxY - currentPoint!.y
         let newPoint = moveJoystick.center - currentPoint!
@@ -232,36 +254,47 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         realDest.y = max(0, realDest.y)
         realDest.y = min(size.height, realDest.y)
         
+        //METHODS ARE BEING CALLED TWICE
+        //If you go slow it works as intended, only when moving quickly is it a problem
+        
         var door = false
         if realDest.y <= 0 // Bottom
         {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 // In the middle
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
             {
+                transitionClose()
                 player.position = CGPoint(x: size.width * 0.5, y: size.height)
+                map.update(map.getDown()!)
                 door = true
             }
         }
         else if realDest.y >= size.height // Top
         {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 // In the middle
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
             {
+                transitionClose()
                 player.position = CGPoint(x: size.width * 0.5, y: 0)
+                map.update(map.getUp()!)
                 door = true
             }
         }
         else if realDest.x <= 0 // Left
         {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 // In the middle
+            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
             {
+                transitionClose()
                 player.position = CGPoint(x: size.width, y: size.height * 0.5)
+                map.update(map.getLeft()!)
                 door = true
             }
         }
         else if realDest.x >= size.width // Right
         {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 // In the middle
+            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
             {
+                transitionClose()
                 player.position = CGPoint(x: 0, y: size.height * 0.5)
+                map.update(map.getRight()!)
                 door = true
             }
         }
@@ -269,6 +302,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let actionMove = SKAction.moveTo(realDest, duration: 0.1)
             player.runAction(actionMove)
             realDest.y = realDest.y + player.size.height/2
+        }
         }
     }
     
@@ -365,6 +399,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             return true
         }
         return false
+    }
+    
+    func transitionClose()  //Work in Progress... player x and y values need to be adjusted
+    {
+        canDoStuff = false
+        print(player.position.x, player.position.y)
+        transitionView = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2, height: size.width))
+        transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
+        transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
+        transitionView.layer.borderColor = UIColor.blackColor().CGColor
+        transitionView.layer.borderWidth = 200
+        self.view?.addSubview(transitionView)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
+    }
+    
+    func transitionOpen()
+    {
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.00, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
+    }
+    
+    func incWidth()
+    {
+        transitionView.layer.borderWidth += transitionView.frame.width * 0.01
+        if(transitionView.layer.borderWidth >= transitionView.frame.width * 0.5)
+        {
+            transTimer.invalidate()
+            transitionOpen()
+        }
+    }
+    
+    func decWidth()
+    {
+        transitionView.layer.borderWidth -= transitionView.frame.width * 0.01
+        if(transitionView.layer.borderWidth <= 0)
+        {
+            transTimer.invalidate()
+            canDoStuff = true
+            transitionView.removeFromSuperview()
+        }
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////

@@ -150,11 +150,11 @@ class Map: NSObject {
         return currLoc
     }
     
-    func getLeft(loc: Coordinate) -> Coordinate?
+    func getLeft() -> Coordinate?
     {
         for spot in realMapLoc
         {
-            if(loc.getCoor().x - spot.getCoor().x == 1 && loc.getCoor().y - spot.getCoor().y == 0)
+            if(currLoc.x - spot.getCoor().x == 1 && currLoc.y - spot.getCoor().y == 0)
             {
                 return spot
             }
@@ -162,11 +162,11 @@ class Map: NSObject {
         return nil
     }
     
-    func getRight(loc: Coordinate) -> Coordinate?
+    func getRight() -> Coordinate?
     {
         for spot in realMapLoc
         {
-            if(loc.getCoor().x - spot.getCoor().x == -1 && loc.getCoor().y - spot.getCoor().y == 0)
+            if(currLoc.x - spot.getCoor().x == -1 && currLoc.y - spot.getCoor().y == 0)
             {
                 return spot
             }
@@ -174,11 +174,11 @@ class Map: NSObject {
         return nil
     }
     
-    func getUp(loc: Coordinate) -> Coordinate?
+    func getUp() -> Coordinate?
     {
         for spot in realMapLoc
         {
-            if(loc.getCoor().x - spot.getCoor().x == 0 && loc.getCoor().y - spot.getCoor().y == 1)
+            if(currLoc.x - spot.getCoor().x == 0 && currLoc.y - spot.getCoor().y == 1)
             {
                 return spot
             }
@@ -186,11 +186,11 @@ class Map: NSObject {
         return nil
     }
     
-    func getDown(loc: Coordinate) -> Coordinate?
+    func getDown() -> Coordinate?
     {
         for spot in realMapLoc
         {
-            if(loc.getCoor().x - spot.getCoor().x == 0 && loc.getCoor().y - spot.getCoor().y == -1)
+            if(currLoc.x - spot.getCoor().x == 0 && currLoc.y - spot.getCoor().y == -1)
             {
                 return spot
             }
@@ -228,6 +228,9 @@ class Map: NSObject {
 class Coordinate: NSObject {
     var x: Int!
     var y: Int!
+    override var description:String {
+        return "(\(x), \(y))"
+    }
     
     init(xCoor: Int, yCoor: Int)
     {
