@@ -67,10 +67,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var moveLoc: CGPoint!
     var attackLoc: CGPoint!
+    var moveTo: CGPoint!
     
     var moveJoystick = SKSpriteNode(imageNamed: "projectile")
     var attackJoystick = SKSpriteNode(imageNamed: "projectile")
-    var transitionView = SKView()
+    var transitionView = SKSpriteNode()
     
     //View Did Load
     override func didMoveToView(view: SKView) {
@@ -252,7 +253,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
             {
                 transitionClose()
-                player.position = CGPoint(x: size.width * 0.5, y: size.height)
+                moveTo = CGPoint(x: size.width * 0.5, y: size.height)
                 map.update(map.getDown()!)
                 door = true
             }
@@ -262,7 +263,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
             {
                 transitionClose()
-                player.position = CGPoint(x: size.width * 0.5, y: 0)
+                moveTo = CGPoint(x: size.width * 0.5, y: 0)
                 map.update(map.getUp()!)
                 door = true
             }
@@ -272,7 +273,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
             {
                 transitionClose()
-                player.position = CGPoint(x: size.width, y: size.height * 0.5)
+                moveTo = CGPoint(x: size.width, y: size.height * 0.5)
                 print("changed location")
                 map.update(map.getLeft()!)
                 door = true
@@ -283,7 +284,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
             {
                 transitionClose()
-                player.position = CGPoint(x: 0, y: size.height * 0.5)
+                moveTo = CGPoint(x: 0, y: size.height * 0.5)
                 map.update(map.getRight()!)
                 door = true
             }
@@ -401,43 +402,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
         canDoStuff = false
-        transitionView = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2.25, height: size.width * 2.25))
-        transitionView.center = CGPoint(x: player.position.x, y: player.position.y)
-        transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
-        transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
-        transitionView.layer.borderColor = UIColor.blackColor().CGColor
-        transitionView.layer.borderWidth = 200
-        self.view?.addSubview(transitionView)
-        print(player.position.x, player.position.y)
+        transitionView = SKSpriteNode(color: UIColor.blackColor(), size: size)
+        transitionView.setScale(2)
+        transitionView.zPosition = 10
+        transitionView.centerRect = self.view!.bounds
+        transitionView.position = self.position
+        transitionView.alpha = 0
+        addChild(transitionView)
         transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
     }
     
     func transitionOpen()
     {
-        transitionView.center = CGPoint(x: player.position.x, y: player.position.y)
-        print(player.position.x, player.position.y)
         transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
     func incWidth()
     {
-        transitionView.layer.borderWidth *= 2
-        if(transitionView.layer.borderWidth >= transitionView.frame.width * 0.5)
+        if(transitionView.alpha >= 1)
         {
+            player.position = moveTo
             transTimer.invalidate()
             transitionOpen()
         }
+        transitionView.alpha += 0.1
     }
     
     func decWidth()
     {
-        transitionView.layer.borderWidth *= 0.5
-        if(transitionView.layer.borderWidth <= 0)
+        if(transitionView.alpha <= 0)
         {
             transTimer.invalidate()
             canDoStuff = true
-            transitionView.removeFromSuperview()
+            transitionView.removeFromParent()
         }
+        transitionView.alpha -= 0.1
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
