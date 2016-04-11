@@ -7,7 +7,7 @@
 //
 
 //  Coordinates (0,0) are in bottom left
-//  SKVIEW changes (0, 0) place based off width and height
+//  SKVIEW changes (0, 0) is in top left
 
 import SpriteKit
 
@@ -68,8 +68,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var moveLoc: CGPoint!
     var attackLoc: CGPoint!
     
-    var moveJoystick = SKView()
-    var attackJoystick = SKView()
+    var moveJoystick = SKSpriteNode(imageNamed: "projectile")
+    var attackJoystick = SKSpriteNode(imageNamed: "projectile")
     var transitionView = SKView()
     
     //View Did Load
@@ -84,27 +84,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
-        let test1 = SKView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.width))
-        test1.backgroundColor = UIColor.greenColor()
-        //self.view?.addSubview(test1)
-        let test2 = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2, height: size.width))
-        test2.backgroundColor = UIColor.blueColor()
-        //self.view?.addSubview(test2)
-        let test3 = SKView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.width * 2))
-        test3.backgroundColor = UIColor.yellowColor()
-        //self.view?.addSubview(test3)
+        moveJoystick.name = "moveJoystick"
+        moveJoystick.position = CGPoint(x: size.width * 0.1, y: size.width * 0.1)
+        moveJoystick.userInteractionEnabled = false
+        moveJoystick.setScale(8)
+        addChild(moveJoystick)
         
-        moveJoystick = SKView(frame: CGRect(x: 0, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        moveJoystick.layer.backgroundColor = SKColor.blackColor().CGColor
-        moveJoystick.layer.borderColor = SKColor.blueColor().CGColor
-        moveJoystick.layer.borderWidth = 25
-        moveJoystick.alpha = 1
-        self.view?.addSubview(moveJoystick)
-        
-        attackJoystick = SKView(frame: CGRect(x: size.width * 0.8, y: size.height - size.width * 0.2, width: size.width * 0.2, height: size.width * 0.2))
-        attackJoystick.backgroundColor = UIColor.redColor()
-        attackJoystick.alpha = 0.25
-        self.view?.addSubview(attackJoystick)
+        attackJoystick.name = "attackJoystick"
+        attackJoystick.position = CGPoint(x: size.width * 0.9, y: size.width * 0.1)
+        attackJoystick.userInteractionEnabled = false
+        attackJoystick.setScale(8)
+        addChild(attackJoystick)
         
         addChild(backgroundMusic)
         // 2
@@ -175,10 +165,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if canDoStuff
         {
-        print(map.getCurr())
-        var currentPoint = moveLoc
-        currentPoint!.y = self.view!.frame.maxY - currentPoint!.y
-        let newPoint = moveJoystick.center - currentPoint!
+        //print(map.getCurr())
+        var newPoint = moveJoystick.position - moveLoc!
+            newPoint.y *= -1
         let xOffset = newPoint.x
         let yOffset = newPoint.y
         let absX = abs(xOffset)
@@ -284,6 +273,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 transitionClose()
                 player.position = CGPoint(x: size.width, y: size.height * 0.5)
+                print("changed location")
                 map.update(map.getLeft()!)
                 door = true
             }
@@ -298,6 +288,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 door = true
             }
         }
+            print(door)
         if !door{
             let actionMove = SKAction.moveTo(realDest, duration: 0.1)
             player.runAction(actionMove)
@@ -309,21 +300,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let firstTouch = touches.first?.locationInNode(self)
+        let positionInScene = touches.first?.locationInNode(self)
+        let touchedNode = self.nodeAtPoint(positionInScene!)
+        
         if(!attackTimer.valid)
         {
-            if isInAttack(firstTouch!)
+            if (touchedNode.name == "attackJoystick")
             {
-                attackLoc = firstTouch
+                attackLoc = positionInScene
                 createShuriken()
                 attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
             }
         }
         if(!moveTimer.valid)
         {
-            if isInMove(firstTouch!)
+            if (touchedNode.name == "moveJoystick")
             {
-                moveLoc = firstTouch
+                moveLoc = positionInScene
                 moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
             }
         }
@@ -335,12 +328,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         for touch in (event?.allTouches())!
         {
-            if(isInMove(touch.locationInNode(self)))
+            let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
+            if(touchedNode.name == "moveJoystick")
             {
                 moveLoc = touch.locationInNode(self)
                 stopMove = false
             }
-            if(isInAttack(touch.locationInNode(self)))
+            if(touchedNode.name == "attackJoystick")
             {
                 attackLoc = touch.locationInNode(self)
                 stopAttack = false
@@ -367,11 +361,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
     {
-        if(isInMove((touches.first?.locationInNode(self))!))
+        let positionInScene = touches.first?.locationInNode(self)
+        let touchedNode = self.nodeAtPoint(positionInScene!)
+        
+        if(touchedNode.name == "moveJoystick")
         {
             moveTimer.invalidate()
         }
-        if(isInAttack((touches.first?.locationInNode(self))!))
+        if(touchedNode.name == "attackJoystick")
         {
             attackTimer.invalidate()
         }
@@ -379,49 +376,52 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
-    func isInMove(loc: CGPoint) -> Bool
-    {
-        let wid = moveJoystick.frame.width
-        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
-        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-        {
-            return true
-        }
-        return false
-    }
-    
-    func isInAttack(loc: CGPoint) -> Bool
-    {
-        let wid = attackJoystick.frame.width
-        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
-        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-        {
-            return true
-        }
-        return false
-    }
+//    func isInMove(loc: CGPoint) -> Bool
+//    {
+//        let wid = moveJoystick.frame.width
+//        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
+//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+//        {
+//            return true
+//        }
+//        return false
+//    }
+//    
+//    func isInAttack(loc: CGPoint) -> Bool
+//    {
+//        let wid = attackJoystick.frame.width
+//        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
+//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+//        {
+//            return true
+//        }
+//        return false
+//    }
     
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
         canDoStuff = false
-        print(player.position.x, player.position.y)
-        transitionView = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2, height: size.width))
+        transitionView = SKView(frame: CGRect(x: 0, y: 0, width: size.width * 2.25, height: size.width * 2.25))
+        transitionView.center = CGPoint(x: player.position.x, y: player.position.y)
         transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
         transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
         transitionView.layer.borderColor = UIColor.blackColor().CGColor
         transitionView.layer.borderWidth = 200
         self.view?.addSubview(transitionView)
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
+        print(player.position.x, player.position.y)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
     }
     
     func transitionOpen()
     {
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.00, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
+        transitionView.center = CGPoint(x: player.position.x, y: player.position.y)
+        print(player.position.x, player.position.y)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
     func incWidth()
     {
-        transitionView.layer.borderWidth += transitionView.frame.width * 0.01
+        transitionView.layer.borderWidth *= 2
         if(transitionView.layer.borderWidth >= transitionView.frame.width * 0.5)
         {
             transTimer.invalidate()
@@ -431,7 +431,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func decWidth()
     {
-        transitionView.layer.borderWidth -= transitionView.frame.width * 0.01
+        transitionView.layer.borderWidth *= 0.5
         if(transitionView.layer.borderWidth <= 0)
         {
             transTimer.invalidate()
