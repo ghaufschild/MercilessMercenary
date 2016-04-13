@@ -69,8 +69,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackLoc: CGPoint!
     var moveTo: CGPoint!
     
-    var moveJoystick = SKSpriteNode(imageNamed: "projectile")
-    var attackJoystick = SKSpriteNode(imageNamed: "projectile")
+    var moveJoystick = SKSpriteNode(imageNamed: "joystick")
+    var attackJoystick = SKSpriteNode(imageNamed: "joystick")
     var transitionView = SKSpriteNode()
     
     //View Did Load
@@ -86,15 +86,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(backgroundImage)
         
         moveJoystick.name = "moveJoystick"
-        moveJoystick.position = CGPoint(x: size.width * 0.1, y: size.width * 0.1)
+        moveJoystick.position = CGPoint(x: size.width * 0.13, y: size.width * 0.13)
+        moveJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
         moveJoystick.userInteractionEnabled = false
-        moveJoystick.setScale(8)
+        moveJoystick.alpha = 0.25
         addChild(moveJoystick)
         
         attackJoystick.name = "attackJoystick"
-        attackJoystick.position = CGPoint(x: size.width * 0.9, y: size.width * 0.1)
+        attackJoystick.position = CGPoint(x: size.width * 0.87, y: size.width * 0.13)
+        attackJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
         attackJoystick.userInteractionEnabled = false
-        attackJoystick.setScale(8)
+        attackJoystick.alpha = 0.25
         addChild(attackJoystick)
         
         addChild(backgroundMusic)
@@ -326,7 +328,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         var stopMove = true
         var stopAttack = true
-        
+        print("moved")
         for touch in (event?.allTouches())!
         {
             let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
@@ -495,14 +497,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 2
         if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 2)) {
-            projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+            if(secondBody.node != nil && firstBody.node != nil)
+            {
+                projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+            }
         }
         else if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 3))
         {
-            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
+            if(firstBody.node != nil)
+            {
+                playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
+            }
         }
         
+    }
+    
+    /////////////////////////////////       MENU FUNCTIONS       ///////////////////////////
+    
+    func openMenu()
+    {
+        let menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+        menu.backgroundColor = UIColor.brownColor()
+        view?.addSubview(menu)
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////

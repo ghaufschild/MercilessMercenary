@@ -13,6 +13,7 @@ class Character: NSObject {
     var fighterType: Int! //1 is melee, 2 is archery, 3 is mage
     var equippedWeapon: Weapon? = nil
     var equippedArmor: Armor? = nil
+    var inventory: Inventory!
 
     var currentHealth: Int!
     var maxHealth: Int!
