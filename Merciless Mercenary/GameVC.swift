@@ -14,7 +14,7 @@ import UIKit
 import SceneKit
 import SpriteKit
 
-class ViewController: UIViewController {
+class GameVC: UIViewController {
 
     let screenWidth: CGFloat = UIScreen.mainScreen().bounds.width           //Dimensions of phone
     let screenHeight: CGFloat = UIScreen.mainScreen().bounds.height

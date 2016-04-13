@@ -10,6 +10,29 @@ import UIKit
 
 class Inventory: NSObject {
     //Capacity Size
+    var capacity: Int!
+    var size: Int!
+    var items: [item] = []
+    
+    override init()
+    {
+        size = 0
+        capacity = 100
+    }
+    
+    func add(pickedUp: item) -> Bool    //Return true if picked up, false if full
+    {
+        if(pickedUp.getSize() + size <= capacity)
+        {
+            items.append(pickedUp)
+            size = size + pickedUp.getSize()
+            return true
+        }
+        else
+        {
+            return false
+        }
+    }
     
     //Sword of divinity
     //Shield of Vulneary
@@ -20,12 +43,27 @@ class Inventory: NSObject {
 
 }
 
-class Weapon: NSObject {
+class item: NSObject
+{
+    var size: Int!
+    
+    init(s: Int)
+    {
+        size = s
+    }
+    
+    func getSize() -> Int
+    {
+        return size
+    }
+}
+
+class Weapon: item {
     //Capacity
     //Damage
 }
 
-class Armor: NSObject {
+class Armor: item {
     
 }
 

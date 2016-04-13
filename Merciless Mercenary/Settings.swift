@@ -13,5 +13,11 @@ class Settings: NSObject {
     var difficulty = 1
     var soundOn = true
     var musicOn = true
+    var characters: [Character] = []
+    
+    func howManyCharacters() -> Int
+    {
+        return characters.count
+    }
     
 }
