@@ -73,6 +73,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackJoystick = SKSpriteNode(imageNamed: "projectile")
     var transitionView = SKSpriteNode()
     
+    var healthBar = SKSpriteNode()
+    var armorBar = SKSpriteNode()
+    
     //View Did Load
     override func didMoveToView(view: SKView) {
         let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
@@ -114,6 +117,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 4
         addChild(player)
+
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -134,30 +138,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canDoStuff)
         {
-        let touchLocation = attackLoc
-        
-        runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-        
-        let projectile = SKSpriteNode(imageNamed: "projectile")
-        projectile.position = player.position
-        projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
-        projectile.physicsBody?.dynamic = true
-        projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
-        projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
-        projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
-        let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
-        let offset = touchLocation - centerPoint
-        addChild(projectile)
-        
-        let direction = offset.normalized()
-        let shootAmount = direction * 1000
-        let realDest = shootAmount + projectile.position
-        
-        let actionMove = SKAction.moveTo(realDest, duration: 2.0)
-        let actionMoveDone = SKAction.removeFromParent()
-        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+            let touchLocation = attackLoc
+            
+            runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+            
+            let projectile = SKSpriteNode(imageNamed: "projectile")
+            projectile.position = player.position
+            projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
+            projectile.physicsBody?.dynamic = true
+            projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
+            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+            projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+            projectile.physicsBody?.usesPreciseCollisionDetection = true
+            
+            let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
+            let offset = touchLocation - centerPoint
+            addChild(projectile)
+            
+            let direction = offset.normalized()
+            let shootAmount = direction * 1000
+            let realDest = shootAmount + projectile.position
+            
+            let actionMove = SKAction.moveTo(realDest, duration: 2.0)
+            let actionMoveDone = SKAction.removeFromParent()
+            projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
         }
     }
     
@@ -166,135 +170,135 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if canDoStuff
         {
-        //print(map.getCurr())
-        var newPoint = moveJoystick.position - moveLoc!
+            //print(map.getCurr())
+            var newPoint = moveJoystick.position - moveLoc!
             newPoint.y *= -1
-        let xOffset = newPoint.x
-        let yOffset = newPoint.y
-        let absX = abs(xOffset)
-        let absY = abs(yOffset)
-        var realDest = newPoint
-        
-        let moveDist: CGFloat = 10
-        let diagMove: CGFloat = moveDist/sqrt(2)
-        
-        if xOffset > 0 && absX > absY // Left
-        {
-            if(xOffset < 2 * yOffset)
+            let xOffset = newPoint.x
+            let yOffset = newPoint.y
+            let absX = abs(xOffset)
+            let absY = abs(yOffset)
+            var realDest = newPoint
+            
+            let moveDist: CGFloat = 10
+            let diagMove: CGFloat = moveDist/sqrt(2)
+            
+            if xOffset > 0 && absX > absY // Left
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                if(xOffset < 2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                }
+                else if(xOffset < -2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
+                }
             }
-            else if(xOffset < -2 * yOffset)
+            else if yOffset > 0 && absX < absY // Up
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                if(2 * xOffset > yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                }
+                else if(-2 * xOffset > yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
+                }
             }
-            else
+            else if xOffset < 0 && absX > absY // Right
             {
-                realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
+                if(xOffset > 2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                }
+                else if(xOffset > -2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
+                }
             }
-        }
-        else if yOffset > 0 && absX < absY // Up
-        {
-            if(2 * xOffset > yOffset)
+            else if yOffset < 0 && absX < absY // Down
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                if(2 * xOffset < yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                }
+                else if(-2 * xOffset < yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
+                }
             }
-            else if(-2 * xOffset > yOffset)
+            
+            realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
+            realDest.x = min(size.width, realDest.x)
+            realDest.y = max(0, realDest.y)
+            realDest.y = min(size.height, realDest.y)
+            
+            //METHODS ARE BEING CALLED TWICE
+            //If you go slow it works as intended, only when moving quickly is it a problem
+            
+            var door = false
+            if realDest.y <= 0 // Bottom
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width * 0.5, y: size.height)
+                    map.update(map.getDown()!)
+                    door = true
+                }
             }
-            else
+            else if realDest.y >= size.height // Top
             {
-                realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width * 0.5, y: 0)
+                    map.update(map.getUp()!)
+                    door = true
+                }
             }
-        }
-        else if xOffset < 0 && absX > absY // Right
-        {
-            if(xOffset > 2 * yOffset)
+            else if realDest.x <= 0 // Left
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width, y: size.height * 0.5)
+                    print("changed location")
+                    map.update(map.getLeft()!)
+                    door = true
+                }
             }
-            else if(xOffset > -2 * yOffset)
+            else if realDest.x >= size.width // Right
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: 0, y: size.height * 0.5)
+                    map.update(map.getRight()!)
+                    door = true
+                }
             }
-            else
-            {
-                realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
-            }
-        }
-        else if yOffset < 0 && absX < absY // Down
-        {
-            if(2 * xOffset < yOffset)
-            {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
-            }
-            else if(-2 * xOffset < yOffset)
-            {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
-            }
-            else
-            {
-                realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
-            }
-        }
-        
-        realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
-        realDest.x = min(size.width, realDest.x)
-        realDest.y = max(0, realDest.y)
-        realDest.y = min(size.height, realDest.y)
-        
-        //METHODS ARE BEING CALLED TWICE
-        //If you go slow it works as intended, only when moving quickly is it a problem
-        
-        var door = false
-        if realDest.y <= 0 // Bottom
-        {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width * 0.5, y: size.height)
-                map.update(map.getDown()!)
-                door = true
-            }
-        }
-        else if realDest.y >= size.height // Top
-        {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width * 0.5, y: 0)
-                map.update(map.getUp()!)
-                door = true
-            }
-        }
-        else if realDest.x <= 0 // Left
-        {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width, y: size.height * 0.5)
-                print("changed location")
-                map.update(map.getLeft()!)
-                door = true
-            }
-        }
-        else if realDest.x >= size.width // Right
-        {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: 0, y: size.height * 0.5)
-                map.update(map.getRight()!)
-                door = true
-            }
-        }
             print(door)
-        if !door{
-            let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-            player.runAction(actionMove)
-            realDest.y = realDest.y + player.size.height/2
-        }
+            if !door{
+                let actionMove = SKAction.moveTo(realDest, duration: 0.1)
+                player.runAction(actionMove)
+                realDest.y = realDest.y + player.size.height/2
+            }
         }
     }
     
@@ -377,27 +381,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
-//    func isInMove(loc: CGPoint) -> Bool
-//    {
-//        let wid = moveJoystick.frame.width
-//        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
-//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-//        {
-//            return true
-//        }
-//        return false
-//    }
-//    
-//    func isInAttack(loc: CGPoint) -> Bool
-//    {
-//        let wid = attackJoystick.frame.width
-//        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
-//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-//        {
-//            return true
-//        }
-//        return false
-//    }
+    //    func isInMove(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = moveJoystick.frame.width
+    //        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
+    //
+    //    func isInAttack(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = attackJoystick.frame.width
+    //        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
     
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
@@ -500,9 +504,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         else if ((firstBody.categoryBitMask == 1) &&
             (secondBody.categoryBitMask == 3))
         {
-            playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
+            if firstBody.node != nil
+            {
+                playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
+            }
         }
-        
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
