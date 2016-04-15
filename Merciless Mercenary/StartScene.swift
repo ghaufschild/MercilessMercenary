@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import SceneKit
+import SpriteKit
 
-class StartVC: UIViewController {
+class StartScene: SKScene {
 
     let screenWidth: CGFloat = UIScreen.mainScreen().bounds.width           //Dimensions of phone
     let screenHeight: CGFloat = UIScreen.mainScreen().bounds.height
@@ -17,8 +19,7 @@ class StartVC: UIViewController {
     var playBut: UIButton!
     var settingsBut: UIButton!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func didMoveToView(view: SKView) {
 
         if let settings = Settings.loadSaved()
         {
@@ -31,18 +32,18 @@ class StartVC: UIViewController {
             self.settings = settings
         }
         
-        playBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.1, screenWidth * 0.2, screenHeight * 0.1))
+        playBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.1, screenWidth * 0.2, screenHeight * 0.2))
         playBut.setTitle("PLAY", forState: UIControlState.Normal)
-        playBut.addTarget(self, action: #selector(StartVC.goToChar), forControlEvents: UIControlEvents.TouchUpInside)
+        playBut.addTarget(self, action: #selector(StartScene.goToChar), forControlEvents: UIControlEvents.TouchUpInside)
         playBut.setTitleColor(UIColor.blackColor(), forState: UIControlState.Normal)
         playBut.layer.cornerRadius = 0.1 * playBut.frame.width
         playBut.layer.borderWidth = playBut.frame.width * 0.03
         playBut.layer.borderColor = UIColor.blackColor().CGColor
         view.addSubview(playBut)
         
-        settingsBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.3, screenWidth * 0.2, screenHeight * 0.1))
+        settingsBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.4, screenWidth * 0.2, screenHeight * 0.2))
         settingsBut.setTitle("SETTINGS", forState: UIControlState.Normal)
-        settingsBut.addTarget(self, action: #selector(StartVC.goToSet), forControlEvents: UIControlEvents.TouchUpInside)
+        settingsBut.addTarget(self, action: #selector(StartScene.goToSet), forControlEvents: UIControlEvents.TouchUpInside)
         settingsBut.setTitleColor(UIColor.blackColor(), forState: UIControlState.Normal)
         settingsBut.layer.cornerRadius = 0.1 * playBut.frame.width
         settingsBut.layer.borderWidth = playBut.frame.width * 0.03
@@ -50,25 +51,25 @@ class StartVC: UIViewController {
         view.addSubview(settingsBut)
     }
     
+    func save()
+    {
+        settings.save()
+        scene?.removeFromParent()
+    }
+    
     func goToChar()
     {
-        performSegueWithIdentifier("goToChar", sender: self)
+        save()
+        let scene = CharacterScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        view!.presentScene(scene)
     }
     
     func goToSet()
     {
-        performSegueWithIdentifier("goToSet", sender: self)
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "goToChar"
-        {
-            let dvc = segue.destinationViewController as! CharacterVC
-            dvc.settings = self.settings
-        }
-        else
-        {
-            
-        }
+        save()
+        let scene = SettingsScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        self.view!.presentScene(scene)
     }
 }

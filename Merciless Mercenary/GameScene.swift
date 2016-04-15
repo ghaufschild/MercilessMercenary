@@ -148,11 +148,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
         menu.addSubview(closeMenuButton)
         
-        let exitButton = UIButton(frame: CGRect(x: menu.frame.width * 0.2, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        let exitButton = UIButton(frame: CGRect(x: menu.frame.width * 0.7, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
         exitButton.backgroundColor = UIColor.redColor()
-        exitButton.setTitle("CLOSE", forState: .Normal)
+        exitButton.setTitle("EXIT", forState: .Normal)
         exitButton.titleLabel?.textColor = UIColor.blackColor()
-        exitButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
+        exitButton.addTarget(self, action: #selector(GameScene.exitGame), forControlEvents: .TouchUpInside)
         menu.addSubview(exitButton)
         
         let menuTitle = UILabel(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.075))
@@ -679,6 +679,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
             place.layer.backgroundColor = UIColor.blackColor().CGColor
             place.layer.cornerRadius = place.frame.width * 0.2
+            if(spot.equals(map.getBoss()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.blackColor()
+                place.addSubview(symbol)
+            }
             mapView.addSubview(place)
         }
         for spot in map.visited
@@ -697,6 +703,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
                 symbol.backgroundColor = UIColor.yellowColor()
+                place.addSubview(symbol)
+            }
+            if(spot.equals(map.getKey()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.greenColor()
                 place.addSubview(symbol)
             }
             place.layer.cornerRadius = place.frame.width * 0.2
@@ -728,8 +740,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func exitGame()
     {
-        settings.save()
-        
+        save()
+        let scene = CharacterScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        view!.presentScene(scene)
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
@@ -741,5 +755,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func random(min min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
     }
+    
+    func save()
+    {
+        settings.save()
+        scene?.removeFromParent()
+    }
+    
     
 }

@@ -7,8 +7,10 @@
 //
 
 import UIKit
+import SceneKit
+import SpriteKit
 
-class CharacterVC: UIViewController {
+class CharacterScene: SKScene {
 
     var settings: Settings!
     var titleLabel: UILabel!
@@ -17,8 +19,18 @@ class CharacterVC: UIViewController {
     var characterTwo: UIView!
     var characterThree: UIView!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func didMoveToView(view: SKView) {
+        
+        if let settings = Settings.loadSaved()
+        {
+            self.settings = settings
+        }
+        else
+        {
+            let settings: Settings = Settings()
+            settings.save()
+            self.settings = settings
+        }
         
         titleLabel = UILabel(frame: CGRect(x: view.frame.width * 0.1, y: view.frame.height * 0.05, width: view.frame.width * 0.8, height: view.frame.height * 0.1))
         titleLabel.textAlignment = .Center
@@ -26,7 +38,7 @@ class CharacterVC: UIViewController {
         titleLabel.text = "CHARACTER SLOTS"
         titleLabel.adjustsFontSizeToFitWidth = true
         view.addSubview(titleLabel)
-        
+
         let numChar: Int = settings.howManyCharacters()
         if numChar == 0
         {
@@ -54,7 +66,7 @@ class CharacterVC: UIViewController {
         }
         
         playCharOne = UIButton(frame: CGRect(x: characterOne.frame.width * 0.2, y: characterOne.frame.height * 0.8, width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1))
-        playCharOne.addTarget(self, action: #selector(CharacterVC.goToGameP1), forControlEvents: UIControlEvents.TouchUpInside)
+        playCharOne.addTarget(self, action: #selector(CharacterScene.goToGameP1), forControlEvents: UIControlEvents.TouchUpInside)
         playCharOne.setTitle("PLAY", forState: .Normal)
         playCharOne.backgroundColor = UIColor.blueColor()
         characterOne.addSubview(playCharOne)
@@ -65,8 +77,8 @@ class CharacterVC: UIViewController {
     {
         if(num == 1)    //First slot
         {
-            characterOne = UIView(frame: CGRect(x: view.frame.width * 0.025, y: view.frame.height * 0.15, width: view.frame.width * 0.3, height: view.frame.height * 0.8))
-            characterOne.layer.borderWidth = view.frame.width * 0.025
+            characterOne = UIView(frame: CGRect(x: view!.frame.width * 0.025, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
+            characterOne.layer.borderWidth = view!.frame.width * 0.025
             characterOne.layer.borderColor = UIColor.blackColor().CGColor
             if(charPresent)     //Yes character
             {
@@ -76,12 +88,12 @@ class CharacterVC: UIViewController {
             {
                 
             }
-            view.addSubview(characterOne)
+            view!.addSubview(characterOne)
         }
         if(num == 2)    //Second slot
         {
-            characterTwo = UIView(frame: CGRect(x: view.frame.width * 0.35, y: view.frame.height * 0.15, width: view.frame.width * 0.3, height: view.frame.height * 0.8))
-            characterTwo.layer.borderWidth = view.frame.width * 0.025
+            characterTwo = UIView(frame: CGRect(x: view!.frame.width * 0.35, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
+            characterTwo.layer.borderWidth = view!.frame.width * 0.025
             characterTwo.layer.borderColor = UIColor.blackColor().CGColor
             if(charPresent)     //Yes character
             {
@@ -91,12 +103,12 @@ class CharacterVC: UIViewController {
             {
                 
             }
-            view.addSubview(characterTwo)
+            view!.addSubview(characterTwo)
         }
         if(num == 3)    //Third slot
         {
-            characterThree = UIView(frame: CGRect(x: view.frame.width * 0.675, y: view.frame.height * 0.15, width: view.frame.width * 0.3, height: view.frame.height * 0.8))
-            characterThree.layer.borderWidth = view.frame.width * 0.025
+            characterThree = UIView(frame: CGRect(x: view!.frame.width * 0.675, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
+            characterThree.layer.borderWidth = view!.frame.width * 0.025
             characterThree.layer.borderColor = UIColor.blackColor().CGColor
             if(charPresent)     //Yes character
             {
@@ -106,30 +118,39 @@ class CharacterVC: UIViewController {
             {
                 
             }
-            view.addSubview(characterThree)
+            view!.addSubview(characterThree)
         }
+    }
+    
+    func save()
+    {
+        settings.save()
+        scene?.removeFromParent()
     }
     
     func goToGameP1()
     {
         settings.selectedPlayer = 1
-        performSegueWithIdentifier("toGame", sender: self)
+        openGame()
     }
     
     func goToGameP2()
     {
         settings.selectedPlayer = 2
-        performSegueWithIdentifier("toGame", sender: self)
+        openGame()
     }
     
     func goToGameP3()
     {
         settings.selectedPlayer = 3
-        performSegueWithIdentifier("toGame", sender: self)
+        openGame()
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        settings.save()
+    func openGame()
+    {
+        save()
+        let scene = GameScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        view!.presentScene(scene)
     }
-
 }
