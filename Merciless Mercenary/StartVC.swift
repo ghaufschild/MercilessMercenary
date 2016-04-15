@@ -20,9 +20,15 @@ class StartVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if(settings == nil)
+        if let settings = Settings.loadSaved()
         {
-            settings = Settings()
+            self.settings = settings
+        }
+        else
+        {
+            let settings: Settings = Settings()
+            settings.save()
+            self.settings = settings
         }
         
         playBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.1, screenWidth * 0.2, screenHeight * 0.1))

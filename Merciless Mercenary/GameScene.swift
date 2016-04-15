@@ -56,9 +56,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////     MAP THINGS      //////////
     var map = Map(version: 1)       //Still needs more work, aka graphics
+    var settings: Settings!
     
-    // 1
-    let player = SKSpriteNode(imageNamed: "player")
     var canDoStuff: Bool = true     //For checking for transitions, eventually move elsewhere
     
     var attackTimer = NSTimer()
@@ -69,14 +68,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackLoc: CGPoint!
     var moveTo: CGPoint!
     
+    var menu: UIView!
+    var mapView: UIView!
+    var inventoryView: UIView!
+    var toggleSoundButton = UIButton()
+    var toggleMusicButton = UIButton()
+    
+    let player = SKSpriteNode(imageNamed: "player")
     var moveJoystick = SKSpriteNode(imageNamed: "joystick")
     var attackJoystick = SKSpriteNode(imageNamed: "joystick")
     var transitionView = SKSpriteNode()
+    var menuButton = SKSpriteNode()
+    
+    let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
     
     //View Did Load
     override func didMoveToView(view: SKView) {
-        let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
+        
+        if let settings = Settings.loadSaved()
+        {
+            self.settings = settings
+        }
+        else
+        {
+            let settings: Settings = Settings()
+            settings.save()
+            self.settings = settings
+        }
+        
         backgroundMusic.autoplayLooped = true
+        addChild(backgroundMusic)
         
         let backgroundImage = SKSpriteNode(imageNamed: "ground")
         backgroundImage.size = self.scene!.size
@@ -99,20 +120,88 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackJoystick.alpha = 0.25
         addChild(attackJoystick)
         
-        addChild(backgroundMusic)
-        // 2
-        backgroundColor = SKColor.blackColor()
-        // 3
+        menuButton.name = "menu"
+        menuButton.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
+        menuButton.size = CGSize(width: size.width * 0.2, height: size.height * 0.1)
+        menuButton.userInteractionEnabled = false
+        menuButton.alpha = 0.5
+        menuButton.color = SKColor.blueColor()
+        addChild(menuButton)
+        
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
         player.physicsBody = SKPhysicsBody(texture: playerText, size: playerText.size())
-        //player.physicsBody = SKPhysicsBody(rectangleOfSize: player.size)
         player.physicsBody?.dynamic = true
         player.physicsBody?.categoryBitMask = PhysicsCategory.Player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
         player.physicsBody?.collisionBitMask = PhysicsCategory.None
         player.physicsBody?.usesPreciseCollisionDetection = true
+        
+        menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+        menu.backgroundColor = UIColor.brownColor()
+        
+        let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width * 0.1, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        closeMenuButton.backgroundColor = UIColor.redColor()
+        closeMenuButton.setTitle("CLOSE", forState: .Normal)
+        closeMenuButton.titleLabel?.textColor = UIColor.blackColor()
+        closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
+        menu.addSubview(closeMenuButton)
+        
+        let exitButton = UIButton(frame: CGRect(x: menu.frame.width * 0.2, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        exitButton.backgroundColor = UIColor.redColor()
+        exitButton.setTitle("CLOSE", forState: .Normal)
+        exitButton.titleLabel?.textColor = UIColor.blackColor()
+        exitButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
+        menu.addSubview(exitButton)
+        
+        let menuTitle = UILabel(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.075))
+        menuTitle.text = "MENU"
+        menuTitle.textAlignment = .Center
+        menuTitle.adjustsFontSizeToFitWidth = true
+        menu.addSubview(menuTitle)
+        
+        let mapButton = UIButton(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.2, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        mapButton.setTitle("MAP", forState: .Normal)
+        mapButton.layer.cornerRadius = mapButton.frame.width * 0.1
+        mapButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        mapButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
+        mapButton.layer.borderWidth = mapButton.frame.height * 0.1
+        mapButton.addTarget(self, action: #selector(GameScene.openMap), forControlEvents: .TouchUpInside)
+        menu.addSubview(mapButton)
+        
+        let inventoryButton = UIButton(frame: CGRect(x: menu.frame.width * 0.35, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        inventoryButton.setTitle("INVENTORY", forState: .Normal)
+        inventoryButton.layer.cornerRadius = mapButton.frame.width * 0.1
+        inventoryButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        inventoryButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
+        inventoryButton.layer.borderWidth = mapButton.frame.height * 0.1
+        inventoryButton.addTarget(self, action: #selector(GameScene.openInventory), forControlEvents: .TouchUpInside)
+        menu.addSubview(inventoryButton)
+        
+        toggleMusicButton = UIButton(frame: CGRect(x: menu.frame.width * 0.75, y: menu.frame.height * 0.55, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
+        toggleMusicButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
+        toggleMusicButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleMusicButton.layer.borderWidth = toggleMusicButton.frame.width * 0.1
+        toggleMusicButton.addTarget(self, action: #selector(GameScene.toggleMusic), forControlEvents: .TouchUpInside)
+        menu.addSubview(toggleMusicButton)
+        
+        let toggleMusicLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.55, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        toggleMusicLabel.text = "Toggle Music"
+        menu.addSubview(toggleMusicLabel)
+        
+        toggleSoundButton = UIButton(frame: CGRect(x: menu.frame.width * 0.75, y: menu.frame.height * 0.7, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
+        toggleSoundButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
+        toggleSoundButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleSoundButton.layer.borderWidth = toggleSoundButton.frame.width * 0.1
+        toggleSoundButton.addTarget(self, action: #selector(GameScene.toggleSound), forControlEvents: .TouchUpInside)
+        menu.addSubview(toggleSoundButton)
+        
+        let toggleSoundLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.7, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        toggleSoundLabel.text = "Toggle Sound"
+        menu.addSubview(toggleSoundLabel)
         
         // 4
         addChild(player)
@@ -128,7 +217,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             ))
     }
     
-    
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
     //Attack Function
@@ -136,30 +224,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canDoStuff)
         {
-        let touchLocation = attackLoc
-        
-        runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-        
-        let projectile = SKSpriteNode(imageNamed: "projectile")
-        projectile.position = player.position
-        projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
-        projectile.physicsBody?.dynamic = true
-        projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
-        projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
-        projectile.physicsBody?.usesPreciseCollisionDetection = true
-        
-        let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
-        let offset = touchLocation - centerPoint
-        addChild(projectile)
-        
-        let direction = offset.normalized()
-        let shootAmount = direction * 1000
-        let realDest = shootAmount + projectile.position
-        
-        let actionMove = SKAction.moveTo(realDest, duration: 2.0)
-        let actionMoveDone = SKAction.removeFromParent()
-        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+            let touchLocation = attackLoc
+            
+            if(settings.soundOn)
+            {
+                runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+            }
+            
+            let projectile = SKSpriteNode(imageNamed: "projectile")
+            projectile.position = player.position
+            projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
+            projectile.physicsBody?.dynamic = true
+            projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
+            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+            projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+            projectile.physicsBody?.usesPreciseCollisionDetection = true
+            
+            let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
+            let offset = touchLocation - centerPoint
+            addChild(projectile)
+            
+            let direction = offset.normalized()
+            let shootAmount = direction * 1000
+            let realDest = shootAmount + projectile.position
+            
+            let actionMove = SKAction.moveTo(realDest, duration: 2.0)
+            let actionMoveDone = SKAction.removeFromParent()
+            projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
         }
     }
     
@@ -168,135 +259,135 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if canDoStuff
         {
-        //print(map.getCurr())
-        var newPoint = moveJoystick.position - moveLoc!
+            //print(map.getCurr())
+            var newPoint = moveJoystick.position - moveLoc!
             newPoint.y *= -1
-        let xOffset = newPoint.x
-        let yOffset = newPoint.y
-        let absX = abs(xOffset)
-        let absY = abs(yOffset)
-        var realDest = newPoint
-        
-        let moveDist: CGFloat = 10
-        let diagMove: CGFloat = moveDist/sqrt(2)
-        
-        if xOffset > 0 && absX > absY // Left
-        {
-            if(xOffset < 2 * yOffset)
+            let xOffset = newPoint.x
+            let yOffset = newPoint.y
+            let absX = abs(xOffset)
+            let absY = abs(yOffset)
+            var realDest = newPoint
+            
+            let moveDist: CGFloat = 10
+            let diagMove: CGFloat = moveDist/sqrt(2)
+            
+            if xOffset > 0 && absX > absY // Left
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                if(xOffset < 2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                }
+                else if(xOffset < -2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
+                }
             }
-            else if(xOffset < -2 * yOffset)
+            else if yOffset > 0 && absX < absY // Up
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                if(2 * xOffset > yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                }
+                else if(-2 * xOffset > yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
+                }
             }
-            else
+            else if xOffset < 0 && absX > absY // Right
             {
-                realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
+                if(xOffset > 2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                }
+                else if(xOffset > -2 * yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
+                }
             }
-        }
-        else if yOffset > 0 && absX < absY // Up
-        {
-            if(2 * xOffset > yOffset)
+            else if yOffset < 0 && absX < absY // Down
             {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y + diagMove)
+                if(2 * xOffset < yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                }
+                else if(-2 * xOffset < yOffset)
+                {
+                    realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
+                }
+                else
+                {
+                    realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
+                }
             }
-            else if(-2 * xOffset > yOffset)
+            
+            realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
+            realDest.x = min(size.width, realDest.x)
+            realDest.y = max(0, realDest.y)
+            realDest.y = min(size.height, realDest.y)
+            
+            //METHODS ARE BEING CALLED TWICE
+            //If you go slow it works as intended, only when moving quickly is it a problem
+            
+            var door = false
+            if realDest.y <= 0 // Bottom
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width * 0.5, y: size.height)
+                    map.update(map.getDown()!)
+                    door = true
+                }
             }
-            else
+            else if realDest.y >= size.height // Top
             {
-                realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width * 0.5, y: 0)
+                    map.update(map.getUp()!)
+                    door = true
+                }
             }
-        }
-        else if xOffset < 0 && absX > absY // Right
-        {
-            if(xOffset > 2 * yOffset)
+            else if realDest.x <= 0 // Left
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: size.width, y: size.height * 0.5)
+                    print("changed location")
+                    map.update(map.getLeft()!)
+                    door = true
+                }
             }
-            else if(xOffset > -2 * yOffset)
+            else if realDest.x >= size.width // Right
             {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y + diagMove)
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
+                {
+                    transitionClose()
+                    moveTo = CGPoint(x: 0, y: size.height * 0.5)
+                    map.update(map.getRight()!)
+                    door = true
+                }
             }
-            else
-            {
-                realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
-            }
-        }
-        else if yOffset < 0 && absX < absY // Down
-        {
-            if(2 * xOffset < yOffset)
-            {
-                realDest = CGPoint(x: player.position.x + diagMove, y: player.position.y - diagMove)
-            }
-            else if(-2 * xOffset < yOffset)
-            {
-                realDest = CGPoint(x: player.position.x - diagMove, y: player.position.y - diagMove)
-            }
-            else
-            {
-                realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
-            }
-        }
-        
-        realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
-        realDest.x = min(size.width, realDest.x)
-        realDest.y = max(0, realDest.y)
-        realDest.y = min(size.height, realDest.y)
-        
-        //METHODS ARE BEING CALLED TWICE
-        //If you go slow it works as intended, only when moving quickly is it a problem
-        
-        var door = false
-        if realDest.y <= 0 // Bottom
-        {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width * 0.5, y: size.height)
-                map.update(map.getDown()!)
-                door = true
-            }
-        }
-        else if realDest.y >= size.height // Top
-        {
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width * 0.5, y: 0)
-                map.update(map.getUp()!)
-                door = true
-            }
-        }
-        else if realDest.x <= 0 // Left
-        {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: size.width, y: size.height * 0.5)
-                print("changed location")
-                map.update(map.getLeft()!)
-                door = true
-            }
-        }
-        else if realDest.x >= size.width // Right
-        {
-            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
-            {
-                transitionClose()
-                moveTo = CGPoint(x: 0, y: size.height * 0.5)
-                map.update(map.getRight()!)
-                door = true
-            }
-        }
             print(door)
-        if !door{
-            let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-            player.runAction(actionMove)
-            realDest.y = realDest.y + player.size.height/2
-        }
+            if !door{
+                let actionMove = SKAction.moveTo(realDest, duration: 0.1)
+                player.runAction(actionMove)
+                realDest.y = realDest.y + player.size.height/2
+            }
         }
     }
     
@@ -306,6 +397,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let positionInScene = touches.first?.locationInNode(self)
         let touchedNode = self.nodeAtPoint(positionInScene!)
         
+        if(touchedNode.name == "menu")
+        {
+            openMenu()
+        }
         if(!attackTimer.valid)
         {
             if (touchedNode.name == "attackJoystick")
@@ -379,27 +474,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
-//    func isInMove(loc: CGPoint) -> Bool
-//    {
-//        let wid = moveJoystick.frame.width
-//        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
-//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-//        {
-//            return true
-//        }
-//        return false
-//    }
-//    
-//    func isInAttack(loc: CGPoint) -> Bool
-//    {
-//        let wid = attackJoystick.frame.width
-//        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
-//        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-//        {
-//            return true
-//        }
-//        return false
-//    }
+    //    func isInMove(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = moveJoystick.frame.width
+    //        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
+    //
+    //    func isInAttack(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = attackJoystick.frame.width
+    //        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
     
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
@@ -517,9 +612,124 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func openMenu()
     {
-        let menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
-        menu.backgroundColor = UIColor.brownColor()
+        self.paused = true
         view?.addSubview(menu)
+    }
+    
+    func closeMenu()
+    {
+        backgroundMusic.removeFromParent()
+        menu.removeFromSuperview()
+        self.paused = false
+        if(settings.musicOn)
+        {
+            addChild(backgroundMusic)
+        }
+    }
+    
+    func toggleSound()
+    {
+        settings.soundOn = !settings.soundOn
+        if(settings.soundOn)
+        {
+            toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        }
+        else
+        {
+            toggleSoundButton.layer.backgroundColor = UIColor.redColor().CGColor
+        }
+    }
+    
+    func toggleMusic()
+    {
+        settings.musicOn = !settings.musicOn
+        if(settings.musicOn)
+        {
+            toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
+            addChild(backgroundMusic)
+        }
+        else
+        {
+            toggleMusicButton.layer.backgroundColor = UIColor.redColor().CGColor
+            backgroundMusic.removeFromParent()
+        }
+    }
+    
+    func openMap()
+    {
+        mapView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
+        mapView.backgroundColor = UIColor.brownColor()
+        let closeMapButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        closeMapButton.addTarget(self, action: #selector(GameScene.closeMap), forControlEvents: .TouchUpInside)
+        closeMapButton.backgroundColor = UIColor.redColor()
+        closeMapButton.setTitle("CLOSE", forState: .Normal)
+        mapView.addSubview(closeMapButton)
+        
+        let maxW = CGFloat(map.getWidth()) + 1
+        let maxW2 = maxW + 1
+        let max2 = maxW * 2
+        
+        menu.addSubview(mapView)
+        for spot in map.known
+        {
+            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
+            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            let width = mapView.frame.width * 1/maxW2
+            let height = mapView.frame.height * 1/maxW2
+            let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
+            place.layer.backgroundColor = UIColor.blackColor().CGColor
+            place.layer.cornerRadius = place.frame.width * 0.2
+            mapView.addSubview(place)
+        }
+        for spot in map.visited
+        {
+            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
+            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            let width = mapView.frame.width * 1/maxW2
+            let height = mapView.frame.height * 1/maxW2
+            let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
+            place.layer.backgroundColor = UIColor.lightGrayColor().CGColor
+            if(spot.equals(map.getCurr()))
+            {
+                place.layer.backgroundColor = UIColor.whiteColor().CGColor
+            }
+            if(spot.equals(map.getSpawn()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.yellowColor()
+                place.addSubview(symbol)
+            }
+            place.layer.cornerRadius = place.frame.width * 0.2
+            mapView.addSubview(place)
+        }
+    }
+    
+    func closeMap()
+    {
+        mapView.removeFromSuperview()
+    }
+    
+    func openInventory()
+    {
+        inventoryView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
+        inventoryView.backgroundColor = UIColor.redColor()
+        let closeInventoryButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), forControlEvents: .TouchUpInside)
+        closeInventoryButton.backgroundColor = UIColor.redColor()
+        closeInventoryButton.setTitle("CLOSE", forState: .Normal)
+        inventoryView.addSubview(closeInventoryButton)
+        menu.addSubview(inventoryView)
+    }
+    
+    func closeInventory()
+    {
+        inventoryView.removeFromSuperview()
+    }
+    
+    func exitGame()
+    {
+        settings.save()
+        
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////

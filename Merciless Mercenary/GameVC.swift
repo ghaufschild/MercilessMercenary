@@ -18,7 +18,7 @@ class GameVC: UIViewController {
 
     let screenWidth: CGFloat = UIScreen.mainScreen().bounds.width           //Dimensions of phone
     let screenHeight: CGFloat = UIScreen.mainScreen().bounds.height
-    
+
         override func viewDidLoad() {
             super.viewDidLoad()
             let scene = GameScene(size: view.bounds.size)
