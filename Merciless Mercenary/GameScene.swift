@@ -56,9 +56,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////     MAP THINGS      //////////
     var map = Map(version: 1)       //Still needs more work, aka graphics
+    var settings: Settings!
     
-    // 1
-    let player = SKSpriteNode(imageNamed: "player")
     var canDoStuff: Bool = true     //For checking for transitions, eventually move elsewhere
     
     var attackTimer = NSTimer()
@@ -69,17 +68,44 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackLoc: CGPoint!
     var moveTo: CGPoint!
     
-    var moveJoystick = SKSpriteNode(imageNamed: "joystick")
-    var attackJoystick = SKSpriteNode(imageNamed: "joystick")
+    var menu: UIView!
+    var moveView: UIView!
+    var attackView: UIView!
+    var mapView: UIView!
+    var inventoryView: UIView!
+    var toggleSoundButton = UIButton()
+    var toggleMusicButton = UIButton()
+    
+    var moveHold: UILongPressGestureRecognizer!
+    var attackHold: UILongPressGestureRecognizer!
+    
+    let player = SKSpriteNode(imageNamed: "player")
     var transitionView = SKSpriteNode()
+    var menuButton = SKSpriteNode()
+    
+    let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
     
     var healthBar = SKSpriteNode()
     var armorBar = SKSpriteNode()
     
     //View Did Load
     override func didMoveToView(view: SKView) {
-        let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
+        
+        if let settings = Settings.loadSaved()
+        {
+            self.settings = settings
+        }
+        else
+        {
+            let settings: Settings = Settings()
+            settings.save()
+            self.settings = settings
+        }
+        
+        self.view?.multipleTouchEnabled = true
+        
         backgroundMusic.autoplayLooped = true
+        addChild(backgroundMusic)
         
         let backgroundImage = SKSpriteNode(imageNamed: "ground")
         backgroundImage.size = self.scene!.size
@@ -88,34 +114,110 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
-        moveJoystick.name = "moveJoystick"
-        moveJoystick.position = CGPoint(x: size.width * 0.13, y: size.width * 0.13)
-        moveJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
-        moveJoystick.userInteractionEnabled = false
-        moveJoystick.alpha = 0.25
-        addChild(moveJoystick)
+        menuButton.name = "menu"
+        menuButton.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
+        menuButton.size = CGSize(width: size.width * 0.2, height: size.height * 0.1)
+        menuButton.userInteractionEnabled = false
+        menuButton.alpha = 0.5
+        menuButton.color = SKColor.blueColor()
+        addChild(menuButton)
         
-        attackJoystick.name = "attackJoystick"
-        attackJoystick.position = CGPoint(x: size.width * 0.87, y: size.width * 0.13)
-        attackJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
-        attackJoystick.userInteractionEnabled = false
-        attackJoystick.alpha = 0.25
-        addChild(attackJoystick)
-        
-        addChild(backgroundMusic)
-        // 2
-        backgroundColor = SKColor.blackColor()
-        // 3
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
         player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
         player.physicsBody = SKPhysicsBody(texture: playerText, size: playerText.size())
-        //player.physicsBody = SKPhysicsBody(rectangleOfSize: player.size)
         player.physicsBody?.dynamic = true
         player.physicsBody?.categoryBitMask = PhysicsCategory.Player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
         player.physicsBody?.collisionBitMask = PhysicsCategory.None
         player.physicsBody?.usesPreciseCollisionDetection = true
+        
+        menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+        menu.backgroundColor = UIColor.brownColor()
+        
+        moveHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.moveOnTouch))
+        moveHold.minimumPressDuration = 0.0
+        attackHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.attackOnTouch))
+        attackHold.minimumPressDuration = 0.0
+
+        let buttonWid = size.width * 0.2
+        
+        moveView = UIView(frame: CGRect(x: 0, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        moveView.backgroundColor = UIColor.blackColor()
+        moveView.addGestureRecognizer(moveHold)
+        
+        attackView = UIView(frame: CGRect(x: size.width - buttonWid, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        attackView.backgroundColor = UIColor.blackColor()
+        attackView.addGestureRecognizer(attackHold)
+        
+        let testLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+        testLabel.backgroundColor = UIColor.clearColor()
+        moveView.addSubview(testLabel)
+        
+        let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width * 0.1, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        closeMenuButton.backgroundColor = UIColor.redColor()
+        closeMenuButton.setTitle("CLOSE", forState: .Normal)
+        closeMenuButton.titleLabel?.textColor = UIColor.blackColor()
+        closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
+        menu.addSubview(closeMenuButton)
+        
+        let exitButton = UIButton(frame: CGRect(x: menu.frame.width * 0.7, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        exitButton.backgroundColor = UIColor.redColor()
+        exitButton.setTitle("EXIT", forState: .Normal)
+        exitButton.titleLabel?.textColor = UIColor.blackColor()
+        exitButton.addTarget(self, action: #selector(GameScene.exitGame), forControlEvents: .TouchUpInside)
+        menu.addSubview(exitButton)
+        
+        let menuTitle = UILabel(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.075))
+        menuTitle.text = "MENU"
+        menuTitle.textAlignment = .Center
+        menuTitle.adjustsFontSizeToFitWidth = true
+        menu.addSubview(menuTitle)
+        
+        let mapButton = UIButton(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.2, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        mapButton.setTitle("MAP", forState: .Normal)
+        mapButton.layer.cornerRadius = mapButton.frame.width * 0.1
+        mapButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        mapButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
+        mapButton.layer.borderWidth = mapButton.frame.height * 0.1
+        mapButton.addTarget(self, action: #selector(GameScene.openMap), forControlEvents: .TouchUpInside)
+        menu.addSubview(mapButton)
+        
+        let inventoryButton = UIButton(frame: CGRect(x: menu.frame.width * 0.35, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        inventoryButton.setTitle("INVENTORY", forState: .Normal)
+        inventoryButton.layer.cornerRadius = mapButton.frame.width * 0.1
+        inventoryButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        inventoryButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
+        inventoryButton.layer.borderWidth = mapButton.frame.height * 0.1
+        inventoryButton.addTarget(self, action: #selector(GameScene.openInventory), forControlEvents: .TouchUpInside)
+        menu.addSubview(inventoryButton)
+        
+        toggleMusicButton = UIButton(frame: CGRect(x: menu.frame.width * 0.75, y: menu.frame.height * 0.55, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
+        toggleMusicButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
+        toggleMusicButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleMusicButton.layer.borderWidth = toggleMusicButton.frame.width * 0.1
+        toggleMusicButton.addTarget(self, action: #selector(GameScene.toggleMusic), forControlEvents: .TouchUpInside)
+        menu.addSubview(toggleMusicButton)
+        
+        let toggleMusicLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.55, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        toggleMusicLabel.text = "Toggle Music"
+        menu.addSubview(toggleMusicLabel)
+        
+        toggleSoundButton = UIButton(frame: CGRect(x: menu.frame.width * 0.75, y: menu.frame.height * 0.7, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
+        toggleSoundButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
+        toggleSoundButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+        toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleSoundButton.layer.borderWidth = toggleSoundButton.frame.width * 0.1
+        toggleSoundButton.addTarget(self, action: #selector(GameScene.toggleSound), forControlEvents: .TouchUpInside)
+        menu.addSubview(toggleSoundButton)
+        
+        let toggleSoundLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.7, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
+        toggleSoundLabel.text = "Toggle Sound"
+        menu.addSubview(toggleSoundLabel)
+        
+        view.addSubview(attackView)
+        view.addSubview(moveView)
         
         // 4
         addChild(player)
@@ -131,7 +233,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 ])
             ))
     }
-    
     
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
@@ -306,80 +407,92 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
+    func moveOnTouch()
+    {
+        if(!moveTimer.valid)
+        {
+            moveLoc = moveHold.locationInView(moveView)
+            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+            move()
+        }
+        else if(moveHold.state == UIGestureRecognizerState.Changed)
+        {
+            moveLoc = moveHold.locationInView(moveView)
+        }
+        else
+        {
+            moveTimer.invalidate()
+        }
+    }
+    
+    func attackOnTouch()
+    {
+        if(!attackTimer.valid)
+        {
+            attackLoc = attackHold.locationInView(attackView)
+            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+            createShuriken()
+        }
+        else if(attackHold.state == UIGestureRecognizerState.Changed)
+        {
+            attackLoc = attackHold.locationInView(attackView)
+        }
+        else
+        {
+            attackTimer.invalidate()
+        }
+    }
+    
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let positionInScene = touches.first?.locationInNode(self)
         let touchedNode = self.nodeAtPoint(positionInScene!)
         
-        if(!attackTimer.valid)
+        if(touchedNode.name == "menu")
         {
-            if (touchedNode.name == "attackJoystick")
-            {
-                attackLoc = positionInScene
-                createShuriken()
-                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-            }
+            openMenu()
         }
-        if(!moveTimer.valid)
-        {
-            if (touchedNode.name == "moveJoystick")
-            {
-                moveLoc = positionInScene
-                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-            }
-        }
+//        if(!attackTimer.valid)
+//        {
+//            if (touchedNode.name == "attackJoystick")
+//            {
+//                attackLoc = positionInScene
+//                createShuriken()
+//                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+//            }
+//        }
+//        if(!moveTimer.valid)
+//        {
+//            if (touchedNode.name == "moveJoystick")
+//            {
+//                moveLoc = positionInScene
+//                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+//            }
+//        }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        var stopMove = true
-        var stopAttack = true
-        print("moved")
-        for touch in (event?.allTouches())!
-        {
-            let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
-            if(touchedNode.name == "moveJoystick")
-            {
-                moveLoc = touch.locationInNode(self)
-                stopMove = false
-            }
-            if(touchedNode.name == "attackJoystick")
-            {
-                attackLoc = touch.locationInNode(self)
-                stopAttack = false
-            }
-        }
-        if(stopMove)
-        {
-            moveTimer.invalidate()
-        }
-        else if(!moveTimer.valid)
-        {
-            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-        }
-        if(stopAttack)
-        {
-            attackTimer.invalidate()
-        }
-        else if(!attackTimer.valid)
-        {
-            createShuriken()
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-        }
-    }
+    /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
-    {
-        let positionInScene = touches.first?.locationInNode(self)
-        let touchedNode = self.nodeAtPoint(positionInScene!)
-        
-        if(touchedNode.name == "moveJoystick")
-        {
-            moveTimer.invalidate()
-        }
-        if(touchedNode.name == "attackJoystick")
-        {
-            attackTimer.invalidate()
-        }
-    }
+    //    func isInMove(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = moveJoystick.frame.width
+    //        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
+    //
+    //    func isInAttack(loc: CGPoint) -> Bool
+    //    {
+    //        let wid = attackJoystick.frame.width
+    //        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
+    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
+    //        {
+    //            return true
+    //        }
+    //        return false
+    //    }
     
     /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
@@ -520,9 +633,139 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func openMenu()
     {
-        let menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
-        menu.backgroundColor = UIColor.brownColor()
+        self.paused = true
         view?.addSubview(menu)
+    }
+    
+    func closeMenu()
+    {
+        backgroundMusic.removeFromParent()
+        menu.removeFromSuperview()
+        self.paused = false
+        if(settings.musicOn)
+        {
+            addChild(backgroundMusic)
+        }
+    }
+    
+    func toggleSound()
+    {
+        settings.soundOn = !settings.soundOn
+        if(settings.soundOn)
+        {
+            toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        }
+        else
+        {
+            toggleSoundButton.layer.backgroundColor = UIColor.redColor().CGColor
+        }
+    }
+    
+    func toggleMusic()
+    {
+        settings.musicOn = !settings.musicOn
+        if(settings.musicOn)
+        {
+            toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
+            addChild(backgroundMusic)
+        }
+        else
+        {
+            toggleMusicButton.layer.backgroundColor = UIColor.redColor().CGColor
+            backgroundMusic.removeFromParent()
+        }
+    }
+    
+    func openMap()
+    {
+        mapView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
+        mapView.backgroundColor = UIColor.brownColor()
+        let closeMapButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        closeMapButton.addTarget(self, action: #selector(GameScene.closeMap), forControlEvents: .TouchUpInside)
+        closeMapButton.backgroundColor = UIColor.redColor()
+        closeMapButton.setTitle("CLOSE", forState: .Normal)
+        mapView.addSubview(closeMapButton)
+        
+        let maxW = CGFloat(map.getWidth()) + 1
+        let maxW2 = maxW + 1
+        let max2 = maxW * 2
+        
+        menu.addSubview(mapView)
+        for spot in map.known
+        {
+            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
+            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            let width = mapView.frame.width * 1/maxW2
+            let height = mapView.frame.height * 1/maxW2
+            let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
+            place.layer.backgroundColor = UIColor.blackColor().CGColor
+            place.layer.cornerRadius = place.frame.width * 0.2
+            if(spot.equals(map.getBoss()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.blackColor()
+                place.addSubview(symbol)
+            }
+            mapView.addSubview(place)
+        }
+        for spot in map.visited
+        {
+            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
+            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            let width = mapView.frame.width * 1/maxW2
+            let height = mapView.frame.height * 1/maxW2
+            let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
+            place.layer.backgroundColor = UIColor.lightGrayColor().CGColor
+            if(spot.equals(map.getCurr()))
+            {
+                place.layer.backgroundColor = UIColor.whiteColor().CGColor
+            }
+            if(spot.equals(map.getSpawn()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.yellowColor()
+                place.addSubview(symbol)
+            }
+            if(spot.equals(map.getKey()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.greenColor()
+                place.addSubview(symbol)
+            }
+            place.layer.cornerRadius = place.frame.width * 0.2
+            mapView.addSubview(place)
+        }
+    }
+    
+    func closeMap()
+    {
+        mapView.removeFromSuperview()
+    }
+    
+    func openInventory()
+    {
+        inventoryView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
+        inventoryView.backgroundColor = UIColor.redColor()
+        let closeInventoryButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), forControlEvents: .TouchUpInside)
+        closeInventoryButton.backgroundColor = UIColor.redColor()
+        closeInventoryButton.setTitle("CLOSE", forState: .Normal)
+        inventoryView.addSubview(closeInventoryButton)
+        menu.addSubview(inventoryView)
+    }
+    
+    func closeInventory()
+    {
+        inventoryView.removeFromSuperview()
+    }
+    
+    func exitGame()
+    {
+        menu.removeFromSuperview()
+        save()
+        let scene = CharacterScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        view!.presentScene(scene)
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
@@ -534,5 +777,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func random(min min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
     }
+    
+    func save()
+    {
+        settings.save()
+        scene?.removeFromParent()
+    }
+    
     
 }

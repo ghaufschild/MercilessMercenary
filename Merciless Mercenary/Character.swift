@@ -19,6 +19,9 @@ class Character: NSObject {
     var maxHealth: Int!
     var moveSpeed: Int!
     
+    var level: Int!
+    var map: Map!
+    
     func Character(fightType: Int)
     {
         fighterType = fightType
@@ -40,5 +43,7 @@ class Character: NSObject {
             currentHealth = maxHealth
             moveSpeed = 7
         }
+        level = 1
+        map = Map(version: 1)
     }
 }

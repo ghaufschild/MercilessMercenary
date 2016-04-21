@@ -17,6 +17,7 @@ class Map: NSObject {
     var spawnPoint: Coordinate!
     var keyPoint: Coordinate!
     var bossPoint: Coordinate!
+    var maxWidth: Int!
     
     init(version: Int)
     {
@@ -49,6 +50,7 @@ class Map: NSObject {
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
             generateLocs(realMapLoc)
             currLoc = spawnPoint
+            maxWidth = 7
         case 2:
             realMapLoc.append(Coordinate(xCoor: 1, yCoor: 2))
             realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
@@ -85,6 +87,7 @@ class Map: NSObject {
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
             generateLocs(realMapLoc)
             currLoc = spawnPoint
+            maxWidth = 7
         default:
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 1))
             realMapLoc.append(Coordinate(xCoor: 5, yCoor: 2))
@@ -112,7 +115,9 @@ class Map: NSObject {
             spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
             generateLocs(realMapLoc)
             currLoc = spawnPoint
+            maxWidth = 7
         }
+        update(currLoc)
     }
     
     func generateLocs(locs: [Coordinate])
@@ -128,6 +133,11 @@ class Map: NSObject {
         }
         check = Int(arc4random_uniform(6))
         bossPoint = locs[check]
+    }
+    
+    func getWidth() -> Int
+    {
+        return maxWidth
     }
     
     func getSpawn() -> Coordinate
@@ -211,7 +221,7 @@ class Map: NSObject {
         return nextTo
     }
     
-    func visited(loc: Coordinate)
+    func updateVisited(loc: Coordinate)
     {
         if(!visited.contains(loc))
         {
@@ -219,9 +229,22 @@ class Map: NSObject {
         }
     }
     
+    func updateKnown(locs: [Coordinate])
+    {
+        for spot in locs
+        {
+            if(!known.contains(spot))
+            {
+                known.append(spot)
+            }
+        }
+    }
+    
     func update(loc: Coordinate)
     {
         currLoc = loc
+        updateVisited(loc)
+        updateKnown(getAdjacent(loc))
     }
 }
 
