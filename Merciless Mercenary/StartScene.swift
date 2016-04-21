@@ -17,6 +17,8 @@ class StartScene: SKScene {
     
     var settings: Settings!
     var playBut: UIButton!
+    var playButton =  SKSpriteNode()
+    var settingsButton = SKSpriteNode()
     var settingsBut: UIButton!
     
     override func didMoveToView(view: SKView) {
@@ -32,23 +34,31 @@ class StartScene: SKScene {
             self.settings = settings
         }
         
-        playBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.1, screenWidth * 0.2, screenHeight * 0.2))
-        playBut.setTitle("PLAY", forState: UIControlState.Normal)
-        playBut.addTarget(self, action: #selector(StartScene.goToChar), forControlEvents: UIControlEvents.TouchUpInside)
-        playBut.setTitleColor(UIColor.blackColor(), forState: UIControlState.Normal)
-        playBut.layer.cornerRadius = 0.1 * playBut.frame.width
-        playBut.layer.borderWidth = playBut.frame.width * 0.03
-        playBut.layer.borderColor = UIColor.blackColor().CGColor
-        view.addSubview(playBut)
+        playButton.name = "goToCharacter"
+        playButton.size = CGSize(width: view.frame.width * 0.2, height: view.frame.height * 0.2)
+        playButton.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.8)
+        playButton.color = SKColor.blackColor()
+        addChild(playButton)
         
-        settingsBut = UIButton(frame: CGRectMake(screenWidth * 0.4, screenHeight * 0.4, screenWidth * 0.2, screenHeight * 0.2))
-        settingsBut.setTitle("SETTINGS", forState: UIControlState.Normal)
-        settingsBut.addTarget(self, action: #selector(StartScene.goToSet), forControlEvents: UIControlEvents.TouchUpInside)
-        settingsBut.setTitleColor(UIColor.blackColor(), forState: UIControlState.Normal)
-        settingsBut.layer.cornerRadius = 0.1 * playBut.frame.width
-        settingsBut.layer.borderWidth = playBut.frame.width * 0.03
-        settingsBut.layer.borderColor = UIColor.blackColor().CGColor
-        view.addSubview(settingsBut)
+        settingsButton.name = "goToSettings"
+        settingsButton.size = CGSize(width: view.frame.width * 0.2, height: view.frame.height * 0.2)
+        settingsButton.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.5)
+        settingsButton.color = SKColor.redColor()
+        addChild(settingsButton)
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        let positionInScene = touches.first?.locationInNode(self)
+        let touchedNode = self.nodeAtPoint(positionInScene!)
+        
+        if(touchedNode.name == "goToCharacter")
+        {
+            goToChar()
+        }
+        if(touchedNode.name == "goToSettings")
+        {
+            goToSet()
+        }
     }
     
     func save()

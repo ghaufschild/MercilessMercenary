@@ -13,11 +13,16 @@ import SpriteKit
 class CharacterScene: SKScene {
 
     var settings: Settings!
-    var titleLabel: UILabel!
-    var playCharOne: UIButton!
-    var characterOne: UIView!
-    var characterTwo: UIView!
-    var characterThree: UIView!
+    
+    
+    var titleLabel = SKSpriteNode()
+    var playCharOne = SKSpriteNode()
+    var playCharTwo = SKSpriteNode()
+    var playCharThree = SKSpriteNode()
+
+    var characterOne = SKSpriteNode()
+    var characterTwo = SKSpriteNode()
+    var characterThree = SKSpriteNode()
     
     override func didMoveToView(view: SKView) {
         
@@ -32,12 +37,10 @@ class CharacterScene: SKScene {
             self.settings = settings
         }
         
-        titleLabel = UILabel(frame: CGRect(x: view.frame.width * 0.1, y: view.frame.height * 0.05, width: view.frame.width * 0.8, height: view.frame.height * 0.1))
-        titleLabel.textAlignment = .Center
-        titleLabel.font.fontWithSize(30)
-        titleLabel.text = "CHARACTER SLOTS"
-        titleLabel.adjustsFontSizeToFitWidth = true
-        view.addSubview(titleLabel)
+        titleLabel.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.9)
+        titleLabel.size = CGSize(width: view.frame.width * 0.8, height: view.frame.height * 0.075)
+        titleLabel.color = SKColor.cyanColor()
+        addChild(titleLabel)
 
         let numChar: Int = settings.howManyCharacters()
         if numChar == 0
@@ -64,62 +67,107 @@ class CharacterScene: SKScene {
             prepSlot(2, charPresent: true)
             prepSlot(3, charPresent: true)
         }
-        
-        playCharOne = UIButton(frame: CGRect(x: characterOne.frame.width * 0.2, y: characterOne.frame.height * 0.8, width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1))
-        playCharOne.addTarget(self, action: #selector(CharacterScene.goToGameP1), forControlEvents: UIControlEvents.TouchUpInside)
-        playCharOne.setTitle("PLAY", forState: .Normal)
-        playCharOne.backgroundColor = UIColor.blueColor()
-        characterOne.addSubview(playCharOne)
-        
     }
     
     func prepSlot(num: Int, charPresent: Bool)
     {
         if(num == 1)    //First slot
         {
-            characterOne = UIView(frame: CGRect(x: view!.frame.width * 0.025, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
-            characterOne.layer.borderWidth = view!.frame.width * 0.025
-            characterOne.layer.borderColor = UIColor.blackColor().CGColor
+            characterOne.name = "characterOne"
+            characterOne.position = CGPoint(x: view!.frame.width * 0.175, y: view!.frame.height * 0.45)
+            characterOne.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
+            characterOne.color = SKColor.blackColor()
             if(charPresent)     //Yes character
             {
-                
+                playCharOne.name = "playCharOne"
+                playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
+                playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                playCharOne.color = SKColor.blueColor()
+                playCharOne.zPosition = 1
+                addChild(playCharOne)
             }
             else                //No character
             {
-                
+                playCharOne.name = "playCharOne"
+                playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
+                playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                playCharOne.color = SKColor.redColor()
+                playCharOne.zPosition = 1
+                addChild(playCharOne)
             }
-            view!.addSubview(characterOne)
+            addChild(characterOne)
         }
         if(num == 2)    //Second slot
         {
-            characterTwo = UIView(frame: CGRect(x: view!.frame.width * 0.35, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
-            characterTwo.layer.borderWidth = view!.frame.width * 0.025
-            characterTwo.layer.borderColor = UIColor.blackColor().CGColor
+            characterTwo.name = "characterTwo"
+            characterTwo.position = CGPoint(x: view!.frame.width * 0.5, y: view!.frame.height * 0.45)
+            characterTwo.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
+            characterTwo.color = SKColor.blackColor()
             if(charPresent)     //Yes character
             {
-                
+                playCharTwo.name = "playCharTwo"
+                playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
+                playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                playCharTwo.color = SKColor.blueColor()
+                playCharTwo.zPosition = 1
+                addChild(playCharTwo)
             }
             else                //No character
             {
-                
+                playCharTwo.name = "playCharTwo"
+                playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
+                playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                playCharTwo.color = SKColor.redColor()
+                playCharTwo.zPosition = 1
+                addChild(playCharTwo)
             }
-            view!.addSubview(characterTwo)
+            addChild(characterTwo)
         }
         if(num == 3)    //Third slot
         {
-            characterThree = UIView(frame: CGRect(x: view!.frame.width * 0.675, y: view!.frame.height * 0.15, width: view!.frame.width * 0.3, height: view!.frame.height * 0.8))
-            characterThree.layer.borderWidth = view!.frame.width * 0.025
-            characterThree.layer.borderColor = UIColor.blackColor().CGColor
+            characterThree.name = "characterThree"
+            characterThree.position = CGPoint(x: view!.frame.width * 0.825, y: view!.frame.height * 0.45)
+            characterThree.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
+            characterThree.color = SKColor.blackColor()
             if(charPresent)     //Yes character
             {
-                
+                playCharThree.name = "playCharThree"
+                playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
+                playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                playCharThree.color = SKColor.blueColor()
+                playCharThree.zPosition = 1
+                addChild(playCharThree)
             }
             else                //No character
             {
-                
+                playCharThree.name = "playCharThree"
+                playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
+                playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                playCharThree.color = SKColor.redColor()
+                playCharThree.zPosition = 1
+                addChild(playCharThree)
             }
-            view!.addSubview(characterThree)
+            addChild(characterThree)
         }
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        let positionInScene = touches.first?.locationInNode(self)
+        let touchedNode = self.nodeAtPoint(positionInScene!)
+        
+        if(touchedNode.name == "playCharOne")
+        {
+            goToGameP1()
+        }
+        if(touchedNode.name == "playCharTwo")
+        {
+            goToGameP2()
+        }
+        if(touchedNode.name == "playCharThree")
+        {
+            goToGameP3()
+        }
+        
     }
     
     func save()

@@ -69,14 +69,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var moveTo: CGPoint!
     
     var menu: UIView!
+    var moveView: UIView!
+    var attackView: UIView!
     var mapView: UIView!
     var inventoryView: UIView!
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
     
+    var moveHold: UILongPressGestureRecognizer!
+    var attackHold: UILongPressGestureRecognizer!
+    
     let player = SKSpriteNode(imageNamed: "player")
-    var moveJoystick = SKSpriteNode(imageNamed: "joystick")
-    var attackJoystick = SKSpriteNode(imageNamed: "joystick")
     var transitionView = SKSpriteNode()
     var menuButton = SKSpriteNode()
     
@@ -96,6 +99,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.settings = settings
         }
         
+        self.view?.multipleTouchEnabled = true
+        
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
         
@@ -105,20 +110,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
         backgroundImage.zPosition = -1
         addChild(backgroundImage)
-        
-        moveJoystick.name = "moveJoystick"
-        moveJoystick.position = CGPoint(x: size.width * 0.13, y: size.width * 0.13)
-        moveJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
-        moveJoystick.userInteractionEnabled = false
-        moveJoystick.alpha = 0.25
-        addChild(moveJoystick)
-        
-        attackJoystick.name = "attackJoystick"
-        attackJoystick.position = CGPoint(x: size.width * 0.87, y: size.width * 0.13)
-        attackJoystick.size = CGSize(width: size.width * 0.26, height: size.width * 0.26)
-        attackJoystick.userInteractionEnabled = false
-        attackJoystick.alpha = 0.25
-        addChild(attackJoystick)
         
         menuButton.name = "menu"
         menuButton.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
@@ -140,6 +131,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
         menu.backgroundColor = UIColor.brownColor()
+        
+        moveHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.moveOnTouch))
+        moveHold.minimumPressDuration = 0.0
+        attackHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.attackOnTouch))
+        attackHold.minimumPressDuration = 0.0
+
+        let buttonWid = size.width * 0.2
+        
+        moveView = UIView(frame: CGRect(x: 0, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        moveView.backgroundColor = UIColor.blackColor()
+        moveView.addGestureRecognizer(moveHold)
+        
+        attackView = UIView(frame: CGRect(x: size.width - buttonWid, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        attackView.backgroundColor = UIColor.blackColor()
+        attackView.addGestureRecognizer(attackHold)
+        
+        let testLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+        testLabel.backgroundColor = UIColor.clearColor()
+        moveView.addSubview(testLabel)
         
         let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width * 0.1, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
         closeMenuButton.backgroundColor = UIColor.redColor()
@@ -203,6 +213,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         toggleSoundLabel.text = "Toggle Sound"
         menu.addSubview(toggleSoundLabel)
         
+        view.addSubview(attackView)
+        view.addSubview(moveView)
+        
         // 4
         addChild(player)
         
@@ -224,8 +237,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canDoStuff)
         {
-            let touchLocation = attackLoc
-            
             if(settings.soundOn)
             {
                 runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
@@ -240,8 +251,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
             projectile.physicsBody?.usesPreciseCollisionDetection = true
             
-            let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
-            let offset = touchLocation - centerPoint
+            var actualCenter = attackView.center
+            actualCenter.y = (size.height - actualCenter.y)
+            actualCenter.x = (size.width - actualCenter.x)
+            var offset =  actualCenter - attackLoc
+            offset.x *= -1
+            print(offset, actualCenter, attackLoc)
             addChild(projectile)
             
             let direction = offset.normalized()
@@ -259,9 +274,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if canDoStuff
         {
-            //print(map.getCurr())
-            var newPoint = moveJoystick.position - moveLoc!
-            newPoint.y *= -1
+            var actualCenter = moveView.center
+            actualCenter.y = (size.height - actualCenter.y)
+            let newPoint = actualCenter - moveLoc
+            //newPoint.y += size.height
             let xOffset = newPoint.x
             let yOffset = newPoint.y
             let absX = abs(xOffset)
@@ -270,6 +286,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             let moveDist: CGFloat = 10
             let diagMove: CGFloat = moveDist/sqrt(2)
+            
+            //print(realDest)
             
             if xOffset > 0 && absX > absY // Left
             {
@@ -382,7 +400,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     door = true
                 }
             }
-            print(door)
             if !door{
                 let actionMove = SKAction.moveTo(realDest, duration: 0.1)
                 player.runAction(actionMove)
@@ -393,6 +410,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
+    func moveOnTouch()
+    {
+        if(!moveTimer.valid)
+        {
+            moveLoc = moveHold.locationInView(moveView)
+            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+            move()
+        }
+        else if(moveHold.state == UIGestureRecognizerState.Changed)
+        {
+            moveLoc = moveHold.locationInView(moveView)
+        }
+        else
+        {
+            moveTimer.invalidate()
+        }
+    }
+    
+    func attackOnTouch()
+    {
+        if(!attackTimer.valid)
+        {
+            attackLoc = attackHold.locationInView(attackView)
+            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+            createShuriken()
+        }
+        else if(attackHold.state == UIGestureRecognizerState.Changed)
+        {
+            attackLoc = attackHold.locationInView(attackView)
+        }
+        else
+        {
+            attackTimer.invalidate()
+        }
+    }
+    
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let positionInScene = touches.first?.locationInNode(self)
         let touchedNode = self.nodeAtPoint(positionInScene!)
@@ -401,76 +454,89 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             openMenu()
         }
-        if(!attackTimer.valid)
-        {
-            if (touchedNode.name == "attackJoystick")
-            {
-                attackLoc = positionInScene
-                createShuriken()
-                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-            }
-        }
-        if(!moveTimer.valid)
-        {
-            if (touchedNode.name == "moveJoystick")
-            {
-                moveLoc = positionInScene
-                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-            }
-        }
+//        if(!attackTimer.valid)
+//        {
+//            if (touchedNode.name == "attackJoystick")
+//            {
+//                attackLoc = positionInScene
+//                createShuriken()
+//                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+//            }
+//        }
+//        if(!moveTimer.valid)
+//        {
+//            if (touchedNode.name == "moveJoystick")
+//            {
+//                moveLoc = positionInScene
+//                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+//            }
+//        }
     }
-    
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        var stopMove = true
-        var stopAttack = true
-        print("moved")
-        for touch in (event?.allTouches())!
-        {
-            let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
-            if(touchedNode.name == "moveJoystick")
-            {
-                moveLoc = touch.locationInNode(self)
-                stopMove = false
-            }
-            if(touchedNode.name == "attackJoystick")
-            {
-                attackLoc = touch.locationInNode(self)
-                stopAttack = false
-            }
-        }
-        if(stopMove)
-        {
-            moveTimer.invalidate()
-        }
-        else if(!moveTimer.valid)
-        {
-            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-        }
-        if(stopAttack)
-        {
-            attackTimer.invalidate()
-        }
-        else if(!attackTimer.valid)
-        {
-            createShuriken()
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-        }
-    }
-    
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
-    {
-        let positionInScene = touches.first?.locationInNode(self)
-        let touchedNode = self.nodeAtPoint(positionInScene!)
-        
-        if(touchedNode.name == "moveJoystick")
-        {
-            moveTimer.invalidate()
-        }
-        if(touchedNode.name == "attackJoystick")
-        {
-            attackTimer.invalidate()
-        }
-    }
+//
+//    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+//        var stopMove = true
+//        var stopAttack = true
+//        print("moved")
+//        for touch in (event?.allTouches())!
+//        {
+//            let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
+//            if(touchedNode.name == "moveJoystick")
+//            {
+//                moveLoc = touch.locationInNode(self)
+//                stopMove = false
+//            }
+//            if(touchedNode.name == "attackJoystick")
+//            {
+//                attackLoc = touch.locationInNode(self)
+//                stopAttack = false
+//            }
+//        }
+//        if(stopMove)
+//        {
+//            moveTimer.invalidate()
+//        }
+//        else if(!moveTimer.valid)
+//        {
+//            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+//        }
+//        if(stopAttack)
+//        {
+//            attackTimer.invalidate()
+//        }
+//        else if(!attackTimer.valid)
+//        {
+//            createShuriken()
+//            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+//        }
+//    }
+//    
+//    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?)
+//    {
+//        if(event?.allTouches()!.count < 2)
+//        {
+//            moveTimer.invalidate()
+//            attackTimer.invalidate()
+//        }
+//        else
+//        {
+//        for touch in (event?.allTouches())!
+//        {
+//            print(touch.phase)
+//            if(touch.phase == UITouchPhase.Ended)
+//            {
+//                let touchedNode = self.nodeAtPoint(touch.locationInNode(self))
+//                if(touchedNode.name == "moveJoystick")
+//                {
+//                    moveTimer.invalidate()
+//                }
+//                if(touchedNode.name == "attackJoystick")
+//                {
+//                    attackTimer.invalidate()
+//                }
+//            }
+//        }
+//        }
+//    }
     
     /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
     
@@ -740,6 +806,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func exitGame()
     {
+        menu.removeFromSuperview()
         save()
         let scene = CharacterScene(size: view!.bounds.size)
         scene.scaleMode = .ResizeFill
