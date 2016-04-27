@@ -13,6 +13,7 @@ class Map: NSObject {
     var realMapLoc: [Coordinate] = []
     var visited: [Coordinate] = []
     var known: [Coordinate] = []
+    var chests: [Coordinate] = []
     var currLoc: Coordinate!
     var spawnPoint: Coordinate!
     var keyPoint: Coordinate!
@@ -133,6 +134,36 @@ class Map: NSObject {
         }
         check = Int(arc4random_uniform(6))
         bossPoint = locs[check]
+        for spot in realMapLoc
+        {
+            if !(spot.equals(keyPoint) || spot.equals(bossPoint) || spot.equals(spawnPoint))
+            {
+                if(Int(arc4random_uniform(100)) < 10)    //10% chance
+                {
+                    let type = Int(arc4random_uniform(100))
+                    if(type < 2)   //2% legendary
+                    {
+                        spot.chest = "legendary"
+                        chests.append(spot)
+                    }
+                    else if(type < 12)    //10% rare
+                    {
+                        spot.chest = "rare"
+                        chests.append(spot)
+                    }
+                    else if(type < 37)    //25% uncommon
+                    {
+                        spot.chest = "uncommon"
+                        chests.append(spot)
+                    }
+                    else
+                    {
+                        spot.chest = "common"
+                        chests.append(spot)
+                    }
+                }
+            }
+        }
     }
     
     func getWidth() -> Int
@@ -221,6 +252,11 @@ class Map: NSObject {
         return nextTo
     }
     
+    func getChest() -> [Coordinate]
+    {
+        return chests
+    }
+    
     func updateVisited(loc: Coordinate)
     {
         if(!visited.contains(loc))
@@ -251,14 +287,17 @@ class Map: NSObject {
 class Coordinate: NSObject {
     var x: Int!
     var y: Int!
+    var chest: String!
+    
     override var description:String {
-        return "(\(x), \(y))"
+        return "(\(x), \(y)): \(chest)"
     }
     
     init(xCoor: Int, yCoor: Int)
     {
         x = xCoor
         y = yCoor
+        chest = nil
     }
     
     func getCoor() -> (x: Int, y: Int)

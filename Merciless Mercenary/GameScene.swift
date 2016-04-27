@@ -50,6 +50,8 @@ struct PhysicsCategory {
     static let Monster   : UInt32 = 0b1       // 1
     static let Projectile: UInt32 = 0b10      // 2
     static let Player    : UInt32 = 0b11      // 3
+    static let Chest     : UInt32 = 0b100     // 4
+    static let Door      : UInt32 = 0b101     // 5
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -73,11 +75,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackView: UIView!
     var mapView: UIView!
     var inventoryView: UIView!
+    var chestNotification: UIView!
+    var transitionView: UIView!
+    var rewardNotifications: [UIView] = []
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
     
     var moveHold: UILongPressGestureRecognizer!
     var attackHold: UILongPressGestureRecognizer!
+    var changeRewards: UITapGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "player")
     
@@ -145,12 +151,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let buttonWid = size.width * 0.2
         
         moveView = UIView(frame: CGRect(x: 0, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
-        moveView.backgroundColor = UIColor.blackColor()
         moveView.addGestureRecognizer(moveHold)
+        let moveImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
+        moveImageView.image = UIImage(named: "joystick")
+        moveView.addSubview(moveImageView)
+        
         
         attackView = UIView(frame: CGRect(x: size.width - buttonWid, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
-        attackView.backgroundColor = UIColor.blackColor()
         attackView.addGestureRecognizer(attackHold)
+        let attackImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
+        attackImageView.image = UIImage(named: "joystick")
+        attackView.addSubview(attackImageView)
         
         heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.width * 0.01, width: size.width * 0.25, height: size.width * 0.1))
         setHearts()
@@ -160,10 +171,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         testLabel.backgroundColor = UIColor.clearColor()
         moveView.addSubview(testLabel)
         
-        let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width * 0.1, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width - menu.frame.height * 0.225, y: menu.frame.height * 0.075, width: menu.frame.height * 0.15, height: menu.frame.height * 0.15))
         closeMenuButton.backgroundColor = UIColor.redColor()
-        closeMenuButton.setTitle("CLOSE", forState: .Normal)
+        closeMenuButton.setTitle("X", forState: .Normal)
         closeMenuButton.titleLabel?.textColor = UIColor.blackColor()
+        closeMenuButton.layer.cornerRadius = closeMenuButton.frame.width * 0.5
         closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
         menu.addSubview(closeMenuButton)
         
@@ -288,7 +300,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             var actualCenter = moveView.center
             actualCenter.y = (size.height - actualCenter.y)
             let newPoint = actualCenter - moveLoc
-            //newPoint.y += size.height
             let xOffset = newPoint.x
             let yOffset = newPoint.y
             let absX = abs(xOffset)
@@ -313,7 +324,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     realDest = CGPoint(x: player.position.x - moveDist, y: player.position.y)
                 }
             }
-            else if yOffset > 0 && absX < absY // Up
+            else if yOffset > 0 && absX <= absY // Up
             {
                 if(2 * xOffset > yOffset)
                 {
@@ -328,7 +339,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     realDest = CGPoint(x: player.position.x, y: player.position.y + moveDist)
                 }
             }
-            else if xOffset < 0 && absX > absY // Right
+            else if xOffset < 0 && absX >= absY // Right
             {
                 if(xOffset > 2 * yOffset)
                 {
@@ -343,7 +354,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     realDest = CGPoint(x: player.position.x + moveDist, y: player.position.y)
                 }
             }
-            else if yOffset < 0 && absX < absY // Down
+            else if yOffset < 0 && absX <= absY // Down
             {
                 if(2 * xOffset < yOffset)
                 {
@@ -363,9 +374,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             realDest.x = min(size.width, realDest.x)
             realDest.y = max(0, realDest.y)
             realDest.y = min(size.height, realDest.y)
-            
-            //METHODS ARE BEING CALLED TWICE
-            //If you go slow it works as intended, only when moving quickly is it a problem
             
             var door = false
             if realDest.y <= 0 // Bottom
@@ -467,41 +475,50 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
         canDoStuff = false
-        transitionView = SKSpriteNode(color: UIColor.blackColor(), size: size)
-        transitionView.setScale(2)
-        transitionView.zPosition = 10
-        transitionView.centerRect = self.view!.bounds
-        transitionView.position = self.position
-        transitionView.alpha = 0
-        addChild(transitionView)
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
+        transitionView = UIView(frame: CGRect(x: 0, y: 0, width: size.width*2.5, height: size.width*2.5))
+        transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
+        transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
+        transitionView.layer.borderColor = UIColor.blackColor().CGColor
+        transitionView.layer.borderWidth = 10
+        transitionView.clipsToBounds = true
+        transitionView.center = player.position
+        fixY()
+        self.view?.addSubview(transitionView)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
     }
     
     func transitionOpen()
     {
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
     func incWidth()
     {
-        if(transitionView.alpha >= 1)
+        transitionView.layer.borderWidth += transitionView.frame.width * 0.01
+        if(transitionView.layer.borderWidth >= transitionView.frame.width * 0.5)
         {
-            player.position = moveTo
             transTimer.invalidate()
+            player.position = moveTo
+            transitionView.center = player.position
+            fixY()
             transitionOpen()
         }
-        transitionView.alpha += 0.1
     }
     
     func decWidth()
     {
-        if(transitionView.alpha <= 0)
+        transitionView.layer.borderWidth -= transitionView.frame.width * 0.01
+        if(transitionView.layer.borderWidth <= 0)
         {
             transTimer.invalidate()
             canDoStuff = true
-            transitionView.removeFromParent()
+            transitionView.removeFromSuperview()
         }
-        transitionView.alpha -= 0.1
+    }
+    
+    func fixY()
+    {
+        transitionView.center.y = view!.frame.maxY - transitionView.center.y
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
@@ -535,7 +552,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
-    func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
+    func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
         projectile.removeFromParent()
         monster.removeFromParent()
         if heartsLeft < 5
@@ -545,7 +562,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func playerDidCollideWithMonster(monster:SKSpriteNode, player:SKSpriteNode) {
+    func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
         monster.removeFromParent()
         heartsLeft -= 0.5
         if heartsLeft >= 0
@@ -558,8 +575,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func didBeginContact(contact: SKPhysicsContact) {
-        // 1
+    func playerDidCollideWithChest(player: SKSpriteNode, chest: SKSpriteNode)
+    {
+        chest.removeFromParent()
+        openChest()
+    }
+    
+    func didBeginContact(contact: SKPhysicsContact)
+    {
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
@@ -570,15 +593,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             secondBody = contact.bodyA
         }
         
-        // 2
-        if ((firstBody.categoryBitMask == 1) &&
+        // 1 is monster
+        // 2 is projectile
+        // 3 is player
+        // 4 is chest
+        // 5 is door
+        if ((firstBody.categoryBitMask == 1) &&     //monster and projectile
             (secondBody.categoryBitMask == 2)) {
             if(secondBody.node != nil && firstBody.node != nil)
             {
                 projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
             }
         }
-        else if ((firstBody.categoryBitMask == 1) &&
+        else if ((firstBody.categoryBitMask == 1) &&    //monster and player
             (secondBody.categoryBitMask == 3))
         {
             if firstBody.node != nil
@@ -639,15 +666,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         mapView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
         mapView.backgroundColor = UIColor.brownColor()
-        let closeMapButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        let closeMapButton = UIButton(frame: CGRect(x: mapView.frame.width - mapView.frame.height * 0.225, y: mapView.frame.height * 0.075, width: mapView.frame.height * 0.15, height: mapView.frame.height * 0.15))
         closeMapButton.addTarget(self, action: #selector(GameScene.closeMap), forControlEvents: .TouchUpInside)
         closeMapButton.backgroundColor = UIColor.redColor()
-        closeMapButton.setTitle("CLOSE", forState: .Normal)
+        closeMapButton.setTitle("X", forState: .Normal)
+        closeMapButton.layer.cornerRadius = closeMapButton.frame.width * 0.5
         mapView.addSubview(closeMapButton)
         
         let maxW = CGFloat(map.getWidth()) + 1
         let maxW2 = maxW + 1
         let max2 = maxW * 2
+        
+        print(map.getBoss())
         
         menu.addSubview(mapView)
         for spot in map.known
@@ -659,12 +689,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
             place.layer.backgroundColor = UIColor.blackColor().CGColor
             place.layer.cornerRadius = place.frame.width * 0.2
-            if(spot.equals(map.getBoss()))
-            {
-                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
-                symbol.backgroundColor = UIColor.blackColor()
-                place.addSubview(symbol)
-            }
             mapView.addSubview(place)
         }
         for spot in map.visited
@@ -675,6 +699,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let height = mapView.frame.height * 1/maxW2
             let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
             place.layer.backgroundColor = UIColor.lightGrayColor().CGColor
+            if(spot.equals(map.getBoss()))
+            {
+                let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
+                symbol.backgroundColor = UIColor.blackColor()
+                place.addSubview(symbol)
+            }
             if(spot.equals(map.getCurr()))
             {
                 place.layer.backgroundColor = UIColor.whiteColor().CGColor
@@ -704,11 +734,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func openInventory()
     {
         inventoryView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
-        inventoryView.backgroundColor = UIColor.redColor()
-        let closeInventoryButton = UIButton(frame: CGRect(x: mapView.frame.width * 0.1, y: mapView.frame.height * 0.85, width: mapView.frame.width * 0.2, height: mapView.frame.height * 0.1))
+        inventoryView.backgroundColor = UIColor.brownColor()
+        let closeInventoryButton = UIButton(frame: CGRect(x: mapView.frame.width - mapView.frame.height * 0.225, y: mapView.frame.height * 0.075, width: mapView.frame.height * 0.1, height: mapView.frame.height * 0.1))
         closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), forControlEvents: .TouchUpInside)
         closeInventoryButton.backgroundColor = UIColor.redColor()
-        closeInventoryButton.setTitle("CLOSE", forState: .Normal)
+        closeInventoryButton.setTitle("X", forState: .Normal)
+        closeInventoryButton.layer.cornerRadius = closeInventoryButton.frame.width * 0.5
         inventoryView.addSubview(closeInventoryButton)
         menu.addSubview(inventoryView)
     }
@@ -728,6 +759,248 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let scene = CharacterScene(size: view!.bounds.size)
         scene.scaleMode = .ResizeFill
         view!.presentScene(scene)
+    }
+    
+    /////////////////////////////////       CHEST FUNCTIONS        ///////////////////////////
+    
+    //Things in chests: Health Potions, Speed Potions, Damage Potions, etc.                                         1
+    //                  Sword Upgrade, Bow Upgrade, Fire Ball Upgrade, Shuriken Upgrade, Crit Chance Upgrade        2
+    //                  Armor Upgrade, Speed Upgrade, Health Upgrade, Block Chance Upgrade                          3
+    
+    func openChest()
+    {
+        self.paused = true
+        openNotify(chest.name!)
+    }
+    
+    func openNotify(chestRarity: String)    //Array of bonuses
+    {
+        var times = 0
+        var itemNum: [Int] = []
+        var pictures: [UIImage] = []
+        
+        //Set up UIView - Image, congrats, close
+        if(chestRarity == "common")
+        {
+            times = 1
+        }
+        else if(chestRarity == "uncommon")
+        {
+            times = 2
+        }
+        else if(chestRarity == "rare")
+        {
+            times = 4
+        }
+        else if(chestRarity == "legendary")
+        {
+            times = 7
+        }
+
+        for _ in 0...times
+        {
+            let itemType = chestType()
+            switch itemType
+            {
+                case 1:
+                    let num = randomPotion()
+                    itemNum.append(num)
+                    pictures.append(findPhoto(num))
+                case 2:
+                    let num = randomAttack()
+                    itemNum.append(num)
+                    pictures.append(findPhoto(num))
+                default:
+                    let num = randomDefense()
+                    itemNum.append(num)
+                    pictures.append(findPhoto(num))
+            }
+        }
+
+        var timesAppear: [Int] = []
+        var tempSizeOne: Int = itemNum.count
+        var i = 0
+        while(i < (tempSizeOne - 1))
+        {
+            timesAppear.append(1)
+            var j = i + 1
+            while(j < tempSizeOne)
+            {
+                if(itemNum[i] == itemNum[j])
+                {
+                    timesAppear[i] += 1
+                    itemNum.removeAtIndex(j)
+                    pictures.removeAtIndex(j)
+                    tempSizeOne -= 1
+                }
+                j += 1
+            }
+            i += 1
+        }
+
+        for things in 0..<timesAppear.count
+        {
+            let reward = UIView(frame: CGRect(x: 0, y: chestNotification.frame.height * 0.1, width: chestNotification.frame.width, height: chestNotification.frame.height * 0.9))
+            let upgrade = UIImageView(frame: CGRect(x: chestNotification.frame.width * 0.1, y: chestNotification.frame.height * 0.2, width: chestNotification.frame.width * 0.5, height: chestNotification.frame.height * 0.6))
+            upgrade.contentMode = .ScaleAspectFit
+            upgrade.image = pictures[things]
+            upgrade.backgroundColor = UIColor.brownColor()
+            let arrow = UIImageView(frame: CGRect(x: chestNotification.frame.width * 0.65, y: chestNotification.frame.height * 0.6, width: chestNotification.frame.width * 0.1, height: chestNotification.frame.height * 0.2))
+            arrow.image = UIImage(named: "Arrow")
+            let amount = UILabel(frame: CGRect(x: chestNotification.frame.width * 0.8, y: chestNotification.frame.height * 0.7, width: chestNotification.frame.width * 0.1, height: chestNotification.frame.height * 0.1))
+            amount.text = "\(timesAppear[things])"
+            amount.adjustsFontSizeToFitWidth = true
+            amount.backgroundColor = UIColor.brownColor()
+            reward.addSubview(upgrade)
+            reward.addSubview(arrow)
+            reward.addSubview(amount)
+            chestNotification.addSubview(reward)
+            rewardNotifications.append(reward)
+        }
+        view?.addSubview(chestNotification)
+    }
+    
+    func continueRewards()
+    {
+        if rewardNotifications.count > 0
+        {
+            rewardNotifications.last?.removeFromSuperview()
+            rewardNotifications.removeLast()
+            if rewardNotifications.count < 1
+            {
+                let closeChestButton = UIButton(frame: CGRect(x: chestNotification.frame.width - chestNotification.frame.height * 0.225, y: chestNotification.frame.height * 0.075, width: chestNotification.frame.height * 0.15, height: chestNotification.frame.height * 0.15))
+                closeChestButton.backgroundColor = UIColor.redColor()
+                closeChestButton.setTitle("X", forState: .Normal)
+                closeChestButton.titleLabel?.textColor = UIColor.blackColor()
+                closeChestButton.layer.cornerRadius = closeChestButton.frame.width * 0.5
+                closeChestButton.addTarget(self, action: #selector(GameScene.closeChest), forControlEvents: .TouchUpInside)
+                chestNotification.addSubview(closeChestButton)
+
+            }
+        }
+    }
+    
+    func findPhoto(type: Int) -> UIImage
+    {
+        switch type
+        {
+        case 1:
+            return UIImage(named: "HealthPot")!
+        case 2:
+            return UIImage(named: "SpeedPot")!
+        case 3:
+            return UIImage(named: "DamagePot")!
+        case 4:
+            return UIImage(named: "BlockPot")!
+        case 5:
+            return UIImage(named: "Sword")!
+        case 6:
+            return UIImage(named: "Bow and Arrow")!
+        case 7:
+            return UIImage(named: "Fireball")!
+        case 8:
+            return UIImage(named: "Shuriken")!
+        case 9:
+            return UIImage(named: "Crit Chance")!
+        case 10:
+            return UIImage(named: "Armor")!
+        case 11:
+            return UIImage(named: "Speed")!
+        case 12:
+            return UIImage(named: "Health")!
+        default:
+            return UIImage(named: "Block")!
+        }
+    }
+    
+    func chestType() -> Int
+    {
+        let chestType = Int(arc4random_uniform(100))
+        if(chestType < 25)  //25% chance
+        {
+            return 3    //Defense
+        }
+        else if(chestType < 50) //25% chance
+        {
+            return 2    //Attack
+        }
+        else    //50% chance
+        {
+            return 1    //Potions
+        }
+    }
+    
+    func randomPotion() -> Int
+    {
+        let chestType = Int(arc4random_uniform(100))
+        if(chestType < 40)  //40% chance
+        {
+            return 1    //Health Potions
+        }
+        else if(chestType < 60) //20% chance
+        {
+            return 2    //Speed Potions
+        }
+        else if(chestType < 80) //20% chance
+        {
+            return 3    //Damage Potions
+        }
+        else    //20% chance
+        {
+            return 4    //Block Chance Potions
+        }
+    }
+    
+    func randomAttack() -> Int
+    {
+        let chestType = Int(arc4random_uniform(100))
+        if(chestType < 23)  //23% chance
+        {
+            return 5    //Sword Upgrade
+        }
+        else if(chestType < 46) //23% chance
+        {
+            return 6    //Bow Upgrade
+        }
+        else if(chestType < 69) //23% chance
+        {
+            return 7    //Fireball Upgrade
+        }
+        else if(chestType < 92) //23% chance
+        {
+            return 8    //Shuriken Upgrade
+        }
+        else    //8% chance
+        {
+            return 9    //Crit Chance Upgrade
+        }
+    }
+    
+    func randomDefense() -> Int
+    {
+        let chestType = Int(arc4random_uniform(100))
+        if(chestType < 40)  //40% chance
+        {
+            return 10    //Armor Upgrade
+        }
+        else if(chestType < 60) //20% chance
+        {
+            return 11    //Speed Upgrade
+        }
+        else if(chestType < 80) //20% chance
+        {
+            return 12    //Health Upgrade
+        }
+        else    //20% chance
+        {
+            return 13    //Block Chance Upgrade
+        }
+    }
+    
+    func closeChest()
+    {
+        chestNotification.removeFromSuperview()
+        self.paused = false
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
