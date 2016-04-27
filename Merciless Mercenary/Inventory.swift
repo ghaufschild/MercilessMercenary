@@ -58,12 +58,19 @@ class item: NSObject
     }
 }
 
-class Weapon: item {
+class Weapon: item
+{
     //Capacity
     //Damage
 }
 
-class Armor: item {
+class Armor: item
+{
+    
+}
+
+class Potions: item
+{
     
 }
 
