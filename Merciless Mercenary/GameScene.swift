@@ -80,13 +80,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackHold: UILongPressGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "player")
+    
     var transitionView = SKSpriteNode()
+    
     var menuButton = SKSpriteNode()
     
-    let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
+    var heartBar: UIView!
+    var heartsLeft = 5.0
     
-    var healthBar = SKSpriteNode()
-    var armorBar = SKSpriteNode()
+    let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
     
     //View Did Load
     override func didMoveToView(view: SKView) {
@@ -139,7 +141,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         moveHold.minimumPressDuration = 0.0
         attackHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.attackOnTouch))
         attackHold.minimumPressDuration = 0.0
-
+        
         let buttonWid = size.width * 0.2
         
         moveView = UIView(frame: CGRect(x: 0, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
@@ -149,6 +151,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackView = UIView(frame: CGRect(x: size.width - buttonWid, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
         attackView.backgroundColor = UIColor.blackColor()
         attackView.addGestureRecognizer(attackHold)
+        
+        heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.width * 0.01, width: size.width * 0.25, height: size.width * 0.1))
+        setHearts()
+        view.addSubview(heartBar)
         
         let testLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
         testLabel.backgroundColor = UIColor.clearColor()
@@ -221,7 +227,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 4
         addChild(player)
-
+        
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -241,7 +247,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canDoStuff)
         {
-            let touchLocation = attackLoc
+            if(settings.soundOn)
+            {
+                runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+            }
             
             runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
             
@@ -254,8 +263,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
             projectile.physicsBody?.usesPreciseCollisionDetection = true
             
-            let centerPoint = CGPoint(x: attackJoystick.frame.minX + attackJoystick.frame.width/2, y: attackJoystick.frame.width/2)
-            let offset = touchLocation - centerPoint
+            var actualCenter = attackView.center
+            actualCenter.y = (size.height - actualCenter.y)
+            actualCenter.x = (size.width - actualCenter.x)
+            var offset =  actualCenter - attackLoc
+            offset.x *= -1
             addChild(projectile)
             
             let direction = offset.normalized()
@@ -273,9 +285,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if canDoStuff
         {
-            //print(map.getCurr())
-            var newPoint = moveJoystick.position - moveLoc!
-            newPoint.y *= -1
+            var actualCenter = moveView.center
+            actualCenter.y = (size.height - actualCenter.y)
+            let newPoint = actualCenter - moveLoc
+            //newPoint.y += size.height
             let xOffset = newPoint.x
             let yOffset = newPoint.y
             let absX = abs(xOffset)
@@ -381,7 +394,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 {
                     transitionClose()
                     moveTo = CGPoint(x: size.width, y: size.height * 0.5)
-                    print("changed location")
                     map.update(map.getLeft()!)
                     door = true
                 }
@@ -396,7 +408,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     door = true
                 }
             }
-            print(door)
             if !door{
                 let actionMove = SKAction.moveTo(realDest, duration: 0.1)
                 player.runAction(actionMove)
@@ -451,72 +462,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             openMenu()
         }
-//        if(!attackTimer.valid)
-//        {
-//            if (touchedNode.name == "attackJoystick")
-//            {
-//                attackLoc = positionInScene
-//                createShuriken()
-//                attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-//            }
-//        }
-//        if(!moveTimer.valid)
-//        {
-//            if (touchedNode.name == "moveJoystick")
-//            {
-//                moveLoc = positionInScene
-//                moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
-//            }
-//        }
     }
-    
-    /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
-    
-    //    func isInMove(loc: CGPoint) -> Bool
-    //    {
-    //        let wid = moveJoystick.frame.width
-    //        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
-    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-    //        {
-    //            return true
-    //        }
-    //        return false
-    //    }
-    //
-    //    func isInAttack(loc: CGPoint) -> Bool
-    //    {
-    //        let wid = attackJoystick.frame.width
-    //        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
-    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-    //        {
-    //            return true
-    //        }
-    //        return false
-    //    }
-    
-    /////////////////////////        LOCATION FUNCTIONS          //////////////////////////////
-    
-    //    func isInMove(loc: CGPoint) -> Bool
-    //    {
-    //        let wid = moveJoystick.frame.width
-    //        let realFrame = CGRect(x: 0, y: 0, width: wid, height: wid)
-    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-    //        {
-    //            return true
-    //        }
-    //        return false
-    //    }
-    //
-    //    func isInAttack(loc: CGPoint) -> Bool
-    //    {
-    //        let wid = attackJoystick.frame.width
-    //        let realFrame = CGRect(x: wid * 4, y: 0, width: wid, height: wid)
-    //        if(loc.x < realFrame.maxX && loc.x > realFrame.minX && loc.y < realFrame.maxY && loc.y > realFrame.minY)
-    //        {
-    //            return true
-    //        }
-    //        return false
-    //    }
     
     func transitionClose()  //Work in Progress... player x and y values need to be adjusted
     {
@@ -561,7 +507,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
     
     func addMonster() {
-        
         // Create sprite
         let monster = SKSpriteNode(imageNamed: "monster")
         
@@ -593,10 +538,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func projectileDidCollideWithMonster(projectile:SKSpriteNode, monster:SKSpriteNode) {
         projectile.removeFromParent()
         monster.removeFromParent()
+        if heartsLeft < 5
+        {
+            heartsLeft += 0.5
+            setHearts()
+        }
     }
     
     func playerDidCollideWithMonster(monster:SKSpriteNode, player:SKSpriteNode) {
         monster.removeFromParent()
+        heartsLeft -= 0.5
+        if heartsLeft >= 0
+        {
+            setHearts()
+        }
+        if heartsLeft == 0
+        {
+            exitGame()
+        }
     }
     
     func didBeginContact(contact: SKPhysicsContact) {
@@ -762,6 +721,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func exitGame()
     {
         menu.removeFromSuperview()
+        attackView.removeFromSuperview()
+        moveView.removeFromSuperview()
+        heartBar.removeFromSuperview()
         save()
         let scene = CharacterScene(size: view!.bounds.size)
         scene.scaleMode = .ResizeFill
@@ -769,6 +731,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
+    
+    func setHearts()
+    {
+        for heart in heartBar.subviews
+        {
+            heart.removeFromSuperview()
+        }
+        let hearts = Int(heartsLeft)
+        for index in 0..<hearts
+        {
+            let CGIndex = CGFloat(index)
+            var heartPicture: UIImageView
+            heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*CGIndex, y: 0, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * 0.5))
+            heartPicture.image = UIImage(named: "8BitHeart")
+            heartBar.addSubview(heartPicture)
+        }
+        let half = heartsLeft - Double(hearts)
+        if half == 0.5
+        {
+            var heartPicture: UIImageView
+            heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*CGFloat(hearts), y: 0, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * 0.5))
+            heartPicture.image = UIImage(named: "8BitHeartHalf")
+            heartBar.addSubview(heartPicture)
+        }
+    }
     
     func random() -> CGFloat {
         return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
@@ -783,6 +770,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         settings.save()
         scene?.removeFromParent()
     }
-    
-    
 }
