@@ -86,9 +86,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var changeRewards: UITapGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "player")
-    
-    var transitionView = SKSpriteNode()
-    
+    let chest = SKSpriteNode(imageNamed: "ChestLegendary")
     var menuButton = SKSpriteNode()
     
     var heartBar: UIView!
@@ -240,6 +238,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 4
         addChild(player)
         
+        chest.position = CGPoint(x: size.width * 0.1, y: size.height * 0.9)
+        chest.size = CGSize(width: size.width * 0.04, height: size.height * 0.04)
+        chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
+        chest.physicsBody?.dynamic = true
+        chest.physicsBody?.categoryBitMask = PhysicsCategory.Chest
+        chest.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+        chest.physicsBody?.collisionBitMask = PhysicsCategory.None
+        chest.physicsBody?.usesPreciseCollisionDetection = false
+        chest.name = "legendary"
+        addChild(chest)
+        
+        changeRewards = UITapGestureRecognizer(target: self, action: #selector(GameScene.continueRewards))
+
+        chestNotification = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+        chestNotification.backgroundColor = UIColor.brownColor()
+        chestNotification.addGestureRecognizer(changeRewards)
+        
+        let congratsLabel = UILabel(frame: CGRect(x: chestNotification.frame.width * 0.2, y: chestNotification.frame.height * 0.075, width: chestNotification.frame.width * 0.6, height: chestNotification.frame.height * 0.1))
+        congratsLabel.text = "CONGRATULATIONS"
+        congratsLabel.adjustsFontSizeToFitWidth = true
+        congratsLabel.textAlignment = .Center
+        chestNotification.addSubview(congratsLabel)
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -309,7 +329,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let moveDist: CGFloat = 10
             let diagMove: CGFloat = moveDist/sqrt(2)
             
-            if xOffset > 0 && absX > absY // Left
+            if xOffset > 0 && absX >= absY // Left
             {
                 if(xOffset < 2 * yOffset)
                 {
@@ -468,11 +488,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if(touchedNode.name == "menu")
         {
-            openMenu()
+            if(!self.paused)
+            {
+                openMenu()
+            }
         }
     }
     
-    func transitionClose()  //Work in Progress... player x and y values need to be adjusted
+    /////////////////////////        TRANSITION FUNCTIONS          //////////////////////////////
+    
+    func transitionClose()
     {
         canDoStuff = false
         transitionView = UIView(frame: CGRect(x: 0, y: 0, width: size.width*2.5, height: size.width*2.5))
@@ -613,6 +638,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
             }
         }
+        else if(firstBody.categoryBitMask == 3 && secondBody.categoryBitMask == 4)  //player and chest
+        {
+            if(secondBody.node != nil)
+            {
+                playerDidCollideWithChest(firstBody.node as! SKSpriteNode, chest: secondBody.node as! SKSpriteNode)
+            }
+        }
+        
     }
     
     /////////////////////////////////       MENU FUNCTIONS       ///////////////////////////
