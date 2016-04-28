@@ -86,8 +86,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var changeRewards: UITapGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "player")
-    
-    var transitionView = SKSpriteNode()
+    let chest = SKSpriteNode(imageNamed: "ChestLegendary")
     
     var menuButton = SKSpriteNode()
     
@@ -115,11 +114,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
         
-        let backgroundImage = SKSpriteNode(imageNamed: "ground")
+        let backgroundImage = SKSpriteNode(imageNamed: "Ground")
         backgroundImage.size = self.scene!.size
         backgroundImage.zPosition = -1
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
-        backgroundImage.zPosition = -1
         addChild(backgroundImage)
         
         menuButton.name = "menu"
@@ -154,6 +152,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         moveView.addGestureRecognizer(moveHold)
         let moveImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
         moveImageView.image = UIImage(named: "joystick")
+        moveImageView.alpha = 0.5
         moveView.addSubview(moveImageView)
         
         
@@ -161,6 +160,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackView.addGestureRecognizer(attackHold)
         let attackImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
         attackImageView.image = UIImage(named: "joystick")
+        attackImageView.alpha = 0.5
         attackView.addSubview(attackImageView)
         
         heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.width * 0.01, width: size.width * 0.25, height: size.width * 0.1))
@@ -239,6 +239,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 4
         addChild(player)
+        
+        chest.position = CGPoint(x: size.width * 0.1, y: size.height * 0.9)
+        chest.size = CGSize(width: size.width * 0.04, height: size.height * 0.04)
+        chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
+        chest.physicsBody?.dynamic = true
+        chest.physicsBody?.categoryBitMask = PhysicsCategory.Chest
+        chest.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+        chest.physicsBody?.collisionBitMask = PhysicsCategory.None
+        chest.physicsBody?.usesPreciseCollisionDetection = false
+        chest.name = "legendary"
+        addChild(chest)
+        
+        changeRewards = UITapGestureRecognizer(target: self, action: #selector(GameScene.continueRewards))
+        
+        chestNotification = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+        chestNotification.backgroundColor = UIColor.brownColor()
+        chestNotification.addGestureRecognizer(changeRewards)
+        
+        let congratsLabel = UILabel(frame: CGRect(x: chestNotification.frame.width * 0.2, y: chestNotification.frame.height * 0.075, width: chestNotification.frame.width * 0.6, height: chestNotification.frame.height * 0.1))
+        congratsLabel.text = "CONGRATULATIONS"
+        congratsLabel.adjustsFontSizeToFitWidth = true
+        congratsLabel.textAlignment = .Center
+        chestNotification.addSubview(congratsLabel)
         
         
         physicsWorld.gravity = CGVectorMake(0, 0)
@@ -613,6 +636,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 playerDidCollideWithMonster(firstBody.node as! SKSpriteNode, player: secondBody.node as! SKSpriteNode)
             }
         }
+        else if(firstBody.categoryBitMask == 3 && secondBody.categoryBitMask == 4)  //player and chest
+        {
+            if(secondBody.node != nil)
+            {
+                playerDidCollideWithChest(firstBody.node as! SKSpriteNode, chest: secondBody.node as! SKSpriteNode)
+            }
+        }
     }
     
     /////////////////////////////////       MENU FUNCTIONS       ///////////////////////////
@@ -735,7 +765,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         inventoryView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
         inventoryView.backgroundColor = UIColor.brownColor()
-        let closeInventoryButton = UIButton(frame: CGRect(x: mapView.frame.width - mapView.frame.height * 0.225, y: mapView.frame.height * 0.075, width: mapView.frame.height * 0.1, height: mapView.frame.height * 0.1))
+        let closeInventoryButton = UIButton(frame: CGRect(x: inventoryView.frame.width - inventoryView.frame.height * 0.225, y: inventoryView.frame.height * 0.075, width: inventoryView.frame.height * 0.1, height: inventoryView.frame.height * 0.1))
         closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), forControlEvents: .TouchUpInside)
         closeInventoryButton.backgroundColor = UIColor.redColor()
         closeInventoryButton.setTitle("X", forState: .Normal)
@@ -794,7 +824,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else if(chestRarity == "legendary")
         {
-            times = 7
+            times = 25
         }
 
         for _ in 0...times
@@ -832,6 +862,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     itemNum.removeAtIndex(j)
                     pictures.removeAtIndex(j)
                     tempSizeOne -= 1
+                    j -= 1
                 }
                 j += 1
             }
@@ -907,7 +938,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case 11:
             return UIImage(named: "Speed")!
         case 12:
-            return UIImage(named: "Health")!
+            return UIImage(named: "8BitHeart")!
         default:
             return UIImage(named: "Block")!
         }
