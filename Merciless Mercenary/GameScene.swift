@@ -275,6 +275,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             ))
     }
     
+    //I hope this allows me to commit
+    
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
     //Attack Function
