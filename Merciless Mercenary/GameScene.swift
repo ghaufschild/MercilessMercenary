@@ -92,6 +92,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var heartBar: UIView!
     var heartsLeft = 5.0
     
+    var doors = [SKSpriteNode]()
+    
     let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
     
     //View Did Load
@@ -130,7 +132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
-        player.position = CGPoint(x: size.width * 0.1, y: size.height * 0.5)
+        player.position = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
         player.physicsBody = SKPhysicsBody(texture: playerText, size: playerText.size())
         player.physicsBody?.dynamic = true
         player.physicsBody?.categoryBitMask = PhysicsCategory.Player
@@ -235,6 +237,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view.addSubview(attackView)
         view.addSubview(moveView)
         
+        if map.getUp() != nil
+        {
+            setDoor("up")
+        }
+        if map.getRight() != nil
+        {
+            setDoor("right")
+        }
+        if map.getDown() != nil
+        {
+            setDoor("down")
+        }
+        if map.getLeft() != nil
+        {
+            setDoor("left")
+        }
+        
         // 4
         addChild(player)
         
@@ -250,7 +269,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(chest)
         
         changeRewards = UITapGestureRecognizer(target: self, action: #selector(GameScene.continueRewards))
-
+        
         chestNotification = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
         chestNotification.backgroundColor = UIColor.brownColor()
         chestNotification.addGestureRecognizer(changeRewards)
@@ -390,18 +409,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
             
-            realDest.x = max(0,realDest.x)              // This keeps the player inside the screen bounds
-            realDest.x = min(size.width, realDest.x)
-            realDest.y = max(0, realDest.y)
-            realDest.y = min(size.height, realDest.y)
-            
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && (map.getDown() != nil || map.getUp() != nil) // In the middle
+            {
+                realDest.x = max(0,realDest.x)
+                realDest.x = min(size.width, realDest.x)
+            }
+            else if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && (map.getLeft() != nil || map.getRight() != nil) // In the middle
+            {
+                realDest.y = max(0, realDest.y)
+                realDest.y = min(size.height, realDest.y)
+            }
+            else
+            {
+                realDest.x = max(size.width * 0.1,realDest.x)
+                realDest.x = min(size.width * 0.9, realDest.x)
+                realDest.y = max(size.height * 0.1, realDest.y)
+                realDest.y = min(size.height * 0.9, realDest.y)
+            }
             var door = false
             if realDest.y <= 0 // Bottom
             {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
                 {
                     transitionClose()
-                    moveTo = CGPoint(x: size.width * 0.5, y: size.height)
+                    moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.9 - player.frame.height * 0.5)
                     map.update(map.getDown()!)
                     door = true
                 }
@@ -411,7 +442,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
                 {
                     transitionClose()
-                    moveTo = CGPoint(x: size.width * 0.5, y: 0)
+                    moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.1 + player.frame.height * 0.5)
                     map.update(map.getUp()!)
                     door = true
                 }
@@ -421,7 +452,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
                 {
                     transitionClose()
-                    moveTo = CGPoint(x: size.width, y: size.height * 0.5)
+                    moveTo = CGPoint(x: size.width * 0.9 - player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getLeft()!)
                     door = true
                 }
@@ -431,7 +462,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
                 {
                     transitionClose()
-                    moveTo = CGPoint(x: 0, y: size.height * 0.5)
+                    moveTo = CGPoint(x: size.width * 0.1 + player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getRight()!)
                     door = true
                 }
@@ -439,7 +470,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if !door{
                 let actionMove = SKAction.moveTo(realDest, duration: 0.1)
                 player.runAction(actionMove)
-                realDest.y = realDest.y + player.size.height/2
             }
         }
     }
@@ -514,6 +544,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func transitionOpen()
     {
+        removeChildrenInArray(doors)
+        doors.removeAll()
+        if map.getUp() != nil
+        {
+            setDoor("up")
+        }
+        if map.getRight() != nil
+        {
+            setDoor("right")
+        }
+        if map.getDown() != nil
+        {
+            setDoor("down")
+        }
+        if map.getLeft() != nil
+        {
+            setDoor("left")
+        }
         transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
@@ -559,7 +607,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.physicsBody?.collisionBitMask = PhysicsCategory.None // 5
         
         // Determine where to spawn the monster along the Y axis
-        let actualY = random(min: monster.size.height/2, max: size.height - monster.size.height/2)
+        let actualY = random(min: size.height * 0.1 + monster.size.height/2, max: size.height * 0.9 - monster.size.height/2)
         
         // Position the monster slightly off-screen along the right edge,
         // and along a random position along the Y axis as calculated above
@@ -829,27 +877,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             times = 7
         }
-
+        
         for _ in 0...times
         {
             let itemType = chestType()
             switch itemType
             {
-                case 1:
-                    let num = randomPotion()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
-                case 2:
-                    let num = randomAttack()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
-                default:
-                    let num = randomDefense()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
+            case 1:
+                let num = randomPotion()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
+            case 2:
+                let num = randomAttack()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
+            default:
+                let num = randomDefense()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
             }
         }
-
+        
         var timesAppear: [Int] = []
         var tempSizeOne: Int = itemNum.count
         var i = 0
@@ -870,7 +918,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             i += 1
         }
-
+        
         for things in 0..<timesAppear.count
         {
             let reward = UIView(frame: CGRect(x: 0, y: chestNotification.frame.height * 0.1, width: chestNotification.frame.width, height: chestNotification.frame.height * 0.9))
@@ -908,7 +956,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 closeChestButton.layer.cornerRadius = closeChestButton.frame.width * 0.5
                 closeChestButton.addTarget(self, action: #selector(GameScene.closeChest), forControlEvents: .TouchUpInside)
                 chestNotification.addSubview(closeChestButton)
-
+                
             }
         }
     }
@@ -1061,6 +1109,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             heartPicture.image = UIImage(named: "8BitHeartHalf")
             heartBar.addSubview(heartPicture)
         }
+    }
+    
+    func setDoor(place: String)
+    {
+        let door = SKSpriteNode()
+        door.color = UIColor.lightGrayColor()
+        doors.append(door)
+        switch place {
+        case "up":
+            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
+            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)
+        case "right":
+            door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
+            door.position = CGPoint(x: view!.bounds.width - view!.bounds.height*0.05, y: view!.bounds.height*0.5)
+        case "down":
+            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
+            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height*0.05)
+        case "left":
+            door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
+            door.position = CGPoint(x: view!.bounds.height * 0.05, y: view!.bounds.height*0.5)
+        default:
+            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
+            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)
+        }
+        addChild(door)
     }
     
     func random() -> CGFloat {
