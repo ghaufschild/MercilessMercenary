@@ -8,7 +8,7 @@
 
 import UIKit
 
-class Map: NSObject {
+class Map: NSObject, NSCoding {
 
     var realMapLoc: [Coordinate] = []
     var visited: [Coordinate] = []
@@ -19,6 +19,33 @@ class Map: NSObject {
     var keyPoint: Coordinate!
     var bossPoint: Coordinate!
     var maxWidth: Int!
+    
+    override init() {}
+    
+    required init(coder aDecoder: NSCoder) {
+        self.maxWidth = aDecoder.decodeIntegerForKey("maxWidth")
+        self.realMapLoc = aDecoder.decodeObjectForKey("realMapLoc") as! [Coordinate]
+        self.visited = aDecoder.decodeObjectForKey("visited") as! [Coordinate]
+        self.known = aDecoder.decodeObjectForKey("known") as! [Coordinate]
+        self.chests = aDecoder.decodeObjectForKey("chests") as! [Coordinate]
+        self.currLoc = aDecoder.decodeObjectForKey("currLoc") as! Coordinate
+        self.spawnPoint = aDecoder.decodeObjectForKey("spawnPoint") as! Coordinate
+        self.keyPoint = aDecoder.decodeObjectForKey("keyPoint") as! Coordinate
+        self.bossPoint = aDecoder.decodeObjectForKey("bossPoint") as! Coordinate
+    }
+    
+    func encodeWithCoder(coder: NSCoder)
+    {
+        coder.encodeInteger(self.maxWidth, forKey: "maxWidth")
+        coder.encodeObject(self.realMapLoc, forKey: "realMapLoc")
+        coder.encodeObject(self.visited, forKey: "visited")
+        coder.encodeObject(self.known, forKey: "known")
+        coder.encodeObject(self.chests, forKey: "chests")
+        coder.encodeObject(self.currLoc, forKey: "currLoc")
+        coder.encodeObject(self.spawnPoint, forKey: "spawnPoint")
+        coder.encodeObject(self.keyPoint, forKey: "keyPoint")
+        coder.encodeObject(self.bossPoint, forKey: "bossPoint")
+    }
     
     init(version: Int)
     {
@@ -284,13 +311,28 @@ class Map: NSObject {
     }
 }
 
-class Coordinate: NSObject {
+class Coordinate: NSObject, NSCoding {
     var x: Int!
     var y: Int!
-    var chest: String!
+    var chest: String?
     
     override var description:String {
         return "(\(x), \(y)): \(chest)"
+    }
+    
+    override init() {}
+    
+    required init(coder aDecoder: NSCoder) {
+        self.x = aDecoder.decodeIntegerForKey("x")
+        self.y = aDecoder.decodeIntegerForKey("y")
+        self.chest = aDecoder.decodeObjectForKey("chest") as? String
+    }
+    
+    func encodeWithCoder(coder: NSCoder)
+    {
+        coder.encodeInteger(self.x, forKey: "x")
+        coder.encodeInteger(self.y, forKey: "y")
+        coder.encodeObject(self.chest, forKey: "chest")
     }
     
     init(xCoor: Int, yCoor: Int)

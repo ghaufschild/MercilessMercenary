@@ -8,30 +8,106 @@
 
 import UIKit
 
-class Inventory: NSObject {
-    //Capacity Size
-    var capacity: Int!
-    var size: Int!
-    var items: [item] = []
+class Inventory: NSObject, NSCoding {
+
+    var items: [Item] = []
     
-    override init()
-    {
-        size = 0
-        capacity = 100
+    override init() {}
+    
+    required init(coder aDecoder: NSCoder) {
+        self.items = aDecoder.decodeObjectForKey("items") as! [Item]
     }
     
-    func add(pickedUp: item) -> Bool    //Return true if picked up, false if full
+    func encodeWithCoder(coder: NSCoder)
     {
-        if(pickedUp.getSize() + size <= capacity)
+        coder.encodeObject(self.items, forKey: "items")
+    }
+    
+    init(type: Int)
+    {
+        if(type == 1)   //Sword
         {
-            items.append(pickedUp)
-            size = size + pickedUp.getSize()
-            return true
+            items.append(Item(n: "Melee", c: 99, a: 1))
+            items.append(Item(n: "Long Range", c: 99, a: 0))
+            items.append(Item(n: "Magic", c: 99, a: 0))
+            items.append(Item(n: "Short Range", c: 99, a: 0))
         }
-        else
+        else if(type == 2)  //Bow
         {
-            return false
+            items.append(Item(n: "Melee", c: 99, a: 0))
+            items.append(Item(n: "Long Range", c: 99, a: 1))
+            items.append(Item(n: "Magic", c: 99, a: 0))
+            items.append(Item(n: "Short Range", c: 99, a: 0))
         }
+        else if(type == 3)  //Mage
+        {
+            items.append(Item(n: "Melee", c: 99, a: 0))
+            items.append(Item(n: "Long Range", c: 99, a: 0))
+            items.append(Item(n: "Magic", c: 99, a: 1))
+            items.append(Item(n: "Short Range", c: 99, a: 0))
+        }
+        else    //Rogue
+        {
+            items.append(Item(n: "Melee", c: 99, a: 0))
+            items.append(Item(n: "Long Range", c: 99, a: 0))
+            items.append(Item(n: "Magic", c: 99, a: 0))
+            items.append(Item(n: "Short Range", c: 99, a: 1))
+        }
+        
+        items.append(Item(n: "Health Potions", c: 15, a: 0))
+        items.append(Item(n: "Damage Potions", c: 15, a: 0))
+        items.append(Item(n: "Speed Potions", c: 15, a: 0))
+        items.append(Item(n: "Block Potions", c: 15, a: 0))
+        
+        items.append(Item(n: "Armor", c: 99, a: 0))
+        items.append(Item(n: "Agility", c: 99, a: 0))
+        items.append(Item(n: "Health", c: 99, a: 0))
+        items.append(Item(n: "Block Chance", c: 99, a: 0))
+        items.append(Item(n: "Crit Chance", c: 99, a: 0))
+    }
+    
+    func add(name: String) -> Bool    //Return true if picked up, false if full
+    {
+        for item in items
+        {
+            if(item.getName() == name)
+            {
+                return item.upgrade()
+            }
+        }
+        return false
+    }
+    
+    func get(name: String) -> Item?
+    {
+        for item in items
+        {
+            if(item.getName() == name)
+            {
+                return item
+            }
+        }
+        return nil
+    }
+    
+    func remove(name: String) -> Bool   //True if removed, false if none
+    {
+        for item in items
+        {
+            if(item.getName() == name)
+            {
+                if(item.getAmount() > 0)
+                {
+                    item.amount = item.amount - 1
+                    return true
+                }
+                else
+                {
+                    return false
+                }
+            }
+        }
+        return false
     }
     
     //Sword of divinity
@@ -43,37 +119,59 @@ class Inventory: NSObject {
 
 }
 
-class item: NSObject
+class Item: NSObject, NSCoding
 {
-    var size: Int!
+    var name: String = ""
+    var cap: Int = 0
+    var amount: Int = 0
     
-    init(s: Int)
-    {
-        size = s
+    override init() {}
+    
+    required init(coder aDecoder: NSCoder) {
+        self.cap = aDecoder.decodeIntegerForKey("cap")
+        self.amount = aDecoder.decodeIntegerForKey("amount")
+        self.name = aDecoder.decodeObjectForKey("name") as! String
     }
     
-    func getSize() -> Int
+    func encodeWithCoder(coder: NSCoder)
     {
-        return size
+        coder.encodeInteger(self.cap, forKey: "cap")
+        coder.encodeInteger(self.amount, forKey: "amount")
+        coder.encodeObject(self.name, forKey: "name")
+    }
+    
+    init(n: String, c: Int, a: Int)
+    {
+        cap = c
+        name = n
+        amount = a
+    }
+    
+    func getCap() -> Int
+    {
+        return cap
+    }
+    
+    func getName() -> String
+    {
+        return name
+    }
+    
+    func getAmount() -> Int
+    {
+        return amount
+    }
+    
+    func upgrade() -> Bool
+    {
+        if(!(amount + 1 > cap))
+        {
+            amount += 1
+            return true
+        }
+        return false
     }
 }
-
-class Weapon: item
-{
-    //Capacity
-    //Damage
-}
-
-class Armor: item
-{
-    
-}
-
-class Potions: item
-{
-    
-}
-
 //Melee vs. Range
 //Magic Resist vs. Armor
 //Block Crit Strike

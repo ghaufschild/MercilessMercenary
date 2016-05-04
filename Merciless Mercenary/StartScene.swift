@@ -22,7 +22,8 @@ class StartScene: SKScene {
     var settingsBut: UIButton!
     
     override func didMoveToView(view: SKView) {
-
+        
+        
         if let settings = Settings.loadSaved()
         {
             self.settings = settings

@@ -14,7 +14,6 @@ class CharacterScene: SKScene {
 
     var settings: Settings!
     
-    
     var titleLabel = SKSpriteNode()
     var playCharOne = SKSpriteNode()
     var playCharTwo = SKSpriteNode()
@@ -24,8 +23,13 @@ class CharacterScene: SKScene {
     var characterTwo = SKSpriteNode()
     var characterThree = SKSpriteNode()
     
+    var deleteCharOne = SKSpriteNode()
+    var deleteCharTwo = SKSpriteNode()
+    var deleteCharThree = SKSpriteNode()
+
+    
     override func didMoveToView(view: SKView) {
-        
+                
         if let settings = Settings.loadSaved()
         {
             self.settings = settings
@@ -45,18 +49,27 @@ class CharacterScene: SKScene {
         let numChar: Int = settings.howManyCharacters()
         if numChar == 0
         {
+            settings.addCharacter(1)
+            settings.addCharacter(2)
+            settings.addCharacter(3)
+
             prepSlot(1, charPresent: false)
             prepSlot(2, charPresent: false)
             prepSlot(3, charPresent: false)
         }
         else if numChar == 1
         {
+            settings.addCharacter(2)
+            settings.addCharacter(3)
+            
             prepSlot(1, charPresent: true)
             prepSlot(2, charPresent: false)
             prepSlot(3, charPresent: false)
         }
         else if numChar == 2
         {
+            settings.addCharacter(3)
+            
             prepSlot(1, charPresent: true)
             prepSlot(2, charPresent: true)
             prepSlot(3, charPresent: false)
@@ -85,7 +98,13 @@ class CharacterScene: SKScene {
                 playCharOne.color = SKColor.blueColor()
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
-            }
+                
+                deleteCharOne.name = "deleteOne"
+                deleteCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.85)
+                deleteCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                deleteCharOne.color = SKColor.redColor()
+                deleteCharOne.zPosition = 1
+                addChild(deleteCharOne)            }
             else                //No character
             {
                 playCharOne.name = "playCharOne"
@@ -111,6 +130,13 @@ class CharacterScene: SKScene {
                 playCharTwo.color = SKColor.blueColor()
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
+                
+                deleteCharTwo.name = "deleteTwo"
+                deleteCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.85)
+                deleteCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                deleteCharTwo.color = SKColor.redColor()
+                deleteCharTwo.zPosition = 1
+                addChild(deleteCharTwo)
             }
             else                //No character
             {
@@ -137,6 +163,13 @@ class CharacterScene: SKScene {
                 playCharThree.color = SKColor.blueColor()
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
+                
+                deleteCharThree.name = "deleteThree"
+                deleteCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.85)
+                deleteCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                deleteCharThree.color = SKColor.redColor()
+                deleteCharThree.zPosition = 1
+                addChild(deleteCharThree)
             }
             else                //No character
             {
@@ -154,6 +187,7 @@ class CharacterScene: SKScene {
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let positionInScene = touches.first?.locationInNode(self)
         let touchedNode = self.nodeAtPoint(positionInScene!)
+        print(touchedNode.name)
         
         if(touchedNode.name == "playCharOne")
         {
@@ -167,6 +201,18 @@ class CharacterScene: SKScene {
         {
             goToGameP3()
         }
+        if(touchedNode.name == "deleteOne")
+        {
+            deleteP1()
+        }
+        if(touchedNode.name == "deleteTwo")
+        {
+            deleteP2()
+        }
+        if(touchedNode.name == "deleteThree")
+        {
+            deleteP3()
+        }
         
     }
     
@@ -178,20 +224,36 @@ class CharacterScene: SKScene {
     
     func goToGameP1()
     {
-        settings.selectedPlayer = 1
+        settings.selectedPlayer = 0
         openGame()
     }
     
     func goToGameP2()
     {
-        settings.selectedPlayer = 2
+        settings.selectedPlayer = 1
         openGame()
     }
     
     func goToGameP3()
     {
-        settings.selectedPlayer = 3
+        settings.selectedPlayer = 2
         openGame()
+    }
+    
+    func deleteP1()
+    {
+        settings.characters[0] = Character(fightType: 1)
+        print("reset P1")
+    }
+    
+    func deleteP2()
+    {
+        settings.characters[1] = Character(fightType: 2)
+    }
+    
+    func deleteP3()
+    {
+        settings.characters[2] = Character(fightType: 3)
     }
     
     func openGame()

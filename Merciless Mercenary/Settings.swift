@@ -23,7 +23,7 @@ class Settings: NSObject, NSCoding {
         self.selectedPlayer = aDecoder.decodeIntegerForKey("selectedPlayer")
         self.soundOn = aDecoder.decodeBoolForKey("sound")
         self.musicOn = aDecoder.decodeBoolForKey("music")
-        self.characters = aDecoder.decodeObjectForKey("characters") as! Array<Character>
+        self.characters = aDecoder.decodeObjectForKey("characters") as! [Character]
     }
     
     func encodeWithCoder(coder: NSCoder)
@@ -33,6 +33,11 @@ class Settings: NSObject, NSCoding {
         coder.encodeBool(self.soundOn, forKey: "sound")
         coder.encodeBool(self.musicOn, forKey: "music")
         coder.encodeObject(self.characters, forKey: "characters")
+    }
+    
+    func addCharacter(fight: Int)
+    {
+        characters.append(Character(fightType: fight))
     }
     
     func howManyCharacters() -> Int
