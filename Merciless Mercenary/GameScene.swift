@@ -62,6 +62,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var character: Character!
     
     var canDoStuff: Bool = true     //For checking for transitions, eventually move elsewhere
+    var canAttack: Bool = true
     
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
@@ -96,7 +97,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var changeRewards: UITapGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "player")
-    let chest = SKSpriteNode(imageNamed: "ChestLegendary")
     
     var menuButton = SKSpriteNode()
     
@@ -105,7 +105,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var doors = [SKSpriteNode]()
     
-    let backgroundMusic = SKAudioNode(fileNamed: "background-music-aac.caf")
+    let backgroundMusic = SKAudioNode(fileNamed: "eerie theme.mp3")
     
     //View Did Load
     override func didMoveToView(view: SKView) {
@@ -289,17 +289,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 4
         addChild(player)
         
-        chest.position = CGPoint(x: size.width * 0.1, y: size.height * 0.9)
-        chest.size = CGSize(width: size.width * 0.05, height: size.height * 0.05)
-        chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
-        chest.physicsBody?.dynamic = true
-        chest.physicsBody?.categoryBitMask = PhysicsCategory.Chest
-        chest.physicsBody?.contactTestBitMask = PhysicsCategory.Player
-        chest.physicsBody?.collisionBitMask = PhysicsCategory.None
-        chest.physicsBody?.usesPreciseCollisionDetection = false
-        chest.name = "legendary"
-        addChild(chest)
-        
         changeRewards = UITapGestureRecognizer(target: self, action: #selector(GameScene.continueRewards))
         
         chestNotification = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
@@ -324,25 +313,47 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             ))
     }
     
-    //I hope this allows me to commit
-    
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
     //Attack Function
     func createShuriken()
     {
-        if(canDoStuff)
+        if(canAttack)
         {
             if(settings.soundOn)
             {
                 runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
             }
             
-            runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-            
-            let projectile = SKSpriteNode(imageNamed: "projectile")
+            var projectile: SKSpriteNode!
+            var distance: CGFloat = 0
+            if(character.equippedWeapon == "Melee")
+            {
+                projectile = SKSpriteNode(imageNamed: "Sword2")
+                projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.8)
+                distance = 50
+            }
+            if(character.equippedWeapon == "Short Range")
+            {
+                projectile = SKSpriteNode(imageNamed: "Shuriken")
+                projectile.size = CGSize(width: player.size.width * 0.3, height: player.size.height * 0.3)
+                distance = 100
+            }
+            if(character.equippedWeapon == "Magic")
+            {
+                projectile = SKSpriteNode(imageNamed: "Fireball")
+                projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.4)
+                distance = 200
+            }
+            if(character.equippedWeapon == "Long Range")
+            {
+                projectile = SKSpriteNode(imageNamed: "Long Range")
+                projectile.size = CGSize(width: player.size.width * 0.2, height: player.size.height * 0.5)
+                distance = 400
+            }
+
             projectile.position = player.position
-            projectile.physicsBody = SKPhysicsBody(circleOfRadius: projectile.size.width/2)
+            projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
             projectile.physicsBody?.dynamic = true
             projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
             projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
@@ -357,13 +368,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(projectile)
             
             let direction = offset.normalized()
-            let shootAmount = direction * 1000
+            let shootAmount = direction * distance
             let realDest = shootAmount + projectile.position
             
-            let actionMove = SKAction.moveTo(realDest, duration: 2.0)
+            let rotate = SKAction.rotateToAngle(atan2(direction.x * -1, direction.y), duration: 0)
+            projectile.runAction(rotate)
+            
+            let actionMove = SKAction.moveTo(realDest, duration: (1/400) * Double(distance))
             let actionMoveDone = SKAction.removeFromParent()
             projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+            
+            canAttack = false
+            _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
         }
+    }
+    
+    func letAttack()
+    {
+        canAttack = true
     }
     
     //Move Function
@@ -534,7 +556,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(!attackTimer.valid)
         {
             attackLoc = attackHold.locationInView(attackView)
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
+            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.2, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
             createShuriken()
         }
         else if(attackHold.state == UIGestureRecognizerState.Changed)
@@ -562,10 +584,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        TRANSITION FUNCTIONS          //////////////////////////////
     
-    func transitionClose()
+    func transitionClose()      //Teleporting error with self.paused and error with moving out of bounds when no door present
     {
         canDoStuff = false
-        self.paused = true
         transitionView = UIView(frame: CGRect(x: 0, y: 0, width: size.width*2.5, height: size.width*2.5))
         transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
         transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
@@ -609,6 +630,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             transTimer.invalidate()
             player.position = moveTo
             transitionView.center = player.position
+            print(player.position)
             fixY()
             transitionOpen()
         }
@@ -621,14 +643,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             transTimer.invalidate()
             canDoStuff = true
-            self.paused = false
             transitionView.removeFromSuperview()
+            print(player.position)
         }
     }
     
     func fixY()
     {
         transitionView.center.y = view!.frame.maxY - transitionView.center.y
+    }
+    
+    func loadScreen()
+    {
+        if(character.map.getCurr().chest != nil)
+        {
+            let chest = SKSpriteNode(imageNamed: character.map.getCurr().chest!)
+            chest.position = CGPoint(x: size.width * 0.1, y: size.height * 0.9)
+            chest.size = CGSize(width: size.width * 0.05, height: size.height * 0.05)
+            chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
+            chest.physicsBody?.dynamic = true
+            chest.physicsBody?.categoryBitMask = PhysicsCategory.Chest
+            chest.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+            chest.physicsBody?.collisionBitMask = PhysicsCategory.None
+            chest.physicsBody?.usesPreciseCollisionDetection = false
+            chest.name = character.map.getCurr().chest
+            addChild(chest)
+        }
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
@@ -642,6 +682,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.physicsBody?.categoryBitMask = PhysicsCategory.Monster // 3
         monster.physicsBody?.contactTestBitMask = PhysicsCategory.Projectile // 4
         monster.physicsBody?.collisionBitMask = PhysicsCategory.None // 5
+        monster.name = "monster1"
         
         // Determine where to spawn the monster along the Y axis
         let actualY = random(min: size.height * 0.1 + monster.size.height/2, max: size.height * 0.9 - monster.size.height/2)
@@ -665,7 +706,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
         projectile.removeFromParent()
         monster.removeFromParent()
-        if character.currentHealth < character.maxHealth
+        if character.currentHealth < character.maxHealth + (character.inventory.get("Health")!.getAmount()/5)
         {
             character.currentHealth = character.currentHealth + 1
             setHearts()
@@ -691,8 +732,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func playerDidCollideWithChest(player: SKSpriteNode, chest: SKSpriteNode)
     {
+        openChest(chest.name!)
+        character.map.getCurr().chest = nil
         chest.removeFromParent()
-        openChest()
     }
     
     func didBeginContact(contact: SKPhysicsContact)
@@ -734,6 +776,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 playerDidCollideWithChest(firstBody.node as! SKSpriteNode, chest: secondBody.node as! SKSpriteNode)
             }
         }
+        
     }
     
     /////////////////////////////////       MENU FUNCTIONS       ///////////////////////////
@@ -794,8 +837,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         closeMapButton.layer.borderColor = UIColor.darkGrayColor().CGColor
         closeMapButton.layer.borderWidth = closeMapButton.frame.width * 0.1
         mapView.addSubview(closeMapButton)
-        
-        
         
         let maxW = CGFloat(map.getWidth()) + 1
         let maxW2 = maxW + 1
@@ -1198,11 +1239,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func useHealth()
     {
-        if(character.currentHealth < character.maxHealth)
+        if(character.currentHealth < character.maxHealth + (character.inventory.get("Health")!.getAmount()/5))
         {
             if(character.inventory.remove("Health Potions"))
             {
-                character.currentHealth = min(character.currentHealth + 2, character.maxHealth)
+                character.currentHealth = min(character.currentHealth + 2, character.maxHealth + (character.inventory.get("Health")!.getAmount()/5))
                 potionsView.removeFromSuperview()
                 openInventory()
                 setHearts()
@@ -1210,7 +1251,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func useSpeed()     //Maybe incorporate a transition?
+    func useSpeed()
     {
         if(character.inventory.remove("Speed Potions"))
         {
@@ -1321,10 +1362,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //                  Sword Upgrade, Bow Upgrade, Fire Ball Upgrade, Shuriken Upgrade, Crit Chance Upgrade        2
     //                  Armor Upgrade, Speed Upgrade, Health Upgrade, Block Chance Upgrade                          3
     
-    func openChest()
+    func openChest(name: String)
     {
         self.paused = true
-        openNotify(chest.name!)
+        openNotify(name)
     }
     
     func openNotify(chestRarity: String)    //Array of bonuses

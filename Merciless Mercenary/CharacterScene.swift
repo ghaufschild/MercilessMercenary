@@ -27,6 +27,7 @@ class CharacterScene: SKScene {
     var deleteCharTwo = SKSpriteNode()
     var deleteCharThree = SKSpriteNode()
 
+    let backgroundMusic = SKAudioNode(fileNamed: "adventurous theme.mp3")
     
     override func didMoveToView(view: SKView) {
                 
@@ -40,6 +41,9 @@ class CharacterScene: SKScene {
             settings.save()
             self.settings = settings
         }
+        
+        backgroundMusic.autoplayLooped = true
+        addChild(backgroundMusic)
         
         titleLabel.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.9)
         titleLabel.size = CGSize(width: view.frame.width * 0.8, height: view.frame.height * 0.075)
@@ -187,7 +191,6 @@ class CharacterScene: SKScene {
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         let positionInScene = touches.first?.locationInNode(self)
         let touchedNode = self.nodeAtPoint(positionInScene!)
-        print(touchedNode.name)
         
         if(touchedNode.name == "playCharOne")
         {
@@ -243,7 +246,6 @@ class CharacterScene: SKScene {
     func deleteP1()
     {
         settings.characters[0] = Character(fightType: 1)
-        print("reset P1")
     }
     
     func deleteP2()

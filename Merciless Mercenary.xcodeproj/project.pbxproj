@@ -16,6 +16,12 @@
 		3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */; };
 		3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */; };
 		3FC7F0D91CD1687A00E090EC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0D81CD1687A00E090EC /* Assets.xcassets */; };
+		3FC7F0DD1CDA64B500E090EC /* adventurous theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0DA1CDA64B400E090EC /* adventurous theme.mp3 */; };
+		3FC7F0DE1CDA64B500E090EC /* eerie theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0DB1CDA64B400E090EC /* eerie theme.mp3 */; };
+		3FC7F0DF1CDA64B500E090EC /* victory jingle.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0DC1CDA64B400E090EC /* victory jingle.mp3 */; };
+		3FC7F0E31CDA65EB00E090EC /* barren lands.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */; };
+		3FC7F0E41CDA65EB00E090EC /* boss.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E11CDA65EB00E090EC /* boss.mp3 */; };
+		3FC7F0E51CDA65EB00E090EC /* death theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */; };
 		3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD71CB69EDB00F6BB4C /* Map.swift */; };
 		3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD91CB69F8800F6BB4C /* Settings.swift */; };
 		3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BDB1CB6A00C00F6BB4C /* Character.swift */; };
@@ -36,6 +42,12 @@
 		3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "background-music-aac.caf"; sourceTree = "<group>"; };
 		3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		3FC7F0D81CD1687A00E090EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3FC7F0DA1CDA64B400E090EC /* adventurous theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "adventurous theme.mp3"; sourceTree = "<group>"; };
+		3FC7F0DB1CDA64B400E090EC /* eerie theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "eerie theme.mp3"; sourceTree = "<group>"; };
+		3FC7F0DC1CDA64B400E090EC /* victory jingle.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "victory jingle.mp3"; sourceTree = "<group>"; };
+		3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "barren lands.mp3"; sourceTree = "<group>"; };
+		3FC7F0E11CDA65EB00E090EC /* boss.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = boss.mp3; sourceTree = "<group>"; };
+		3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "death theme.mp3"; sourceTree = "<group>"; };
 		3FE64BD71CB69EDB00F6BB4C /* Map.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Map.swift; sourceTree = "<group>"; };
 		3FE64BD91CB69F8800F6BB4C /* Settings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3FE64BDB1CB6A00C00F6BB4C /* Character.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Character.swift; sourceTree = "<group>"; };
@@ -85,6 +97,12 @@
 				3F344C761C76427F0027247E /* Inventory.swift */,
 				3FE64BDB1CB6A00C00F6BB4C /* Character.swift */,
 				3F344C481C763EF70027247E /* Main.storyboard */,
+				3FC7F0DA1CDA64B400E090EC /* adventurous theme.mp3 */,
+				3FC7F0DB1CDA64B400E090EC /* eerie theme.mp3 */,
+				3FC7F0DC1CDA64B400E090EC /* victory jingle.mp3 */,
+				3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */,
+				3FC7F0E11CDA65EB00E090EC /* boss.mp3 */,
+				3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */,
 				3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */,
 				3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */,
 				3FC7F0D81CD1687A00E090EC /* Assets.xcassets */,
@@ -153,6 +171,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FC7F0DE1CDA64B500E090EC /* eerie theme.mp3 in Resources */,
+				3FC7F0E41CDA65EB00E090EC /* boss.mp3 in Resources */,
+				3FC7F0DF1CDA64B500E090EC /* victory jingle.mp3 in Resources */,
+				3FC7F0E31CDA65EB00E090EC /* barren lands.mp3 in Resources */,
+				3FC7F0E51CDA65EB00E090EC /* death theme.mp3 in Resources */,
+				3FC7F0DD1CDA64B500E090EC /* adventurous theme.mp3 in Resources */,
 				3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */,
 				3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */,
 				3F344C4A1C763EF70027247E /* Main.storyboard in Resources */,
