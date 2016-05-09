@@ -7,7 +7,6 @@
 //
 
 //  Coordinates (0,0) are in bottom left
-//  SKVIEW changes (0, 0) is in top left
 
 import SpriteKit
 
@@ -52,6 +51,7 @@ struct PhysicsCategory {
     static let Player    : UInt32 = 0b11      // 3
     static let Chest     : UInt32 = 0b100     // 4
     static let Door      : UInt32 = 0b101     // 5
+    static let EnemyProjectile : UInt32 = 0b110 // 6
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -61,13 +61,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var settings: Settings!
     var character: Character!
     
-    var canDoStuff: Bool = true     //For checking for transitions, eventually move elsewhere
+    var canDoStuff: Bool = true
     var canAttack: Bool = true
+    var canTakeDamage: Bool = true
+    var roomCleared: Bool = true
     
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
     var transTimer = NSTimer()
     var buffTimers: [NSTimer] = []
+    var immortalTimer = NSTimer()
     var tempSpeed = 0
     var tempBlock = 0
     var tempDamage = 0
@@ -76,12 +79,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var damageCounter = 0
     
     var moveLoc: CGPoint!
+    var tempMove: CGPoint!
     var attackLoc: CGPoint!
+    var tempAttack: CGPoint!
     var moveTo: CGPoint!
     
     var menu: UIView!
     var moveView: UIView!
+    var moveJoystickOuter: UIImageView!
     var attackView: UIView!
+    var attackJoystickOuter: UIImageView!
     var mapView: UIView!
     var potionsView: UIView!
     var skillsView: UIView!
@@ -101,11 +108,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var menuButton = SKSpriteNode()
     
     var heartBar: UIView!
-    var heartsLeft : Int!
     
     var doors = [SKSpriteNode]()
+    var enemyObjects = [Enemy]()
+    var healthBars = [SKSpriteNode]()             //Shows health on enemy
+    var attackEnemyTimer = NSTimer()        //Controls how enemies attack
+    var moveEnemyTimer = NSTimer()          //Controls how enemies move
+    var availableEnemyLocs = [CGPoint]()    //Locations that an enemy can spawn in
+    var extraNodes = [SKSpriteNode]()       //Clear every time you enter a new room
+    var extraViews = [UIView]()       //Clear every time you enter a new room
+    var doorLocked: SKTexture!
+    var doorUnlocked: SKTexture!
     
     let backgroundMusic = SKAudioNode(fileNamed: "eerie theme.mp3")
+    
+    var invincibleCounter = 0       //After taking damage
     
     //View Did Load
     override func didMoveToView(view: SKView) {
@@ -123,16 +140,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         character = settings.characters[settings.selectedPlayer]
         map = character.map
-        heartsLeft = character.currentHealth
         
         self.view?.multipleTouchEnabled = true
         
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
         
+        doorLocked = SKTexture(image: UIImage(named: "doorLocked")!)
+        doorUnlocked = SKTexture(image: UIImage(named: "doorUnlocked")!)
+        
         let backgroundImage = SKSpriteNode(imageNamed: "Ground")
         backgroundImage.size = self.scene!.size
-        backgroundImage.zPosition = -1
+        backgroundImage.zPosition = -10
         backgroundImage.position = CGPoint(x: frame.size.width/2, y: frame.size.height/2)
         addChild(backgroundImage)
         
@@ -143,7 +162,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menuButton.alpha = 0.5
         menuButton.color = SKColor.blueColor()
         addChild(menuButton)
-        
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
         player.position = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
@@ -164,22 +182,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.attackOnTouch))
         attackHold.minimumPressDuration = 0.0
         
-        let buttonWid = size.width * 0.2
+        let buttonWid = size.width * 0.15
         
-        moveView = UIView(frame: CGRect(x: 0, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        moveView = UIView(frame: CGRect(x: 0, y: 0, width: size.width * 0.4, height: size.height))
         moveView.addGestureRecognizer(moveHold)
-        let moveImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
-        moveImageView.image = UIImage(named: "joystick")
-        moveImageView.alpha = 0.5
-        moveView.addSubview(moveImageView)
+        moveJoystickOuter = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
+        moveJoystickOuter.image = UIImage(named: "joystick")
+        moveJoystickOuter.alpha = 0.4
         
         
-        attackView = UIView(frame: CGRect(x: size.width - buttonWid, y: size.height - buttonWid, width: buttonWid, height: buttonWid))
+        attackView = UIView(frame: CGRect(x: size.width * 0.6, y: 0, width: size.width * 0.4, height: size.height))
         attackView.addGestureRecognizer(attackHold)
-        let attackImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
-        attackImageView.image = UIImage(named: "joystick")
-        attackImageView.alpha = 0.5
-        attackView.addSubview(attackImageView)
+        attackJoystickOuter = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
+        attackJoystickOuter.image = UIImage(named: "joystick")
+        attackJoystickOuter.alpha = 0.4
         
         heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.width * 0.01, width: size.width * 0.25, height: size.width * 0.15))
         setHearts()
@@ -304,21 +320,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
-        
-        runAction(SKAction.repeatActionForever(
-            SKAction.sequence([
-                SKAction.runBlock(addMonster),
-                SKAction.waitForDuration(1.0)
-                ])
-            ))
     }
     
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
     //Attack Function
-    func createShuriken()
+    func attack()
     {
-        if(canAttack)
+        if(canAttack && canDoStuff)
         {
             if(settings.soundOn)
             {
@@ -351,7 +360,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 projectile.size = CGSize(width: player.size.width * 0.2, height: player.size.height * 0.5)
                 distance = 400
             }
-
+            
             projectile.position = player.position
             projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
             projectile.physicsBody?.dynamic = true
@@ -360,10 +369,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
             projectile.physicsBody?.usesPreciseCollisionDetection = true
             
-            var actualCenter = attackView.center
-            actualCenter.y = (size.height - actualCenter.y)
-            actualCenter.x = (size.width - actualCenter.x)
-            var offset =  actualCenter - attackLoc
+            var offset =  tempAttack - attackLoc
             offset.x *= -1
             addChild(projectile)
             
@@ -371,15 +377,72 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let shootAmount = direction * distance
             let realDest = shootAmount + projectile.position
             
-            let rotate = SKAction.rotateToAngle(atan2(direction.x * -1, direction.y), duration: 0)
-            projectile.runAction(rotate)
+            projectile.zRotation = atan2(direction.x * -1, direction.y)
             
             let actionMove = SKAction.moveTo(realDest, duration: (1/400) * Double(distance))
             let actionMoveDone = SKAction.removeFromParent()
-            projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+            if(offset.x != 0 && offset.y != 0)
+            {
+                projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+                canAttack = false
+                _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
+            }
+            else
+            {
+                projectile.runAction(actionMoveDone)
+            }
             
-            canAttack = false
-            _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
+        }
+    }
+    
+    func setEnemyLocs(place: CGPoint)
+    {
+        if(place.y > size.height * 0.4)  //Above
+        {
+            if place.x > size.width * 0.7  //Right
+            {
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.5))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.5, y: size.height * 0.5))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.8))
+            }
+            else if place.x < size.width * 0.3   //Left
+            {
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.5))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.5, y: size.height * 0.5))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.8))
+            }
+            else    //Above
+            {
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.2))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.5))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.8))
+                availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.5))
+            }
+        }
+        else    //Below
+        {
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.8))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.4, y: size.height * 0.8))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.6, y: size.height * 0.8))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.8))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.5))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.2, y: size.height * 0.2))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.2))
+            availableEnemyLocs.append(CGPoint(x: size.width * 0.8, y: size.height * 0.5))
         }
     }
     
@@ -388,14 +451,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         canAttack = true
     }
     
+    func mortal()
+    {
+        invincibleCounter += 1
+        if(invincibleCounter < 6)
+        {
+            player.alpha = CGFloat(12 - (invincibleCounter * 2))/10
+        }
+        else
+        {
+            player.alpha = CGFloat((invincibleCounter - 5) * 2)/10
+        }
+        if(invincibleCounter == 10)
+        {
+            canTakeDamage = true
+            invincibleCounter = 0
+            immortalTimer.invalidate()
+        }
+    }
+    
     //Move Function
     func move()
     {
         if canDoStuff
         {
-            var actualCenter = moveView.center
-            actualCenter.y = (size.height - actualCenter.y)
-            let newPoint = actualCenter - moveLoc
+            let newPoint = tempMove - moveLoc
             let xOffset = newPoint.x
             let yOffset = newPoint.y
             let absX = abs(xOffset)
@@ -465,6 +545,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     realDest = CGPoint(x: player.position.x, y: player.position.y - moveDist)
                 }
             }
+            else
+            {
+                realDest = player.position
+            }
             
             if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && (map.getDown() != nil || map.getUp() != nil) // In the middle
             {
@@ -478,7 +562,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             else
             {
-                realDest.x = max(size.width * 0.1,realDest.x)
+                realDest.x = max(size.width * 0.1, realDest.x)
                 realDest.x = min(size.width * 0.9, realDest.x)
                 realDest.y = max(size.height * 0.1, realDest.y)
                 realDest.y = min(size.height * 0.9, realDest.y)
@@ -486,7 +570,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             var door = false
             if realDest.y <= 0 // Bottom
             {
-                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil // In the middle
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil && roomCleared // In the middle
                 {
                     transitionClose()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.9 - player.frame.height * 0.5)
@@ -496,7 +580,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             else if realDest.y >= size.height // Top
             {
-                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil // In the middle
+                if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil && roomCleared // In the middle
                 {
                     transitionClose()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.1 + player.frame.height * 0.5)
@@ -506,7 +590,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             else if realDest.x <= 0 // Left
             {
-                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil // In the middle
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil && roomCleared // In the middle
                 {
                     transitionClose()
                     moveTo = CGPoint(x: size.width * 0.9 - player.frame.width * 0.5, y: size.height * 0.5)
@@ -516,7 +600,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             else if realDest.x >= size.width // Right
             {
-                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil // In the middle
+                if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil && roomCleared // In the middle
                 {
                     transitionClose()
                     moveTo = CGPoint(x: size.width * 0.1 + player.frame.width * 0.5, y: size.height * 0.5)
@@ -531,13 +615,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func unlockDoors()      //Chance image of doors
+    {
+        for num in 0..<doors.count
+        {
+            doors[num].texture = doorUnlocked
+        }
+    }
+    
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
     func moveOnTouch()
     {
         if(!moveTimer.valid)
         {
+            tempMove = moveHold.locationInView(moveView)
             moveLoc = moveHold.locationInView(moveView)
+            
+            moveJoystickOuter.center = moveLoc
+            moveView.addSubview(moveJoystickOuter)
+            
             moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
             move()
         }
@@ -548,6 +645,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         else
         {
             moveTimer.invalidate()
+            moveJoystickOuter.removeFromSuperview()
         }
     }
     
@@ -555,9 +653,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(!attackTimer.valid)
         {
+            tempAttack = attackHold.locationInView(attackView)
             attackLoc = attackHold.locationInView(attackView)
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.2, target: self, selector: #selector(GameScene.createShuriken), userInfo: nil, repeats: true)
-            createShuriken()
+            
+            attackJoystickOuter.center = attackLoc
+            attackView.addSubview(attackJoystickOuter)
+            
+            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.2, target: self, selector: #selector(GameScene.attack), userInfo: nil, repeats: true)
+            attack()
         }
         else if(attackHold.state == UIGestureRecognizerState.Changed)
         {
@@ -565,6 +668,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else
         {
+            attackJoystickOuter.removeFromSuperview()
             attackTimer.invalidate()
         }
     }
@@ -603,6 +707,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         removeChildrenInArray(doors)
         doors.removeAll()
+        loadScreen()
         if map.getUp() != nil
         {
             setDoor("up")
@@ -630,7 +735,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             transTimer.invalidate()
             player.position = moveTo
             transitionView.center = player.position
-            print(player.position)
+            availableEnemyLocs.removeAll()
+            setEnemyLocs(player.position)
             fixY()
             transitionOpen()
         }
@@ -644,7 +750,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             transTimer.invalidate()
             canDoStuff = true
             transitionView.removeFromSuperview()
-            print(player.position)
         }
     }
     
@@ -669,11 +774,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chest.name = character.map.getCurr().chest
             addChild(chest)
         }
+        
+        addMonster(1)
+        addMonster(1)
+        addMonster(2)
+        addMonster(2)
+        
+        roomCleared = false
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
     
-    func addMonster() {
+    func addMonster(num : Int)      //Num is type of enemy, 1 is ranged, 2 is melee(run into you), 3 is boss
+    {
         // Create sprite
         let monster = SKSpriteNode(imageNamed: "monster")
         
@@ -682,42 +795,236 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         monster.physicsBody?.categoryBitMask = PhysicsCategory.Monster // 3
         monster.physicsBody?.contactTestBitMask = PhysicsCategory.Projectile // 4
         monster.physicsBody?.collisionBitMask = PhysicsCategory.None // 5
-        monster.name = "monster1"
         
-        // Determine where to spawn the monster along the Y axis
-        let actualY = random(min: size.height * 0.1 + monster.size.height/2, max: size.height * 0.9 - monster.size.height/2)
+        let index = Int(arc4random_uniform(UInt32(availableEnemyLocs.count)))
         
-        // Position the monster slightly off-screen along the right edge,
-        // and along a random position along the Y axis as calculated above
-        monster.position = CGPoint(x: size.width + monster.size.width/2, y: actualY)
+        monster.position = availableEnemyLocs[index]
+        availableEnemyLocs.removeAtIndex(index)
         
-        // Add the monster to the scene
         addChild(monster)
         
-        // Determine speed of the monster
-        let actualDuration = random(min: CGFloat(2.0), max: CGFloat(4.0))
+        if !attackEnemyTimer.valid
+        {
+            attackEnemyTimer = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(GameScene.attackPerson), userInfo: nil, repeats: true)
+        }
+        if !moveEnemyTimer.valid
+        {
+            moveEnemyTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(GameScene.moveEnemyAround), userInfo: nil, repeats: true)
+        }
+        var enemy: Enemy!
+        if(num == 1)
+        {
+            enemy = Enemy(h: 5, dam: 1, move: 10, num: 1, enemy: monster)
+        }
+        else if(num == 3)
+        {
+            enemy = Enemy(h: 10, dam: 1, move: 15, num: 3, enemy: monster)
+        }
+        else
+        {
+            enemy = Enemy(h: 25, dam: 3, move: 5, num: 2, enemy: monster)
+        }
         
-        // Create the actions
-        let actionMove = SKAction.moveTo(CGPoint(x: -monster.size.width/2, y: actualY), duration: NSTimeInterval(actualDuration))
-        let actionMoveDone = SKAction.removeFromParent()
-        monster.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+        enemyObjects.append(enemy)
+        
+        let totalHealthView = SKSpriteNode(color: UIColor.redColor(), size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
+        totalHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
+        addChild(totalHealthView)
+        let currHealthView = SKSpriteNode(color: UIColor.greenColor(), size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
+            currHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
+        addChild(currHealthView)
+        
+        healthBars.append(totalHealthView)
+        healthBars.append(currHealthView)
     }
     
-    func projectileDidCollideWithMonster(projectile: SKSpriteNode, monster: SKSpriteNode) {
-        projectile.removeFromParent()
-        monster.removeFromParent()
-        if character.currentHealth < character.maxHealth + (character.inventory.get("Health")!.getAmount()/5)
+    func moveEnemyAround()
+    {
+        if(canDoStuff)
         {
-            character.currentHealth = character.currentHealth + 1
+            for num in 0..<enemyObjects.count
+            {
+                let currLoc = enemyObjects[num].sprite.position
+                
+                let x = arc4random_uniform(2)
+                var actualX = currLoc.x
+                let moveSpeed: CGFloat = CGFloat(enemyObjects[num].getMoveSpeed() * 2)
+                if x == 0
+                {
+                    actualX = currLoc.x + moveSpeed
+                }
+                else if x == 1
+                {
+                    actualX = currLoc.x - moveSpeed
+                }
+                
+                let y = arc4random_uniform(2)
+                var actualY = currLoc.y
+                if y == 0
+                {
+                    actualY = currLoc.y + moveSpeed
+                }
+                else if y == 1
+                {
+                    actualY = currLoc.y - moveSpeed
+                }
+                
+                actualY = min(actualY, size.height - enemyObjects[num].sprite.frame.height)
+                actualY = max(actualY, enemyObjects[num].sprite.frame.height)
+                
+                actualX = min(actualX, size.width - enemyObjects[num].sprite.frame.width)
+                actualX = max(actualX, enemyObjects[num].sprite.frame.width)
+                
+                let loc = CGPoint(x: actualX, y: actualY)
+
+                let delta: CGVector = CGVector(dx: loc.x - currLoc.x, dy: loc.y - currLoc.y)
+                let move = SKAction.moveTo(loc, duration: 1.0)
+                let displacement = SKAction.moveBy(delta, duration: 1.0)
+                
+                healthBars[num * 2].runAction(displacement)
+                healthBars[num * 2 + 1].runAction(displacement)
+                enemyObjects[num].sprite.runAction(move)
+            }
+        }
+    }
+    
+    func attackPerson()
+    {
+        if(canDoStuff)
+        {
+            var shots = 0
+            for num in 0..<enemyObjects.count
+            {
+                let random = arc4random_uniform(100)
+                if(random > 80)
+                {
+                    if(shots < 2)
+                    {
+                        enemyProjectile(enemyObjects[num].sprite.position, dam: enemyObjects[num].getDamage())
+                        shots += 1
+                    }
+                }
+            }
+        }
+    }
+    
+    func enemyProjectile(loc: CGPoint, dam: Int)
+    {
+        
+        let projectile =  SKSpriteNode(imageNamed: "Fireball")
+        let distance: CGFloat = 400
+        
+        projectile.position = loc
+        projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.4)
+        projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
+        projectile.physicsBody?.dynamic = true
+        projectile.physicsBody?.categoryBitMask = PhysicsCategory.EnemyProjectile
+        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Player
+        projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
+        projectile.physicsBody?.usesPreciseCollisionDetection = true
+        projectile.name = "\(dam)"
+        
+        let offset = player.position - loc
+        addChild(projectile)
+        
+        let direction = offset.normalized()
+        let shootAmount = direction * distance
+        let realDest = shootAmount + projectile.position
+        
+        projectile.zRotation = atan2(direction.x * -1, direction.y)
+        
+        let actionMove = SKAction.moveTo(realDest, duration: 3.5)
+        let actionMoveDone = SKAction.removeFromParent()
+        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+    }
+    
+    func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {     //Check for damage against enemy
+        projectile.removeFromParent()
+        var damage = 0
+        if(character.equippedWeapon == "Melee")
+        {
+            damage = 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/10 + 1)
+        }
+        if(character.equippedWeapon == "Short Range")
+        {
+            damage = 3 * (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/10 + 1)
+        }
+        if(character.equippedWeapon == "Magic")
+        {
+            damage = 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/10 + 1)
+
+        }
+        if(character.equippedWeapon == "Long Range")
+        {
+            damage = (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/10 + 1)
+        }
+        
+        for num in 0..<enemyObjects.count
+        {
+            if enemyObjects[num].sprite == monster
+            {
+                if !enemyObjects[num].gotHit(damage)
+                {
+                    enemyObjects.removeAtIndex(num)
+                    healthBars[num * 2].removeFromParent()
+                    healthBars.removeAtIndex(num * 2)
+                    healthBars[num * 2].removeFromParent()
+                    healthBars.removeAtIndex(num * 2)
+                    monster.removeFromParent()
+                    if enemyObjects.count == 0
+                    {
+                        roomCleared = true
+                        unlockDoors()
+                    }
+                }
+                else
+                {
+                    flickerMonster(num)
+                    healthBars[num * 2 + 1].size.width = healthBars[num * 2].size.width * (CGFloat(enemyObjects[num].currentHealth)/CGFloat(enemyObjects[num].maxHealth))
+                    healthBars[num * 2 + 1].position.x = healthBars[num * 2].position.x - (healthBars[num * 2].size.width - healthBars[num * 2 + 1].size.width) / 2
+                }
+                break
+            }
+        }
+    }
+    
+    
+    func flickerMonster(num: Int)
+    {
+        enemyObjects[num].flicker()
+    }
+    
+    func projectileDidCollideWithPlayer(projectile: SKSpriteNode, player: SKSpriteNode) {
+        projectile.removeFromParent()
+        if(character.currentHealth > 0)
+        {
+            if(canTakeDamage)
+            {
+                canTakeDamage = false
+                immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                character.currentHealth = character.currentHealth - Int(projectile.name!)!
+            }
+        }
+        if character.currentHealth > 0
+        {
             setHearts()
+        }
+        if character.currentHealth <= 0
+        {
+            character.currentHealth = character.maxHealth
+            exitGame()
         }
     }
     
     func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
-        monster.removeFromParent()
         if(character.currentHealth > 0)
         {
-            character.currentHealth = character.currentHealth - 1
+            if(canTakeDamage)
+            {
+                canTakeDamage = false
+                immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                character.currentHealth = character.currentHealth - 2
+            }
         }
         if character.currentHealth > 0
         {
@@ -754,11 +1061,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 3 is player
         // 4 is chest
         // 5 is door
+        // 6 is enemyProjectile
         if ((firstBody.categoryBitMask == 1) &&     //monster and projectile
             (secondBody.categoryBitMask == 2)) {
             if(secondBody.node != nil && firstBody.node != nil)
             {
-                projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, monster: secondBody.node as! SKSpriteNode)
+                projectileDidCollideWithMonster(firstBody.node as! SKSpriteNode, projectile: secondBody.node as! SKSpriteNode)
             }
         }
         else if ((firstBody.categoryBitMask == 1) &&    //monster and player
@@ -774,6 +1082,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if(secondBody.node != nil)
             {
                 playerDidCollideWithChest(firstBody.node as! SKSpriteNode, chest: secondBody.node as! SKSpriteNode)
+            }
+        }
+        else if(firstBody.categoryBitMask == 3 && secondBody.categoryBitMask == 6)  //player and enemyProjectile
+        {
+            if(secondBody.node != nil)
+            {
+                projectileDidCollideWithPlayer(secondBody.node as! SKSpriteNode, player: firstBody.node as! SKSpriteNode)
             }
         }
         
@@ -841,8 +1156,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let maxW = CGFloat(map.getWidth()) + 1
         let maxW2 = maxW + 1
         let max2 = maxW * 2
-        
-        print(map.getBoss())
         
         menu.addSubview(mapView)
         for spot in map.known
@@ -984,15 +1297,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blockPotView.addGestureRecognizer(blockTapped)
         potionsView.addSubview(blockPotView)
         
-        if(tempDamage == 5)
+        if(tempDamage > 0)
         {
             damagePotView.layer.backgroundColor = UIColor.blueColor().CGColor
         }
-        if(tempSpeed == 5)
+        if(tempSpeed > 0)
         {
             speedPotView.layer.backgroundColor = UIColor.blueColor().CGColor
         }
-        if(tempBlock == 5)
+        if(tempBlock > 0)
         {
             blockPotView.layer.backgroundColor = UIColor.blueColor().CGColor
         }
@@ -1272,8 +1585,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func reduceSpeed()      //Call image that oscillates alphas from .2 to .9
     {
+        print("reached")
         speedCounter += 1
-        tempSpeed -= 5
+        tempSpeed = 0
     }
     
     func useBlock()
@@ -1283,8 +1597,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if(tempBlock == 0)
             {
                 blockCounter = 0
-                tempBlock += 5
-                buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: false))
+                tempBlock += 3
+                buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: false))
                 potionsView.removeFromSuperview()
                 openInventory()
             }
@@ -1298,7 +1612,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func reduceBlock()
     {
         blockCounter += 1
-        tempBlock -= 5
+        tempBlock = 0
     }
     
     func useDamage()
@@ -1308,7 +1622,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if(tempDamage == 0)
             {
                 damageCounter = 0
-                tempDamage += 5
+                tempDamage += 3
                 buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: false))
                 potionsView.removeFromSuperview()
                 openInventory()
@@ -1323,37 +1637,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func reduceDamage()
     {
         damageCounter += 1
-        tempDamage -= 5
+        tempDamage = 0
     }
-
+    
     ///////////////////////////////      ATTACK TYPE FUNCTIONS       ///////////////////////////
     
     func goMelee()
     {
-        character.equippedWeapon = "Melee"
-        chooseAttackView.removeFromSuperview()
-        openChooseAttack()
+        if settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount() > 0
+        {
+            character.equippedWeapon = "Melee"
+            chooseAttackView.removeFromSuperview()
+            openChooseAttack()
+        }
     }
     
     func goShortRange()
     {
-        character.equippedWeapon = "Short Range"
-        chooseAttackView.removeFromSuperview()
-        openChooseAttack()
+        if settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount() > 0
+        {
+            character.equippedWeapon = "Short Range"
+            chooseAttackView.removeFromSuperview()
+            openChooseAttack()
+        }
     }
     
     func goMagic()
     {
-        character.equippedWeapon = "Magic"
-        chooseAttackView.removeFromSuperview()
-        openChooseAttack()
+        if settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount() > 0
+        {
+            character.equippedWeapon = "Magic"
+            chooseAttackView.removeFromSuperview()
+            openChooseAttack()
+        }
     }
     
     func goLongRange()
     {
-        character.equippedWeapon = "Long Range"
-        chooseAttackView.removeFromSuperview()
-        openChooseAttack()
+        if settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount() > 0
+        {
+            character.equippedWeapon = "Long Range"
+            chooseAttackView.removeFromSuperview()
+            openChooseAttack()
+        }
     }
     
     /////////////////////////////////       CHEST FUNCTIONS        ///////////////////////////
@@ -1381,15 +1707,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else if(chestRarity == "uncommon")
         {
-            times = 2
+            times = 4
         }
         else if(chestRarity == "rare")
         {
-            times = 4
+            times = 10
         }
         else if(chestRarity == "legendary")
         {
-            times = 25
+            times = 24
         }
         
         for _ in 0...times
@@ -1397,21 +1723,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let itemType = chestType()
             switch itemType
             {
-                case 1:
-                    let num = randomPotion()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
-                    settings.characters[settings.selectedPlayer].inventory.add(findName(num))
-                case 2:
-                    let num = randomAttack()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
-                    settings.characters[settings.selectedPlayer].inventory.add(findName(num))
-                default:
-                    let num = randomDefense()
-                    itemNum.append(num)
-                    pictures.append(findPhoto(num))
-                    settings.characters[settings.selectedPlayer].inventory.add(findName(num))
+            case 1:
+                let num = randomPotion()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
+                settings.characters[settings.selectedPlayer].inventory.add(findName(num))
+            case 2:
+                let num = randomAttack()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
+                settings.characters[settings.selectedPlayer].inventory.add(findName(num))
+            default:
+                let num = randomDefense()
+                itemNum.append(num)
+                pictures.append(findPhoto(num))
+                settings.characters[settings.selectedPlayer].inventory.add(findName(num))
             }
         }
         
@@ -1475,7 +1801,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 closeChestButton.layer.borderColor = UIColor.darkGrayColor().CGColor
                 closeChestButton.addTarget(self, action: #selector(GameScene.closeChest), forControlEvents: .TouchUpInside)
                 chestNotification.addSubview(closeChestButton)
-                
             }
         }
     }
@@ -1674,22 +1999,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func setDoor(place: String)
     {
-        let door = SKSpriteNode()
-        door.color = UIColor.lightGrayColor()
+        let door = SKSpriteNode(texture: doorLocked)
+        door.zPosition = -1
         doors.append(door)
         switch place {
         case "up":
             door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
             door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)
+            door.zRotation = CGFloat(M_PI)
         case "right":
             door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
             door.position = CGPoint(x: view!.bounds.width - view!.bounds.height*0.05, y: view!.bounds.height*0.5)
+            door.zRotation = CGFloat(M_PI_2)
         case "down":
             door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
             door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height*0.05)
         case "left":
             door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
             door.position = CGPoint(x: view!.bounds.height * 0.05, y: view!.bounds.height*0.5)
+            door.zRotation = 3 * CGFloat(M_PI_2)
         default:
             door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
             door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)

@@ -22,6 +22,7 @@
 		3FC7F0E31CDA65EB00E090EC /* barren lands.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */; };
 		3FC7F0E41CDA65EB00E090EC /* boss.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E11CDA65EB00E090EC /* boss.mp3 */; };
 		3FC7F0E51CDA65EB00E090EC /* death theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */; };
+		3FC7F0E71CDE18A800E090EC /* Enemy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E61CDE18A700E090EC /* Enemy.swift */; };
 		3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD71CB69EDB00F6BB4C /* Map.swift */; };
 		3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD91CB69F8800F6BB4C /* Settings.swift */; };
 		3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BDB1CB6A00C00F6BB4C /* Character.swift */; };
@@ -48,6 +49,7 @@
 		3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "barren lands.mp3"; sourceTree = "<group>"; };
 		3FC7F0E11CDA65EB00E090EC /* boss.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = boss.mp3; sourceTree = "<group>"; };
 		3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "death theme.mp3"; sourceTree = "<group>"; };
+		3FC7F0E61CDE18A700E090EC /* Enemy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enemy.swift; sourceTree = "<group>"; };
 		3FE64BD71CB69EDB00F6BB4C /* Map.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Map.swift; sourceTree = "<group>"; };
 		3FE64BD91CB69F8800F6BB4C /* Settings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3FE64BDB1CB6A00C00F6BB4C /* Character.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Character.swift; sourceTree = "<group>"; };
@@ -91,6 +93,7 @@
 				3FE64BE51CBE849B00F6BB4C /* StartScene.swift */,
 				3FE64BE71CBE84AA00F6BB4C /* CharacterScene.swift */,
 				3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */,
+				3FC7F0E61CDE18A700E090EC /* Enemy.swift */,
 				3FE64BEB1CBE84C400F6BB4C /* SettingsScene.swift */,
 				3FE64BD71CB69EDB00F6BB4C /* Map.swift */,
 				3FE64BD91CB69F8800F6BB4C /* Settings.swift */,
@@ -195,6 +198,7 @@
 				3FE64BEC1CBE84C400F6BB4C /* SettingsScene.swift in Sources */,
 				3F3296781CC15DC100661CC0 /* MainVC.swift in Sources */,
 				3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */,
+				3FC7F0E71CDE18A800E090EC /* Enemy.swift in Sources */,
 				3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */,
 				3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */,
 				3F344C771C76427F0027247E /* Inventory.swift in Sources */,
