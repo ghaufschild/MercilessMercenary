@@ -65,6 +65,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var canAttack: Bool = true
     var canTakeDamage: Bool = true
     var roomCleared: Bool = true
+    var hasKey = false
     
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
@@ -95,6 +96,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var chooseAttackView: UIView!
     var chestNotification: UIView!
     var transitionView: UIView!
+    var speedPot: UIImageView!
+    var speedPotBG: UIView!
+    var blockPot: UIImageView!
+    var blockPotBG: UIView!
+    var damagePot: UIImageView!
+    var damagePotBG: UIView!
     var rewardNotifications: [UIView] = []
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
@@ -111,7 +118,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var doors = [SKSpriteNode]()
     var enemyObjects = [Enemy]()
-    var healthBars = [SKSpriteNode]()             //Shows health on enemy
+    var healthBars = [SKSpriteNode]()       //Shows health on enemy
     var attackEnemyTimer = NSTimer()        //Controls how enemies attack
     var moveEnemyTimer = NSTimer()          //Controls how enemies move
     var availableEnemyLocs = [CGPoint]()    //Locations that an enemy can spawn in
@@ -319,6 +326,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         congratsLabel.textAlignment = .Center
         chestNotification.addSubview(congratsLabel)
         
+        speedPotBG = UIView(frame: CGRect(x: size.width * 0.02, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        speedPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
+        speedPotBG.layer.borderColor = UIColor.grayColor().CGColor
+        speedPotBG.layer.borderWidth = speedPotBG.frame.width * 0.05
+        speedPot = UIImageView(frame: CGRect(x: size.width * 0.03, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        speedPot.image = UIImage(named: "SpeedPot")
+        blockPotBG = UIView(frame: CGRect(x: size.width * 0.09, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        blockPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
+        blockPotBG.layer.borderColor = UIColor.grayColor().CGColor
+        blockPotBG.layer.borderWidth = blockPotBG.frame.width * 0.05
+        blockPot = UIImageView(frame: CGRect(x: size.width * 0.1, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        blockPot.image = UIImage(named: "BlockPot")
+        damagePotBG = UIView(frame: CGRect(x: size.width * 0.16, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        damagePotBG.layer.backgroundColor = UIColor.brownColor().CGColor
+        damagePotBG.layer.borderColor = UIColor.grayColor().CGColor
+        damagePotBG.layer.borderWidth = damagePotBG.frame.width * 0.05
+        damagePot = UIImageView(frame: CGRect(x: size.width * 0.17, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        damagePot.image = UIImage(named: "DamagePot")
+        
+        checkForKey()
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -331,11 +358,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canAttack && canDoStuff)
         {
-            if(settings.soundOn)
-            {
-                runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-            }
-            
             var projectile: SKSpriteNode!
             var distance: CGFloat = 0
             if(character.equippedWeapon == "Melee")
@@ -388,6 +410,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
                 canAttack = false
                 _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
+                if(settings.soundOn)
+                {
+                    runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+                }
             }
             else
             {
@@ -619,40 +645,44 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.9 - player.frame.height * 0.5)
                     map.update(map.getDown()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.y >= size.height // Top
             {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.1 + player.frame.height * 0.5)
                     map.update(map.getUp()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.x <= 0 // Left
             {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.9 - player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getLeft()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.x >= size.width // Right
             {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.1 + player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getRight()!)
                     door = true
+                    transitionClose()
                 }
             }
             if !door{
@@ -662,8 +692,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func checkForKey()
+    {
+        if map.visited.contains(map.getKey())
+        {
+            let keyView = UIImageView(frame: CGRect(x: size.width * 0.65, y: size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+            keyView.image = UIImage(named: "key")
+            view?.addSubview(keyView)
+            hasKey = true
+        }
+        hasKey = false
+    }
+    
     func unlockDoors()      //Chance image of doors
     {
+        checkForKey()
         for num in 0..<doors.count
         {
             doors[num].texture = doorUnlocked
@@ -822,12 +865,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(chest)
         }
         
-        addMonster(1)
-        addMonster(1)
-        addMonster(2)
-        addMonster(2)
-        
-        roomCleared = false
+        if(map.visited.contains(map.getCurr()))
+        {
+            roomCleared = true
+        }
+        else
+        {
+            addMonster(1)
+            addMonster(1)
+            addMonster(2)
+            addMonster(2)
+            roomCleared = false
+        }
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
@@ -1644,9 +1693,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 speedCounter = 0
                 tempSpeed += 5
-                buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: false))
                 potionsView.removeFromSuperview()
                 openInventory()
+                speedPot.alpha = 1.0
+                speedPotBG.alpha = 1.0
+                view?.insertSubview(speedPot, belowSubview: menu)
+                view?.insertSubview(speedPotBG, belowSubview: speedPot)
             }
             else
             {
@@ -1657,9 +1709,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func reduceSpeed()      //Call image that oscillates alphas from .2 to .9
     {
-        print("reached")
         speedCounter += 1
-        tempSpeed = 0
+        if(speedCounter >= 100)
+        {
+            speedPot.alpha = findPotAlpha(speedCounter - 100)
+            speedPotBG.alpha = findPotAlpha(speedCounter - 100)
+        }
+        if(speedCounter >= 150)
+        {
+            tempSpeed = 0
+            speedPotBG.removeFromSuperview()
+            speedPot.removeFromSuperview()
+        }
     }
     
     func useBlock()
@@ -1670,9 +1731,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 blockCounter = 0
                 tempBlock += 3
-                buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: false))
                 potionsView.removeFromSuperview()
                 openInventory()
+                blockPot.alpha = 1.0
+                blockPotBG.alpha = 1.0
+                view?.insertSubview(blockPot, belowSubview: menu)
+                view?.insertSubview(blockPotBG, belowSubview: blockPot)
             }
             else
             {
@@ -1684,7 +1748,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func reduceBlock()
     {
         blockCounter += 1
-        tempBlock = 0
+        if(blockCounter >= 100)
+        {
+            blockPot.alpha = findPotAlpha(blockCounter - 100)
+            blockPotBG.alpha = findPotAlpha(blockCounter - 100)
+        }
+        if(blockCounter >= 150)
+        {
+            tempBlock = 0
+            blockPotBG.removeFromSuperview()
+            blockPot.removeFromSuperview()
+        }
     }
     
     func useDamage()
@@ -1695,9 +1769,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 damageCounter = 0
                 tempDamage += 3
-                buffTimers.append(NSTimer(timeInterval: 0.25, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: false))
                 potionsView.removeFromSuperview()
                 openInventory()
+                damagePot.alpha = 1.0
+                damagePotBG.alpha = 1.0
+                view?.insertSubview(damagePot, belowSubview: menu)
+                view?.insertSubview(damagePotBG, belowSubview: damagePot)
             }
             else
             {
@@ -1708,8 +1785,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func reduceDamage()
     {
+        if(damageCounter >= 100)
+        {
+            damagePotBG.alpha = findPotAlpha(damageCounter - 100)
+            damagePot.alpha = findPotAlpha(damageCounter - 100)
+        }
         damageCounter += 1
-        tempDamage = 0
+        if damageCounter >= 150
+        {
+            tempDamage = 0
+            damagePotBG.removeFromSuperview()
+            damagePot.removeFromSuperview()
+            
+        }
+    }
+    
+    func findPotAlpha(count: Int) -> CGFloat
+    {
+        let alpha: CGFloat = (CGFloat(count)/10)%2
+        if alpha <= 1
+        {
+            return 1 - alpha
+        }
+        else
+        {
+            return alpha - 1
+        }
     }
     
     ///////////////////////////////      ATTACK TYPE FUNCTIONS       ///////////////////////////
