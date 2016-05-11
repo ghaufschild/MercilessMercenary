@@ -152,6 +152,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.view?.multipleTouchEnabled = true
         
         backgroundMusic.autoplayLooped = true
+        backgroundMusic.name = "backgroundMusic"
         addChild(backgroundMusic)
         
         doorLocked = SKTexture(image: UIImage(named: "doorLocked")!)
@@ -309,6 +310,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             setDoor("left")
         }
+        unlockDoors()
         
         // 4
         addChild(player)
@@ -629,23 +631,68 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 realDest = player.position
             }
             
-            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && (map.getDown() != nil || map.getUp() != nil) // In the middle
+            if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && roomCleared // In the middle
             {
-                realDest.x = max(0,realDest.x)
-                realDest.x = min(size.width, realDest.x)
+                if realDest.y < size.height * 0.5
+                {
+                    if map.getDown() != nil
+                    {
+                        realDest.y = max(0,realDest.y)
+                    }
+                    else
+                    {
+                        realDest.y = max(size.height * 0.1, realDest.y)
+                    }
+                }
+                else
+                {
+                    if map.getUp() != nil
+                    {
+                        realDest.y = min(size.width, realDest.y)
+                    }
+                    else
+                    {
+                        realDest.y = min(size.height * 0.9, realDest.y)
+                    }
+                }
             }
-            else if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && (map.getLeft() != nil || map.getRight() != nil) // In the middle
+            else
             {
-                realDest.y = max(0, realDest.y)
-                realDest.y = min(size.height, realDest.y)
+                realDest.y = max(size.height * 0.1, realDest.y)
+                realDest.y = min(size.height * 0.9, realDest.y)
+            }
+            
+            if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && roomCleared // In the middle
+            {
+                if realDest.x < size.width * 0.5
+                {
+                    if map.getLeft() != nil
+                    {
+                        realDest.x = max(0, realDest.x)
+                    }
+                    else
+                    {
+                        realDest.x = max(size.width * 0.1, realDest.x)
+                    }
+                }
+                else
+                {
+                    if map.getRight() != nil
+                    {
+                        realDest.x = min(size.width, realDest.x)
+                    }
+                    else
+                    {
+                        realDest.x = min(size.width * 0.9, realDest.x)
+                    }
+                }
             }
             else
             {
                 realDest.x = max(size.width * 0.1, realDest.x)
                 realDest.x = min(size.width * 0.9, realDest.x)
-                realDest.y = max(size.height * 0.1, realDest.y)
-                realDest.y = min(size.height * 0.9, realDest.y)
             }
+            
             var door = false
             if realDest.y <= 0 // Bottom
             {
@@ -918,13 +965,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             enemy = Enemy(h: 5, dam: 1, move: 10, num: 1, enemy: monster)
         }
-        else if(num == 3)
+        else if(num == 2)
         {
-            enemy = Enemy(h: 10, dam: 1, move: 15, num: 3, enemy: monster)
+            enemy = Enemy(h: 10, dam: 1, move: 15, num: 2, enemy: monster)
         }
         else
         {
-            enemy = Enemy(h: 25, dam: 3, move: 5, num: 2, enemy: monster)
+            enemy = Enemy(h: 25, dam: 3, move: 5, num: 3, enemy: monster)
         }
         
         enemyObjects.append(enemy)
@@ -933,7 +980,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         totalHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
         addChild(totalHealthView)
         let currHealthView = SKSpriteNode(color: UIColor.greenColor(), size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
-            currHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
+        currHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
         addChild(currHealthView)
         
         healthBars.append(totalHealthView)
@@ -948,37 +995,50 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 let currLoc = enemyObjects[num].sprite.position
                 
-                let x = arc4random_uniform(2)
                 var actualX = currLoc.x
-                let moveSpeed: CGFloat = CGFloat(enemyObjects[num].getMoveSpeed() * 2)
-                if x == 0
-                {
-                    actualX = currLoc.x + moveSpeed
-                }
-                else if x == 1
-                {
-                    actualX = currLoc.x - moveSpeed
-                }
-                
-                let y = arc4random_uniform(2)
                 var actualY = currLoc.y
-                if y == 0
+                let moveSpeed: CGFloat = CGFloat(enemyObjects[num].getMoveSpeed() * 2)
+                
+                if enemyObjects[num].type == 2
                 {
-                    actualY = currLoc.y + moveSpeed
+                    let offset = player.position - currLoc
+                    let direction = offset.normalized()
+                    let moveAmount = direction * moveSpeed
+                    let realDest = moveAmount + currLoc
+                    actualX = realDest.x
+                    actualY = realDest.y
                 }
-                else if y == 1
+                else
                 {
-                    actualY = currLoc.y - moveSpeed
+                    let x = arc4random_uniform(2)
+                    if x == 0
+                    {
+                        actualX = currLoc.x + moveSpeed
+                    }
+                    else if x == 1
+                    {
+                        actualX = currLoc.x - moveSpeed
+                    }
+                    
+                    let y = arc4random_uniform(2)
+                    if y == 0
+                    {
+                        actualY = currLoc.y + moveSpeed
+                    }
+                    else if y == 1
+                    {
+                        actualY = currLoc.y - moveSpeed
+                    }
                 }
                 
-                actualY = min(actualY, size.height - enemyObjects[num].sprite.frame.height)
-                actualY = max(actualY, enemyObjects[num].sprite.frame.height)
+                actualY = min(actualY, size.height * 0.9)
+                actualY = max(actualY, size.height * 0.1)
                 
-                actualX = min(actualX, size.width - enemyObjects[num].sprite.frame.width)
-                actualX = max(actualX, enemyObjects[num].sprite.frame.width)
+                actualX = min(actualX, size.width * 0.9)
+                actualX = max(actualX, size.width * 0.1)
                 
                 let loc = CGPoint(x: actualX, y: actualY)
-
+                
                 let delta: CGVector = CGVector(dx: loc.x - currLoc.x, dy: loc.y - currLoc.y)
                 let move = SKAction.moveTo(loc, duration: 1.0)
                 let displacement = SKAction.moveBy(delta, duration: 1.0)
@@ -995,15 +1055,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(canDoStuff)
         {
             var shots = 0
-            for num in 0..<enemyObjects.count
+            for enemy in enemyObjects
             {
-                let random = arc4random_uniform(100)
-                if(random > 80)
+                if enemy.type != 2
                 {
-                    if(shots < 2)
+                    let random = arc4random_uniform(100)
+                    if(random > 80)
                     {
-                        enemyProjectile(enemyObjects[num].sprite.position, dam: enemyObjects[num].getDamage())
-                        shots += 1
+                        if(shots < 2)
+                        {
+                            enemyProjectile(enemy.sprite.position, dam: enemy.getDamage())
+                            shots += 1
+                        }
                     }
                 }
             }
@@ -1054,7 +1117,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(character.equippedWeapon == "Magic")
         {
             damage = 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/10 + 1)
-
+            
         }
         if(character.equippedWeapon == "Long Range")
         {
@@ -1220,7 +1283,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func openMenu()
     {
-        self.paused = true
+        canDoStuff = false
+        for child in (self.scene?.children)!
+        {
+            if child.name != "backgroundMusic"
+            {
+                child.paused = true
+            }
+        }
+        
         for timer in buffTimers
         {
             timer.invalidate()
@@ -1230,9 +1301,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func closeMenu()
     {
-        backgroundMusic.removeFromParent()
         menu.removeFromSuperview()
-        self.paused = false
+        canDoStuff = true
         if tempSpeed > 0
         {
             buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
@@ -1249,10 +1319,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             view?.addSubview(damagePotBG)
             view?.addSubview(damagePot)
         }
-        
-        if(settings.musicOn)
+        for child in (self.scene?.children)!
         {
-            addChild(backgroundMusic)
+            child.paused = false
         }
     }
     
@@ -1275,12 +1344,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(settings.musicOn)
         {
             toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
-            addChild(backgroundMusic)
+            let volumeUp = SKAction.changeVolumeTo(1, duration: 0)
+            backgroundMusic.runAction(volumeUp)
         }
         else
         {
             toggleMusicButton.layer.backgroundColor = UIColor.redColor().CGColor
-            backgroundMusic.removeFromParent()
+            let volumeDown = SKAction.changeVolumeTo(0, duration: 0)
+            backgroundMusic.runAction(volumeDown)
         }
     }
     
