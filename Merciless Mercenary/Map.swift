@@ -14,6 +14,8 @@ class Map: NSObject, NSCoding {
     var visited: [Coordinate] = []
     var known: [Coordinate] = []
     var chests: [Coordinate] = []
+    var cleared: [Coordinate] = []
+    var respawnPoint: Coordinate!
     var currLoc: Coordinate!
     var spawnPoint: Coordinate!
     var keyPoint: Coordinate!
@@ -24,6 +26,8 @@ class Map: NSObject, NSCoding {
     
     required init(coder aDecoder: NSCoder) {
         self.maxWidth = aDecoder.decodeIntegerForKey("maxWidth")
+        self.respawnPoint = aDecoder.decodeObjectForKey("respawn") as! Coordinate
+        self.cleared = aDecoder.decodeObjectForKey("cleared") as! [Coordinate]
         self.realMapLoc = aDecoder.decodeObjectForKey("realMapLoc") as! [Coordinate]
         self.visited = aDecoder.decodeObjectForKey("visited") as! [Coordinate]
         self.known = aDecoder.decodeObjectForKey("known") as! [Coordinate]
@@ -37,6 +41,8 @@ class Map: NSObject, NSCoding {
     func encodeWithCoder(coder: NSCoder)
     {
         coder.encodeInteger(self.maxWidth, forKey: "maxWidth")
+        coder.encodeObject(self.respawnPoint, forKey: "respawn")
+        coder.encodeObject(self.cleared, forKey: "cleared")
         coder.encodeObject(self.realMapLoc, forKey: "realMapLoc")
         coder.encodeObject(self.visited, forKey: "visited")
         coder.encodeObject(self.known, forKey: "known")
@@ -150,6 +156,7 @@ class Map: NSObject, NSCoding {
     
     func generateLocs(locs: [Coordinate])
     {
+        respawnPoint = spawnPoint
         var check: Int = Int(arc4random_uniform(2))
         if(check == 0)
         {
@@ -305,9 +312,18 @@ class Map: NSObject, NSCoding {
     
     func update(loc: Coordinate)
     {
+        respawnPoint = currLoc
         currLoc = loc
         updateVisited(loc)
         updateKnown(getAdjacent(loc))
+    }
+    
+    func cleared(loc: Coordinate)
+    {
+        if(!cleared.contains(loc))
+        {
+            cleared.append(loc)
+        }
     }
 }
 

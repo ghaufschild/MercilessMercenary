@@ -52,6 +52,7 @@ struct PhysicsCategory {
     static let Chest     : UInt32 = 0b100     // 4
     static let Door      : UInt32 = 0b101     // 5
     static let EnemyProjectile : UInt32 = 0b110 // 6
+    static let Wall      : UInt32 = 0b111     // 7
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -345,6 +346,58 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         checkForKey()
         
+        let wallText = SKTexture(CGImage: (UIImage(named: "Wall")?.CGImage)!)
+        let wall1 = SKSpriteNode(texture: wallText)
+        wall1.size = CGSize(width: size.width, height: size.width * 0.08)
+        wall1.position = CGPoint(x: size.width * 0.5, y: size.height * 0.04)
+        wall1.zPosition = -2
+        wall1.physicsBody = SKPhysicsBody(texture: wallText, size: wall1.size)
+        wall1.physicsBody?.dynamic = true
+        wall1.physicsBody?.categoryBitMask = PhysicsCategory.Wall
+        wall1.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
+        wall1.physicsBody?.collisionBitMask = PhysicsCategory.None
+        wall1.physicsBody?.usesPreciseCollisionDetection = false
+        
+        let wall2 = SKSpriteNode(texture: wallText)
+        wall2.size = CGSize(width: size.width, height: size.width * 0.08)
+        wall2.position = CGPoint(x: size.width * 0.5, y: size.height * 0.96)
+        wall2.zPosition = -2
+        wall2.physicsBody = SKPhysicsBody(texture: wallText, size: wall2.size)
+        wall2.physicsBody?.dynamic = true
+        wall2.physicsBody?.categoryBitMask = PhysicsCategory.Wall
+        wall2.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
+        wall2.physicsBody?.collisionBitMask = PhysicsCategory.None
+        wall2.physicsBody?.usesPreciseCollisionDetection = false
+        
+        let wall3 = SKSpriteNode(texture: wallText)
+        wall3.size = CGSize(width: size.width, height: size.width * 0.08)
+        wall3.position = CGPoint(x: size.width * 0.04, y: size.height * 0.5)
+        wall3.zPosition = -2
+        wall3.zRotation = CGFloat(M_PI_2)
+        wall3.physicsBody = SKPhysicsBody(texture: wallText, size: wall3.size)
+        wall3.physicsBody?.dynamic = true
+        wall3.physicsBody?.categoryBitMask = PhysicsCategory.Wall
+        wall3.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
+        wall3.physicsBody?.collisionBitMask = PhysicsCategory.None
+        wall3.physicsBody?.usesPreciseCollisionDetection = false
+        
+        let wall4 = SKSpriteNode(texture: wallText)
+        wall4.size = CGSize(width: size.width, height: size.width * 0.08)
+        wall4.position = CGPoint(x: size.width * 0.96, y: size.height * 0.5)
+        wall4.zPosition = -2
+        wall4.zRotation = CGFloat(M_PI_2)
+        wall4.physicsBody = SKPhysicsBody(texture: wallText, size: wall4.size)
+        wall4.physicsBody?.dynamic = true
+        wall4.physicsBody?.categoryBitMask = PhysicsCategory.Wall
+        wall4.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
+        wall4.physicsBody?.collisionBitMask = PhysicsCategory.None
+        wall4.physicsBody?.usesPreciseCollisionDetection = false
+        
+        addChild(wall1)
+        addChild(wall2)
+        addChild(wall3)
+        addChild(wall4)
+        
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
     }
@@ -366,7 +419,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             if(character.equippedWeapon == "Short Range")
             {
-                projectile = SKSpriteNode(imageNamed: "Shuriken")
+                projectile = SKSpriteNode(imageNamed: "movingShuriken")
                 projectile.size = CGSize(width: player.size.width * 0.3, height: player.size.height * 0.3)
                 distance = 100
             }
@@ -387,7 +440,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
             projectile.physicsBody?.dynamic = true
             projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
-            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
+            projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Wall
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
             projectile.physicsBody?.usesPreciseCollisionDetection = true
             
@@ -1093,6 +1146,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         chest.removeFromParent()
     }
     
+    func projectileDidCollideWithWall(projectile: SKSpriteNode, wall: SKSpriteNode)
+    {
+        projectile.removeFromParent()
+    }
+    
     func didBeginContact(contact: SKPhysicsContact)
     {
         var firstBody: SKPhysicsBody
@@ -1111,6 +1169,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 4 is chest
         // 5 is door
         // 6 is enemyProjectile
+        // 7 is wall
         if ((firstBody.categoryBitMask == 1) &&     //monster and projectile
             (secondBody.categoryBitMask == 2)) {
             if(secondBody.node != nil && firstBody.node != nil)
@@ -1138,6 +1197,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if(secondBody.node != nil)
             {
                 projectileDidCollideWithPlayer(secondBody.node as! SKSpriteNode, player: firstBody.node as! SKSpriteNode)
+            }
+        }
+        else if(firstBody.categoryBitMask == 2 && secondBody.categoryBitMask == 7)  //player and enemyProjectile
+        {
+            if(firstBody.node != nil)
+            {
+                projectileDidCollideWithWall(firstBody.node as! SKSpriteNode, wall: secondBody.node as! SKSpriteNode)
+            }
+        }
+        else if(firstBody.categoryBitMask == 6 && secondBody.categoryBitMask == 7)  //player and enemyProjectile
+        {
+            if(firstBody.node != nil)
+            {
+                projectileDidCollideWithWall(firstBody.node as! SKSpriteNode, wall: secondBody.node as! SKSpriteNode)
             }
         }
         
