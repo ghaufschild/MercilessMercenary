@@ -65,6 +65,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var canAttack: Bool = true
     var canTakeDamage: Bool = true
     var roomCleared: Bool = true
+    var hasKey = false
     
     var attackTimer = NSTimer()
     var moveTimer = NSTimer()
@@ -342,6 +343,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         damagePot = UIImageView(frame: CGRect(x: size.width * 0.17, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         damagePot.image = UIImage(named: "DamagePot")
         
+        checkForKey()
+        
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
     }
@@ -353,11 +356,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if(canAttack && canDoStuff)
         {
-            if(settings.soundOn)
-            {
-                runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
-            }
-            
             var projectile: SKSpriteNode!
             var distance: CGFloat = 0
             if(character.equippedWeapon == "Melee")
@@ -410,6 +408,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
                 canAttack = false
                 _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
+                if(settings.soundOn)
+                {
+                    runAction(SKAction.playSoundFileNamed("pew-pew-lei.caf", waitForCompletion: false))
+                }
             }
             else
             {
@@ -596,40 +598,44 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getDown() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.9 - player.frame.height * 0.5)
                     map.update(map.getDown()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.y >= size.height // Top
             {
                 if realDest.x >= size.width * 0.45 && realDest.x <= size.width * 0.55 && map.getUp() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.1 + player.frame.height * 0.5)
                     map.update(map.getUp()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.x <= 0 // Left
             {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getLeft() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.9 - player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getLeft()!)
                     door = true
+                    transitionClose()
                 }
             }
             else if realDest.x >= size.width // Right
             {
                 if realDest.y >= size.height * 0.45 && realDest.y <= size.height * 0.55 && map.getRight() != nil && roomCleared // In the middle
                 {
-                    transitionClose()
+                    checkForKey()
                     moveTo = CGPoint(x: size.width * 0.1 + player.frame.width * 0.5, y: size.height * 0.5)
                     map.update(map.getRight()!)
                     door = true
+                    transitionClose()
                 }
             }
             if !door{
@@ -639,8 +645,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func checkForKey()
+    {
+        if map.visited.contains(map.getKey())
+        {
+            let keyView = UIImageView(frame: CGRect(x: size.width * 0.65, y: size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+            keyView.image = UIImage(named: "key")
+            view?.addSubview(keyView)
+            hasKey = true
+        }
+        hasKey = false
+    }
+    
     func unlockDoors()      //Chance image of doors
     {
+        checkForKey()
         for num in 0..<doors.count
         {
             doors[num].texture = doorUnlocked
@@ -799,12 +818,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(chest)
         }
         
-        addMonster(1)
-        addMonster(1)
-        addMonster(2)
-        addMonster(2)
-        
-        roomCleared = false
+        if(map.visited.contains(map.getCurr()))
+        {
+            roomCleared = true
+        }
+        else
+        {
+            addMonster(1)
+            addMonster(1)
+            addMonster(2)
+            addMonster(2)
+            roomCleared = false
+        }
     }
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
@@ -1036,8 +1061,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if character.currentHealth <= 0
         {
             character.currentHealth = character.maxHealth
-            map.visited.removeLast()
-            map.currLoc = map.visited.last
             exitGame()
         }
     }
