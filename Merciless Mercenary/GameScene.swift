@@ -1211,25 +1211,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func openMenu()
     {
         canDoStuff = false
-        for child in (self.view?.scene!.children)!
+        for child in (self.scene?.children)!
         {
             if child.name != "backgroundMusic"
             {
-             child.paused = true
+                child.paused = true
             }
+        }
+        
+        for timer in buffTimers
+        {
+            timer.invalidate()
         }
         view?.addSubview(menu)
     }
     
     func closeMenu()
     {
+        menu.removeFromSuperview()
         canDoStuff = true
-        for child in (self.view?.scene!.children)!
+        if tempSpeed > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
+        }
+        if tempBlock > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
+            view?.addSubview(blockPotBG)
+            view?.addSubview(blockPot)
+        }
+        if tempDamage > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
+            view?.addSubview(damagePotBG)
+            view?.addSubview(damagePot)
+        }
+        for child in (self.scene?.children)!
         {
             child.paused = false
         }
-        menu.removeFromSuperview()
-        
     }
     
     func toggleSound()
