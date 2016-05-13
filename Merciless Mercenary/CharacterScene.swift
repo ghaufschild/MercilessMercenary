@@ -14,6 +14,10 @@ class CharacterScene: SKScene {
 
     var settings: Settings!
     
+    var createText = SKTexture(imageNamed: "CreateButton")
+    var playText = SKTexture(imageNamed: "PlayButton")
+    var deleteText = SKTexture(imageNamed: "DeleteButton")
+    
     var titleLabel = SKSpriteNode()
     var playCharOne = SKSpriteNode()
     var playCharTwo = SKSpriteNode()
@@ -97,24 +101,24 @@ class CharacterScene: SKScene {
             if(charPresent)     //Yes character
             {
                 playCharOne.name = "playCharOne"
+                playCharOne.texture = playText
                 playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
                 playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
-                playCharOne.color = SKColor.blueColor()
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
                 
                 deleteCharOne.name = "deleteOne"
+                deleteCharOne.texture = deleteText
                 deleteCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.85)
                 deleteCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
-                deleteCharOne.color = SKColor.redColor()
                 deleteCharOne.zPosition = 1
                 addChild(deleteCharOne)            }
             else                //No character
             {
                 playCharOne.name = "playCharOne"
+                playCharOne.texture = createText
                 playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
                 playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
-                playCharOne.color = SKColor.redColor()
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
             }
@@ -129,25 +133,25 @@ class CharacterScene: SKScene {
             if(charPresent)     //Yes character
             {
                 playCharTwo.name = "playCharTwo"
+                playCharTwo.texture = playText
                 playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
                 playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
-                playCharTwo.color = SKColor.blueColor()
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
                 
                 deleteCharTwo.name = "deleteTwo"
                 deleteCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.85)
                 deleteCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
-                deleteCharTwo.color = SKColor.redColor()
+                deleteCharTwo.texture = deleteText
                 deleteCharTwo.zPosition = 1
                 addChild(deleteCharTwo)
             }
             else                //No character
             {
                 playCharTwo.name = "playCharTwo"
+                playCharTwo.texture = createText
                 playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
                 playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
-                playCharTwo.color = SKColor.redColor()
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
             }
@@ -164,14 +168,14 @@ class CharacterScene: SKScene {
                 playCharThree.name = "playCharThree"
                 playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
                 playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
-                playCharThree.color = SKColor.blueColor()
+                playCharThree.texture = playText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
                 
                 deleteCharThree.name = "deleteThree"
                 deleteCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.85)
                 deleteCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
-                deleteCharThree.color = SKColor.redColor()
+                deleteCharThree.texture = deleteText
                 deleteCharThree.zPosition = 1
                 addChild(deleteCharThree)
             }
@@ -180,7 +184,7 @@ class CharacterScene: SKScene {
                 playCharThree.name = "playCharThree"
                 playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
                 playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
-                playCharThree.color = SKColor.redColor()
+                playCharThree.texture = createText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
             }
@@ -228,18 +232,32 @@ class CharacterScene: SKScene {
     func goToGameP1()
     {
         settings.selectedPlayer = 0
+        if settings.characters.count < 0
+        {
+            settings.addCharacter(0)
+        }
         openGame()
     }
     
     func goToGameP2()
     {
         settings.selectedPlayer = 1
+        if settings.characters.count < 1
+        {
+            settings.addCharacter(1)
+            settings.selectedPlayer = settings.characters.count - 1
+        }
         openGame()
     }
     
     func goToGameP3()
     {
         settings.selectedPlayer = 2
+        if settings.characters.count < 2
+        {
+            settings.addCharacter(2)
+            settings.selectedPlayer = settings.characters.count - 1
+        }
         openGame()
     }
     

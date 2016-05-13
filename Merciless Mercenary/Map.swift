@@ -198,6 +198,7 @@ class Map: NSObject, NSCoding {
                 }
             }
         }
+        cleared.append(spawnPoint)
     }
     
     func getWidth() -> Int

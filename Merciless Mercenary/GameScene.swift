@@ -103,6 +103,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var blockPotBG: UIView!
     var damagePot: UIImageView!
     var damagePotBG: UIView!
+    var keyView: UIImageView!
     var rewardNotifications: [UIView] = []
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
@@ -113,7 +114,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let player = SKSpriteNode(imageNamed: "player")
     
-    var menuButton = SKSpriteNode()
+    var menuButton = SKSpriteNode(imageNamed: "MenuButton")
     
     var heartBar: UIView!
     
@@ -165,11 +166,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(backgroundImage)
         
         menuButton.name = "menu"
-        menuButton.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
+        menuButton.position = CGPoint(x: size.width * 0.2, y: size.height * 0.95)
         menuButton.size = CGSize(width: size.width * 0.2, height: size.height * 0.1)
         menuButton.userInteractionEnabled = false
-        menuButton.alpha = 0.5
-        menuButton.color = SKColor.blueColor()
+        menuButton.alpha = 0.8
         addChild(menuButton)
         
         let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
@@ -206,7 +206,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         attackJoystickOuter.image = UIImage(named: "joystick")
         attackJoystickOuter.alpha = 0.4
         
-        heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.width * 0.01, width: size.width * 0.25, height: size.width * 0.15))
+        heartBar = UIView(frame: CGRect(x: size.width * 0.74, y: size.height * 0.01, width: size.width * 0.25, height: size.width * 0.15))
         setHearts()
         view.addSubview(heartBar)
         
@@ -327,31 +327,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         congratsLabel.textAlignment = .Center
         chestNotification.addSubview(congratsLabel)
         
-        speedPotBG = UIView(frame: CGRect(x: size.width * 0.02, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        speedPotBG = UIView(frame: CGRect(x: size.width * 0.02, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
         speedPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
         speedPotBG.layer.borderColor = UIColor.grayColor().CGColor
         speedPotBG.layer.borderWidth = speedPotBG.frame.width * 0.05
-        speedPot = UIImageView(frame: CGRect(x: size.width * 0.03, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        speedPot = UIImageView(frame: CGRect(x: size.width * 0.03, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         speedPot.image = UIImage(named: "SpeedPot")
-        blockPotBG = UIView(frame: CGRect(x: size.width * 0.09, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        blockPotBG = UIView(frame: CGRect(x: size.width * 0.09, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
         blockPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
         blockPotBG.layer.borderColor = UIColor.grayColor().CGColor
         blockPotBG.layer.borderWidth = blockPotBG.frame.width * 0.05
-        blockPot = UIImageView(frame: CGRect(x: size.width * 0.1, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        blockPot = UIImageView(frame: CGRect(x: size.width * 0.1, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         blockPot.image = UIImage(named: "BlockPot")
-        damagePotBG = UIView(frame: CGRect(x: size.width * 0.16, y: size.height * 0.02, width: size.width * 0.07, height: size.width * 0.07))
+        damagePotBG = UIView(frame: CGRect(x: size.width * 0.16, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
         damagePotBG.layer.backgroundColor = UIColor.brownColor().CGColor
         damagePotBG.layer.borderColor = UIColor.grayColor().CGColor
         damagePotBG.layer.borderWidth = damagePotBG.frame.width * 0.05
-        damagePot = UIImageView(frame: CGRect(x: size.width * 0.17, y: size.height * 0.02 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+        damagePot = UIImageView(frame: CGRect(x: size.width * 0.17, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         damagePot.image = UIImage(named: "DamagePot")
         
         checkForKey()
         
         let wallText = SKTexture(CGImage: (UIImage(named: "Wall")?.CGImage)!)
         let wall1 = SKSpriteNode(texture: wallText)
-        wall1.size = CGSize(width: size.width, height: size.width * 0.08)
-        wall1.position = CGPoint(x: size.width * 0.5, y: size.height * 0.04)
+        wall1.size = CGSize(width: size.width, height: size.height * 0.1)
+        wall1.position = CGPoint(x: size.width * 0.5, y: size.height * 0.05)
         wall1.zPosition = -2
         wall1.physicsBody = SKPhysicsBody(texture: wallText, size: wall1.size)
         wall1.physicsBody?.dynamic = true
@@ -361,8 +361,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall1.physicsBody?.usesPreciseCollisionDetection = false
         
         let wall2 = SKSpriteNode(texture: wallText)
-        wall2.size = CGSize(width: size.width, height: size.width * 0.08)
-        wall2.position = CGPoint(x: size.width * 0.5, y: size.height * 0.96)
+        wall2.size = CGSize(width: size.width, height: size.height * 0.1)
+        wall2.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
         wall2.zPosition = -2
         wall2.physicsBody = SKPhysicsBody(texture: wallText, size: wall2.size)
         wall2.physicsBody?.dynamic = true
@@ -372,8 +372,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall2.physicsBody?.usesPreciseCollisionDetection = false
         
         let wall3 = SKSpriteNode(texture: wallText)
-        wall3.size = CGSize(width: size.width, height: size.width * 0.08)
-        wall3.position = CGPoint(x: size.width * 0.04, y: size.height * 0.5)
+        wall3.size = CGSize(width: size.width, height: size.height * 0.1)
+        wall3.position = CGPoint(x: size.height * 0.05, y: size.height * 0.5)
         wall3.zPosition = -2
         wall3.zRotation = CGFloat(M_PI_2)
         wall3.physicsBody = SKPhysicsBody(texture: wallText, size: wall3.size)
@@ -384,8 +384,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall3.physicsBody?.usesPreciseCollisionDetection = false
         
         let wall4 = SKSpriteNode(texture: wallText)
-        wall4.size = CGSize(width: size.width, height: size.width * 0.08)
-        wall4.position = CGPoint(x: size.width * 0.96, y: size.height * 0.5)
+        wall4.size = CGSize(width: size.width, height: size.height * 0.1)
+        wall4.position = CGPoint(x: size.width - size.height * 0.05, y: size.height * 0.5)
         wall4.zPosition = -2
         wall4.zRotation = CGFloat(M_PI_2)
         wall4.physicsBody = SKPhysicsBody(texture: wallText, size: wall4.size)
@@ -399,6 +399,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(wall2)
         addChild(wall3)
         addChild(wall4)
+        
+        loadScreen()
         
         physicsWorld.gravity = CGVectorMake(0, 0)
         physicsWorld.contactDelegate = self
@@ -749,7 +751,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if map.visited.contains(map.getKey())
         {
-            let keyView = UIImageView(frame: CGRect(x: size.width * 0.65, y: size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
+            keyView = UIImageView(frame: CGRect(x: size.width * 0.65, y: size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
             keyView.image = UIImage(named: "key")
             view?.addSubview(keyView)
             hasKey = true
@@ -843,14 +845,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         transitionView.center = player.position
         fixY()
         self.view?.addSubview(transitionView)
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
     }
     
     func transitionOpen()
     {
         removeChildrenInArray(doors)
         doors.removeAll()
-        loadScreen()
         if map.getUp() != nil
         {
             setDoor("up")
@@ -867,7 +868,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             setDoor("left")
         }
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.02, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
+        loadScreen()
+        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
     func incWidth()
@@ -906,7 +908,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(character.map.getCurr().chest != nil)
         {
             let chest = SKSpriteNode(imageNamed: character.map.getCurr().chest!)
-            chest.position = CGPoint(x: size.width * 0.1, y: size.height * 0.9)
+            chest.position = CGPoint(x: size.width * 0.2, y: size.height * 0.8)
             chest.size = CGSize(width: size.width * 0.05, height: size.height * 0.05)
             chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
             chest.physicsBody?.dynamic = true
@@ -918,17 +920,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(chest)
         }
         
-        if(map.visited.contains(map.getCurr()))
+        if(map.cleared.contains(map.getCurr()))
         {
             roomCleared = true
+            unlockDoors()
         }
-        else
+        else if(map.getCurr() != map.bossPoint)
         {
             addMonster(1)
             addMonster(1)
             addMonster(2)
             addMonster(2)
             roomCleared = false
+        }
+        else
+        {
+            addMonster(3)
+            //addMonster(3)
+            //addMonster(2)
+            addMonster(2)
+            addMonster(2)
+            addMonster(2)
         }
     }
     
@@ -937,7 +949,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func addMonster(num : Int)      //Num is type of enemy, 1 is ranged, 2 is melee(run into you), 3 is boss
     {
         // Create sprite
-        let monster = SKSpriteNode(imageNamed: "monster")
+        let monster: SKSpriteNode!
+        var enemy: Enemy!
+        if(num == 1)
+        {
+            monster = SKSpriteNode(imageNamed: "EnemyRanged")
+            monster.size = CGSize(width: player.size.width * 1.5, height: player.size.height)
+            enemy = Enemy(h: 5, dam: 1, move: 10, num: 1, enemy: monster)
+        }
+        else if(num == 2)
+        {
+            monster = SKSpriteNode(imageNamed: "EnemyMelee")
+            monster.size = CGSize(width: player.size.height, height: player.size.width * 1.3)
+            enemy = Enemy(h: 10, dam: 1, move: 20, num: 2, enemy: monster)
+        }
+        else
+        {
+            monster = SKSpriteNode(imageNamed: "EnemyBoss")
+            monster.size = CGSize(width: player.size.width * 2, height: player.size.height * 2)
+            enemy = Enemy(h: 25, dam: 3, move: 5, num: 3, enemy: monster)
+        }
         
         monster.physicsBody = SKPhysicsBody(rectangleOfSize: monster.size) // 1
         monster.physicsBody?.dynamic = true // 2
@@ -959,19 +990,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if !moveEnemyTimer.valid
         {
             moveEnemyTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(GameScene.moveEnemyAround), userInfo: nil, repeats: true)
-        }
-        var enemy: Enemy!
-        if(num == 1)
-        {
-            enemy = Enemy(h: 5, dam: 1, move: 10, num: 1, enemy: monster)
-        }
-        else if(num == 2)
-        {
-            enemy = Enemy(h: 10, dam: 1, move: 15, num: 2, enemy: monster)
-        }
-        else
-        {
-            enemy = Enemy(h: 25, dam: 3, move: 5, num: 3, enemy: monster)
         }
         
         enemyObjects.append(enemy)
@@ -1103,6 +1121,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
+    func playerDies()
+    {
+        map.currLoc = map.respawnPoint
+    }
+    
     func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {     //Check for damage against enemy
         projectile.removeFromParent()
         var damage = 0
@@ -1140,6 +1163,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     {
                         roomCleared = true
                         unlockDoors()
+                        map.cleared(map.getCurr())
                     }
                 }
                 else
@@ -1177,6 +1201,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if character.currentHealth <= 0
         {
             character.currentHealth = character.maxHealth
+            map.currLoc = map.respawnPoint
             exitGame()
         }
     }
@@ -1198,6 +1223,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if character.currentHealth <= 0
         {
             character.currentHealth = character.maxHealth
+            map.currLoc = map.respawnPoint
             exitGame()
         }
     }
@@ -1752,10 +1778,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func exitGame()
     {
-        menu.removeFromSuperview()
-        attackView.removeFromSuperview()
-        moveView.removeFromSuperview()
-        heartBar.removeFromSuperview()
+        for viewThing in view!.subviews
+        {
+            viewThing.removeFromSuperview()
+        }
         save()
         let scene = CharacterScene(size: view!.bounds.size)
         scene.scaleMode = .ResizeFill
@@ -2270,23 +2296,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         doors.append(door)
         switch place {
         case "up":
-            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
-            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)
-            door.zRotation = CGFloat(M_PI)
+            door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
+            door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
         case "right":
-            door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
-            door.position = CGPoint(x: view!.bounds.width - view!.bounds.height*0.05, y: view!.bounds.height*0.5)
-            door.zRotation = CGFloat(M_PI_2)
+            door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
+            door.position = CGPoint(x: size.width - size.height * 0.05, y: size.height * 0.5)
+            door.zRotation = CGFloat(M_PI_2) * 3
         case "down":
-            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
-            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height*0.05)
+            door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
+            door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.05)
+            door.zRotation = CGFloat(M_PI)
         case "left":
-            door.size = CGSize(width: view!.bounds.height*0.1, height: view!.bounds.width*0.1)
-            door.position = CGPoint(x: view!.bounds.height * 0.05, y: view!.bounds.height*0.5)
-            door.zRotation = 3 * CGFloat(M_PI_2)
+            door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
+            door.position = CGPoint(x: size.height * 0.05, y: size.height * 0.5)
+            door.zRotation = CGFloat(M_PI_2)
         default:
-            door.size = CGSize(width: view!.bounds.width*0.1, height: view!.bounds.height*0.1)
-            door.position = CGPoint(x: view!.bounds.width * 0.5, y: view!.bounds.height-view!.bounds.height*0.05)
+            door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
+            door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
         }
         addChild(door)
     }
