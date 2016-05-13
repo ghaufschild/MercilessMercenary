@@ -112,7 +112,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var attackHold: UILongPressGestureRecognizer!
     var changeRewards: UITapGestureRecognizer!
     
-    let player = SKSpriteNode(imageNamed: "player")
+    let player = SKSpriteNode(imageNamed: "playerDown")
     
     var menuButton = SKSpriteNode(imageNamed: "MenuButton")
     
@@ -172,9 +172,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menuButton.alpha = 0.8
         addChild(menuButton)
         
-        let playerText = SKTexture(CGImage: (UIImage(named: "player")?.CGImage)!)
+        let playerText = SKTexture(CGImage: (UIImage(named: "playerDown")?.CGImage)!)
         player.position = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
-        player.physicsBody = SKPhysicsBody(texture: playerText, size: playerText.size())
+        player.size = CGSize(width: size.height*CGFloat(0.06), height: size.height*CGFloat(0.12 ))
+        player.physicsBody = SKPhysicsBody(texture: playerText, size: player.size)
         player.physicsBody?.dynamic = true
         player.physicsBody?.categoryBitMask = PhysicsCategory.Player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
@@ -2255,15 +2256,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
     
-    func setHearts()        //Add in max health over 10 ability
+    func setHearts()
     {
         for heart in heartBar.subviews
         {
             heart.removeFromSuperview()
         }
+        
         var health = character.currentHealth
+        var missingHealth = character.maxHealth - character.currentHealth
         var xMulti: CGFloat = 0
         var yMulti: CGFloat = 0
+        
         while(health - 2 >= 0)
         {
             var heartPicture: UIImageView
@@ -2279,12 +2283,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        let half = health == 1
-        if half
+        if health == 1
+        {
+            if missingHealth != 0
+            {
+                var heartPicture: UIImageView
+                heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
+                heartPicture.image = UIImage(named: "8BitHeartHalf")
+                heartBar.addSubview(heartPicture)
+                xMulti += 1
+                if(xMulti % 5 == 0)
+                {
+                    xMulti = 0
+                    yMulti += 1
+                }
+            }
+            else
+            {
+                var heartPicture: UIImageView
+                heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.1, height: heartBar.frame.height * (1/3)))
+                heartPicture.image = UIImage(named: "8BitHeartHalfFull")
+                heartBar.addSubview(heartPicture)
+            }
+        }
+        
+        while(missingHealth - 2 >= 0)
         {
             var heartPicture: UIImageView
             heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
-            heartPicture.image = UIImage(named: "8BitHeartHalf")
+            heartPicture.image = UIImage(named: "8BitHeartEmpty")
+            heartBar.addSubview(heartPicture)
+            missingHealth -= 2
+            xMulti += 1
+            if(xMulti % 5 == 0)
+            {
+                xMulti = 0
+                yMulti += 1
+            }
+        }
+        if missingHealth == 1
+        {
+            var heartPicture: UIImageView
+            heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.1, height: heartBar.frame.height * (1/3)))
+            heartPicture.image = UIImage(named: "8BitHeartEmptyHalf")
             heartBar.addSubview(heartPicture)
         }
     }
