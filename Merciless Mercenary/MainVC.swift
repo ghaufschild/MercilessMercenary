@@ -17,8 +17,6 @@ class MainVC: UIViewController {
         
         let scene = CharacterScene(size: view.bounds.size)
         let skView: SKView = view as! SKView
-        skView.showsFPS = true
-        skView.showsNodeCount = true
         skView.ignoresSiblingOrder = true
         scene.scaleMode = .ResizeFill
         skView.presentScene(scene)

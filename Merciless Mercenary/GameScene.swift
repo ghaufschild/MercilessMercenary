@@ -87,6 +87,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var tempAttack: CGPoint!
     var moveTo: CGPoint!
     
+    var congrats: UIView!
     var menu: UIView!
     var moveView: UIView!
     var moveJoystickOuter: UIImageView!
@@ -774,7 +775,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             view?.addSubview(keyView)
             hasKey = true
         }
-        hasKey = false
+        else
+        {
+            hasKey = false
+        }
     }
     
     func unlockDoors()      //Chance image of doors
@@ -921,7 +925,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(transitionView.layer.borderWidth <= 0)
         {
             transTimer.invalidate()
-            canDoStuff = true
+            if(!view!.subviews.contains(menu))
+            {
+                canDoStuff = true
+            }
             transitionView.removeFromSuperview()
         }
     }
@@ -1193,6 +1200,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         roomCleared = true
                         unlockDoors()
                         map.cleared(map.getCurr())
+                        checkWin()
                     }
                 }
                 else
@@ -1536,7 +1544,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         healthPotLabel.text = "Health Potions"
         healthPotLabel.textAlignment = .Center
         healthPotView.addSubview(healthPotLabel)
-        let healthPotAmount = UILabel(frame: CGRect(x: healthPotView.frame.width * 0.7, y: healthPotView.frame.height * 0.4, width: healthPotView.frame.width * 0.25, height: healthPotView.frame.height * 0.3))
+        let healthPotAmount = UILabel(frame: CGRect(x: healthPotView.frame.width * 0.7, y: healthPotView.frame.height * 0.6, width: healthPotView.frame.width * 0.25, height: healthPotView.frame.height * 0.15))
         healthPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Health Potions")!.getAmount())"
         healthPotView.addSubview(healthPotAmount)
         let healthTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.useHealth))
@@ -1555,7 +1563,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         speedPotLabel.text = "Speed Potions"
         speedPotLabel.textAlignment = .Center
         speedPotView.addSubview(speedPotLabel)
-        let speedPotAmount = UILabel(frame: CGRect(x: speedPotView.frame.width * 0.7, y: speedPotView.frame.height * 0.4, width: speedPotView.frame.width * 0.25, height: speedPotView.frame.height * 0.3))
+        let speedPotAmount = UILabel(frame: CGRect(x: speedPotView.frame.width * 0.7, y: speedPotView.frame.height * 0.6, width: speedPotView.frame.width * 0.25, height: speedPotView.frame.height * 0.15))
         speedPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Speed Potions")!.getAmount())"
         speedPotView.addSubview(speedPotAmount)
         let speedTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.useSpeed))
@@ -1574,7 +1582,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         damagePotLabel.text = "Damage Potions"
         damagePotLabel.textAlignment = .Center
         damagePotView.addSubview(damagePotLabel)
-        let damagePotAmount = UILabel(frame: CGRect(x: damagePotView.frame.width * 0.7, y: damagePotView.frame.height * 0.4, width: damagePotView.frame.width * 0.25, height: damagePotView.frame.height * 0.3))
+        let damagePotAmount = UILabel(frame: CGRect(x: damagePotView.frame.width * 0.7, y: damagePotView.frame.height * 0.6, width: damagePotView.frame.width * 0.25, height: damagePotView.frame.height * 0.15))
         damagePotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Damage Potions")!.getAmount())"
         damagePotView.addSubview(damagePotAmount)
         let damageTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.useDamage))
@@ -1593,7 +1601,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blockPotLabel.text = "Block Potions"
         blockPotLabel.textAlignment = .Center
         blockPotView.addSubview(blockPotLabel)
-        let blockPotAmount = UILabel(frame: CGRect(x: blockPotView.frame.width * 0.7, y: blockPotView.frame.height * 0.4, width: blockPotView.frame.width * 0.25, height: blockPotView.frame.height * 0.3))
+        let blockPotAmount = UILabel(frame: CGRect(x: blockPotView.frame.width * 0.7, y: blockPotView.frame.height * 0.6, width: blockPotView.frame.width * 0.25, height: blockPotView.frame.height * 0.15))
         blockPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Block Potions")!.getAmount())"
         blockPotView.addSubview(blockPotAmount)
         let blockTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.useBlock))
@@ -1645,8 +1653,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         armorLabel.text = "Armor"
         armorLabel.textAlignment = .Center
         armorView.addSubview(armorLabel)
-        let armorAmount = UILabel(frame: CGRect(x: armorView.frame.width * 0.7, y: armorView.frame.height * 0.4, width: armorView.frame.width * 0.25, height: armorView.frame.height * 0.3))
-        armorAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Armor")!.getAmount())"
+        let armorAmount = UILabel(frame: CGRect(x: armorView.frame.width * 0.7, y: armorView.frame.height * 0.6, width: armorView.frame.width * 0.25, height: armorView.frame.height * 0.15))
+        armorAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Armor")!.getAmount()/5)"
+        let armAmount = (settings.characters[settings.selectedPlayer].inventory.get("Armor")!.getAmount() % 5)
+        let sectionWidth = (armorView.frame.width - armorView.frame.height * 0.75)/7
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: armorView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: armorView.frame.height * 0.2, width: sectionWidth, height: armorView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < armAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            armorView.addSubview(progressBar)
+        }
         armorView.addSubview(armorAmount)
         skillsView.addSubview(armorView)
         
@@ -1662,8 +1684,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         agilityLabel.text = "Agility"
         agilityLabel.textAlignment = .Center
         agilityView.addSubview(agilityLabel)
-        let agilityAmount = UILabel(frame: CGRect(x: agilityView.frame.width * 0.7, y: agilityView.frame.height * 0.4, width: agilityView.frame.width * 0.25, height: agilityView.frame.height * 0.3))
-        agilityAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Agility")!.getAmount())"
+        let agilityAmount = UILabel(frame: CGRect(x: agilityView.frame.width * 0.7, y: agilityView.frame.height * 0.6, width: agilityView.frame.width * 0.25, height: agilityView.frame.height * 0.15))
+        agilityAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Agility")!.getAmount()/5)"
+        let agilAmount = (settings.characters[settings.selectedPlayer].inventory.get("Agility")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: agilityView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: agilityView.frame.height * 0.2, width: sectionWidth, height: agilityView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < agilAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            agilityView.addSubview(progressBar)
+        }
         agilityView.addSubview(agilityAmount)
         skillsView.addSubview(agilityView)
         
@@ -1679,8 +1714,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         healthLabel.text = "Health"
         healthLabel.textAlignment = .Center
         healthView.addSubview(healthLabel)
-        let healthAmount = UILabel(frame: CGRect(x: healthView.frame.width * 0.7, y: healthView.frame.height * 0.4, width: healthView.frame.width * 0.25, height: healthView.frame.height * 0.3))
-        healthAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Health")!.getAmount())"
+        let healthAmount = UILabel(frame: CGRect(x: healthView.frame.width * 0.7, y: healthView.frame.height * 0.6, width: healthView.frame.width * 0.25, height: healthView.frame.height * 0.15))
+        healthAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Health")!.getAmount()/5)"
+        let healAmount = (settings.characters[settings.selectedPlayer].inventory.get("Health")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: healthView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: healthView.frame.height * 0.2, width: sectionWidth, height: healthView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < healAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            healthView.addSubview(progressBar)
+        }
         healthView.addSubview(healthAmount)
         skillsView.addSubview(healthView)
         
@@ -1696,8 +1744,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         critLabel.text = "Crit Chance"
         critLabel.textAlignment = .Center
         critView.addSubview(critLabel)
-        let critAmount = UILabel(frame: CGRect(x: critView.frame.width * 0.7, y: critView.frame.height * 0.4, width: critView.frame.width * 0.25, height: critView.frame.height * 0.3))
-        critAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Crit Chance")!.getAmount())"
+        let critAmount = UILabel(frame: CGRect(x: critView.frame.width * 0.7, y: critView.frame.height * 0.6, width: critView.frame.width * 0.25, height: critView.frame.height * 0.15))
+        critAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Crit Chance")!.getAmount()/5)"
+        let criAmount = (settings.characters[settings.selectedPlayer].inventory.get("Crit Chance")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: critView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: critView.frame.height * 0.2, width: sectionWidth, height: critView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < criAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            critView.addSubview(progressBar)
+        }
         critView.addSubview(critAmount)
         skillsView.addSubview(critView)
         
@@ -1713,8 +1774,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blockLabel.text = "Block Chance"
         blockLabel.textAlignment = .Center
         blockView.addSubview(blockLabel)
-        let blockAmount = UILabel(frame: CGRect(x: blockView.frame.width * 0.7, y: blockView.frame.height * 0.4, width: blockView.frame.width * 0.25, height: blockView.frame.height * 0.3))
-        blockAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Block Chance")!.getAmount())"
+        let blockAmount = UILabel(frame: CGRect(x: blockView.frame.width * 0.7, y: blockView.frame.height * 0.6, width: blockView.frame.width * 0.25, height: blockView.frame.height * 0.15))
+        blockAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Block Chance")!.getAmount()/5)"
+        let bloAmount = (settings.characters[settings.selectedPlayer].inventory.get("Block Chance")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: blockView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: blockView.frame.height * 0.2, width: sectionWidth, height: blockView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < bloAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            blockView.addSubview(progressBar)
+        }
         blockView.addSubview(blockAmount)
         skillsView.addSubview(blockView)
         
@@ -2435,6 +2509,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func random(min min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
+    }
+    
+    func checkWin()
+    {
+        if map.cleared.contains(map.getBoss())
+        {
+            canDoStuff = false
+            for child in (self.scene?.children)!
+            {
+                if child.name != "backgroundMusic"
+                {
+                    child.paused = true
+                }
+            }
+            
+            for timer in buffTimers
+            {
+                timer.invalidate()
+            }
+            
+            congrats = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
+            congrats.layer.borderColor = UIColor.grayColor().CGColor
+            congrats.layer.borderWidth = congrats.frame.width * 0.01
+            congrats.layer.backgroundColor = UIColor.brownColor().CGColor
+            view?.addSubview(congrats)
+            let quitButton = UIButton(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.7, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
+            quitButton.addTarget(self, action: #selector(GameScene.endGame), forControlEvents: .TouchUpInside)
+            quitButton.setTitle("QUIT", forState: .Normal)
+            quitButton.layer.borderColor = UIColor.grayColor().CGColor
+            quitButton.layer.borderWidth = quitButton.frame.height * 0.05
+            quitButton.layer.backgroundColor = UIColor.brownColor().CGColor
+            congrats.addSubview(quitButton)
+            let congratsLabel = UILabel(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.3, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
+            congratsLabel.textAlignment = .Center
+            congratsLabel.text = "CONGRATULATIONS"
+            congrats.addSubview(congratsLabel)
+        }
+    }
+    
+    func endGame()
+    {
+        for viewThing in view!.subviews
+        {
+            viewThing.removeFromSuperview()
+        }
+        save()
+        settings.characters[settings.selectedPlayer] = Character(fightType: character.fighterType)
+        let scene = CharacterScene(size: view!.bounds.size)
+        scene.scaleMode = .ResizeFill
+        view!.presentScene(scene)
     }
     
     func save()
