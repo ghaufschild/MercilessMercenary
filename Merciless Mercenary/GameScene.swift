@@ -114,6 +114,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var changeRewards: UITapGestureRecognizer!
     
     let player = SKSpriteNode(imageNamed: "playerDown")
+    let playerLeft = SKTexture(imageNamed: "playerLeft")
+    let playerUp = SKTexture(imageNamed: "playerUp")
+    let playerRight = SKTexture(imageNamed: "playerRight")
+    let playerDown = SKTexture(imageNamed: "playerDown")
+
     
     var menuButton = SKSpriteNode(imageNamed: "MenuButton")
     
@@ -466,6 +471,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let realDest = shootAmount + projectile.position
             
             projectile.zRotation = atan2(direction.x * -1, direction.y)
+            
+            let xOffset = offset.x
+            let yOffset = offset.y
+            let absX = abs(xOffset)
+            let absY = abs(yOffset)
+
+            if xOffset > 0 && absX >= absY // Right
+            {
+                player.texture = playerRight
+            }
+            else if yOffset > 0 && absX <= absY // Up
+            {
+                player.texture = playerUp
+            }
+            else if xOffset < 0 && absX >= absY // Left
+            {
+                player.texture = playerLeft
+            }
+            else if yOffset < 0 && absX <= absY // Down
+            {
+                player.texture = playerDown
+            }
+            else
+            {
+                player.texture = playerDown
+            }
             
             let actionMove = SKAction.moveTo(realDest, duration: (1/400) * Double(distance))
             let actionMoveDone = SKAction.removeFromParent()
