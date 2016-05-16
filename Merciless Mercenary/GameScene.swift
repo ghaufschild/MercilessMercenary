@@ -971,6 +971,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func loadScreen()
     {
+        for heart in extraNodes
+        {
+            heart.removeFromParent()
+        }
+        
         if(character.map.getCurr().chest != nil)
         {
             let chest = SKSpriteNode(imageNamed: character.map.getCurr().chest!)
@@ -984,6 +989,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chest.physicsBody?.usesPreciseCollisionDetection = false
             chest.name = character.map.getCurr().chest
             addChild(chest)
+            extraNodes.append(chest)
         }
         
         if(map.cleared.contains(map.getCurr()) || map.spawnPoint.equals(map.getCurr()))
@@ -1159,8 +1165,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func enemyProjectile(loc: CGPoint, dam: Int)
     {
+        let projectile: SKSpriteNode!
+        if(dam == 1)
+        {
+            projectile = SKSpriteNode(imageNamed: "Needle")
+        }
+        else
+        {
+            projectile = SKSpriteNode(imageNamed: "BossShot")
+        }
         
-        let projectile =  SKSpriteNode(imageNamed: "Fireball")
         let distance: CGFloat = 400
         
         projectile.position = loc
@@ -1194,7 +1208,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {     //Check for damage against enemy
         projectile.removeFromParent()
-        var damage = 0
+        var damage = tempDamage
         if(character.equippedWeapon == "Melee")
         {
             damage = 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/10 + 1)
@@ -1261,6 +1275,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             heart.physicsBody?.collisionBitMask = PhysicsCategory.None
             heart.physicsBody?.usesPreciseCollisionDetection = false
             addChild(heart)
+            extraNodes.append(heart)
         }
     }
     
@@ -1282,11 +1297,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         projectile.removeFromParent()
         if(character.currentHealth > 0)
         {
-            if(canTakeDamage)
+            if(Int(arc4random_uniform(25)) > character.inventory.get("Block Chance")!.getAmount()/5 + tempBlock)
             {
-                canTakeDamage = false
-                immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
-                character.currentHealth = character.currentHealth - Int(projectile.name!)!
+                if(canTakeDamage)
+                {
+                    canTakeDamage = false
+                    immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                    character.currentHealth = character.currentHealth - Int(projectile.name!)!
+                }
+            }
+            else
+            {
+                if(settings.soundOn)
+                {
+                    runAction(SKAction.playSoundFileNamed("blockNoise2.0", waitForCompletion: false))
+                }
             }
         }
         if character.currentHealth > 0
@@ -1304,12 +1329,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
         if(character.currentHealth > 0)
         {
-            if(canTakeDamage)
-            {
-                canTakeDamage = false
-                immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
-                character.currentHealth = character.currentHealth - 2
-            }
+                if(canTakeDamage)
+                {
+                    canTakeDamage = false
+                    immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                    if(Int(arc4random_uniform(25)) > character.inventory.get("Armor")!.getAmount()/5)
+                    {
+                        character.currentHealth = character.currentHealth - 2
+                    }
+                    else
+                    {
+                        if(settings.soundOn)
+                        {
+                            runAction(SKAction.playSoundFileNamed("armorNoise2.0", waitForCompletion: false))
+                        }
+                    }
+                    
+                }
+
         }
         if character.currentHealth > 0
         {
@@ -1856,8 +1893,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         swordLabel.textAlignment = .Center
         swordView.addSubview(swordLabel)
         let swordAmount = UILabel(frame: CGRect(x: swordView.frame.width * 0.7, y: swordView.frame.height * 0.4, width: swordView.frame.width * 0.25, height: swordView.frame.height * 0.3))
-        swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount())"
+        swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5)"
         swordView.addSubview(swordAmount)
+        let swoAmount = (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount() % 5)
+        let sectionWidth = (swordView.frame.width - swordView.frame.height * 0.75)/7
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: swordView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: swordView.frame.height * 0.2, width: sectionWidth, height: swordView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < swoAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            swordView.addSubview(progressBar)
+        }
         let healthTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.goMelee))
         swordView.addGestureRecognizer(healthTapped)
         chooseAttackView.addSubview(swordView)
@@ -1875,8 +1926,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         shortRangeLabel.textAlignment = .Center
         shortRangeView.addSubview(shortRangeLabel)
         let shortRangeAmount = UILabel(frame: CGRect(x: shortRangeView.frame.width * 0.7, y: shortRangeView.frame.height * 0.4, width: shortRangeView.frame.width * 0.25, height: shortRangeView.frame.height * 0.3))
-        shortRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount())"
+        shortRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5)"
         shortRangeView.addSubview(shortRangeAmount)
+        let sRAmount = (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: shortRangeView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: shortRangeView.frame.height * 0.2, width: sectionWidth, height: shortRangeView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < sRAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            shortRangeView.addSubview(progressBar)
+        }
         let speedTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.goShortRange))
         shortRangeView.addGestureRecognizer(speedTapped)
         chooseAttackView.addSubview(shortRangeView)
@@ -1894,8 +1958,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         magicLabel.textAlignment = .Center
         magicView.addSubview(magicLabel)
         let magicAmount = UILabel(frame: CGRect(x: magicView.frame.width * 0.7, y: magicView.frame.height * 0.4, width: magicView.frame.width * 0.25, height: magicView.frame.height * 0.3))
-        magicAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount())"
+        magicAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5)"
         magicView.addSubview(magicAmount)
+        let magAmount = (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: magicView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: magicView.frame.height * 0.2, width: sectionWidth, height: magicView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < magAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            magicView.addSubview(progressBar)
+        }
         let damageTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.goMagic))
         magicView.addGestureRecognizer(damageTapped)
         chooseAttackView.addSubview(magicView)
@@ -1913,8 +1990,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         longRangeLabel.textAlignment = .Center
         longRangeView.addSubview(longRangeLabel)
         let longRangeAmount = UILabel(frame: CGRect(x: longRangeView.frame.width * 0.7, y: longRangeView.frame.height * 0.4, width: longRangeView.frame.width * 0.25, height: longRangeView.frame.height * 0.3))
-        longRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount())"
+        longRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5)"
         longRangeView.addSubview(longRangeAmount)
+        let lRAmount = (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount() % 5)
+        for num in 0...4
+        {
+            let progressBar = UIView(frame: CGRect(x: longRangeView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: longRangeView.frame.height * 0.2, width: sectionWidth, height: longRangeView.frame.height * 0.15))
+            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
+            progressBar.layer.borderWidth = progressBar.frame.width * 0.2
+            if num < lRAmount
+            {
+                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+            }
+            longRangeView.addSubview(progressBar)
+        }
         let blockTapped = UITapGestureRecognizer(target: self, action: #selector(GameScene.goLongRange))
         longRangeView.addGestureRecognizer(blockTapped)
         chooseAttackView.addSubview(longRangeView)
@@ -1934,6 +2024,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(character.equippedWeapon == "Long Range")
         {
             longRangeView.layer.backgroundColor = UIColor.blueColor().CGColor
+        }
+        
+        switch character.fighterType {
+        case 1:
+            swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)"
+        case 2:
+            shortRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5 + 1)"
+        case 3:
+            magicAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5 + 1)"
+        case 4:
+            longRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5 + 1)"
+        default:
+            swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)"
         }
         
         menu.addSubview(chooseAttackView)
@@ -2577,18 +2680,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             congrats.layer.borderWidth = congrats.frame.width * 0.01
             congrats.layer.backgroundColor = UIColor.brownColor().CGColor
             view?.addSubview(congrats)
+            character.level = character.level + 1
             let quitButton = UIButton(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.7, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
-            quitButton.addTarget(self, action: #selector(GameScene.endGame), forControlEvents: .TouchUpInside)
-            quitButton.setTitle("QUIT", forState: .Normal)
+            quitButton.addTarget(self, action: #selector(GameScene.nextLevel), forControlEvents: .TouchUpInside)
+            quitButton.setTitle("NEXT LEVEL", forState: .Normal)
             quitButton.layer.borderColor = UIColor.grayColor().CGColor
             quitButton.layer.borderWidth = quitButton.frame.height * 0.05
-            quitButton.layer.backgroundColor = UIColor.brownColor().CGColor
+            quitButton.layer.backgroundColor = UIColor.blueColor().CGColor
             congrats.addSubview(quitButton)
             let congratsLabel = UILabel(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.3, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
             congratsLabel.textAlignment = .Center
             congratsLabel.text = "CONGRATULATIONS"
             congrats.addSubview(congratsLabel)
         }
+    }
+    
+    func nextLevel()
+    {
+        character.map = Map(version: character.level)
+        loadScreen()
     }
     
     func endGame()
