@@ -17,15 +17,16 @@ class CharacterScene: SKScene {
     var createText = SKTexture(imageNamed: "CreateButton")
     var playText = SKTexture(imageNamed: "PlayButton")
     var deleteText = SKTexture(imageNamed: "DeleteButton")
+    var slotsText = SKTexture(imageNamed: "SlotsLabel")
     
     var titleLabel = SKSpriteNode()
     var playCharOne = SKSpriteNode()
     var playCharTwo = SKSpriteNode()
     var playCharThree = SKSpriteNode()
 
-    var characterOne = SKSpriteNode()
-    var characterTwo = SKSpriteNode()
-    var characterThree = SKSpriteNode()
+    var characterOne = SKSpriteNode(imageNamed: "playerLeft")
+    var characterTwo = SKSpriteNode(imageNamed: "playerDown")
+    var characterThree = SKSpriteNode(imageNamed: "playerRight")
     
     var deleteCharOne = SKSpriteNode()
     var deleteCharTwo = SKSpriteNode()
@@ -49,9 +50,10 @@ class CharacterScene: SKScene {
         backgroundMusic.autoplayLooped = true
         addChild(backgroundMusic)
         
-        titleLabel.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.9)
+        scene!.backgroundColor = UIColor(red: 121/255, green: 60/255, blue: 0/255, alpha: 1.0)
+        titleLabel.texture = slotsText
+        titleLabel.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.925)
         titleLabel.size = CGSize(width: view.frame.width * 0.8, height: view.frame.height * 0.075)
-        titleLabel.color = SKColor.cyanColor()
         addChild(titleLabel)
 
         let numChar: Int = settings.howManyCharacters()
@@ -96,29 +98,28 @@ class CharacterScene: SKScene {
         {
             characterOne.name = "characterOne"
             characterOne.position = CGPoint(x: view!.frame.width * 0.175, y: view!.frame.height * 0.45)
-            characterOne.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
-            characterOne.color = SKColor.blackColor()
+            characterOne.size = CGSize(width: view!.frame.width * 0.1, height: view!.frame.height * 0.3)
             if(charPresent)     //Yes character
             {
                 playCharOne.name = "playCharOne"
                 playCharOne.texture = playText
-                playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
-                playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                playCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y - size.height * 0.275)
+                playCharOne.size = CGSize(width: view!.frame.width * 0.15, height: view!.frame.height * 0.075)
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
                 
                 deleteCharOne.name = "deleteOne"
                 deleteCharOne.texture = deleteText
-                deleteCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.85)
-                deleteCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                deleteCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y + size.height * 0.275)
+                deleteCharOne.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 deleteCharOne.zPosition = 1
                 addChild(deleteCharOne)            }
             else                //No character
             {
                 playCharOne.name = "playCharOne"
                 playCharOne.texture = createText
-                playCharOne.position = CGPoint(x: characterOne.frame.width * 0.5 + characterOne.frame.minX, y: characterOne.frame.height * 0.15)
-                playCharOne.size = CGSize(width: characterOne.frame.width * 0.6, height: characterOne.frame.height * 0.1)
+                playCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y - size.height * 0.275)
+                playCharOne.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
             }
@@ -128,20 +129,19 @@ class CharacterScene: SKScene {
         {
             characterTwo.name = "characterTwo"
             characterTwo.position = CGPoint(x: view!.frame.width * 0.5, y: view!.frame.height * 0.45)
-            characterTwo.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
-            characterTwo.color = SKColor.blackColor()
+            characterTwo.size = CGSize(width: view!.frame.width * 0.1, height: view!.frame.height * 0.3)
             if(charPresent)     //Yes character
             {
                 playCharTwo.name = "playCharTwo"
                 playCharTwo.texture = playText
-                playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
-                playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                playCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y - size.height * 0.275)
+                playCharTwo.size = CGSize(width: view!.frame.width * 0.15, height: view!.frame.height * 0.075)
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
                 
                 deleteCharTwo.name = "deleteTwo"
-                deleteCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.85)
-                deleteCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                deleteCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y + size.height * 0.275)
+                deleteCharTwo.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 deleteCharTwo.texture = deleteText
                 deleteCharTwo.zPosition = 1
                 addChild(deleteCharTwo)
@@ -150,8 +150,8 @@ class CharacterScene: SKScene {
             {
                 playCharTwo.name = "playCharTwo"
                 playCharTwo.texture = createText
-                playCharTwo.position = CGPoint(x: characterTwo.frame.width * 0.5 + characterTwo.frame.minX, y: characterTwo.frame.height * 0.15)
-                playCharTwo.size = CGSize(width: characterTwo.frame.width * 0.6, height: characterTwo.frame.height * 0.1)
+                playCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y - size.height * 0.275)
+                playCharTwo.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
             }
@@ -161,20 +161,19 @@ class CharacterScene: SKScene {
         {
             characterThree.name = "characterThree"
             characterThree.position = CGPoint(x: view!.frame.width * 0.825, y: view!.frame.height * 0.45)
-            characterThree.size = CGSize(width: view!.frame.width * 0.3, height: view!.frame.height * 0.8)
-            characterThree.color = SKColor.blackColor()
+            characterThree.size = CGSize(width: view!.frame.width * 0.1, height: view!.frame.height * 0.3)
             if(charPresent)     //Yes character
             {
                 playCharThree.name = "playCharThree"
-                playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
-                playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                playCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y - size.height * 0.275)
+                playCharThree.size = CGSize(width: view!.frame.width * 0.15, height: view!.frame.height * 0.075)
                 playCharThree.texture = playText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
                 
                 deleteCharThree.name = "deleteThree"
-                deleteCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.85)
-                deleteCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                deleteCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y + size.height * 0.275)
+                deleteCharThree.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 deleteCharThree.texture = deleteText
                 deleteCharThree.zPosition = 1
                 addChild(deleteCharThree)
@@ -182,8 +181,8 @@ class CharacterScene: SKScene {
             else                //No character
             {
                 playCharThree.name = "playCharThree"
-                playCharThree.position = CGPoint(x: characterThree.frame.width * 0.5 + characterThree.frame.minX, y: characterThree.frame.height * 0.15)
-                playCharThree.size = CGSize(width: characterThree.frame.width * 0.6, height: characterThree.frame.height * 0.1)
+                playCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y - size.height * 0.275)
+                playCharThree.size = CGSize(width: view!.frame.width * 0.18, height: view!.frame.height * 0.075)
                 playCharThree.texture = createText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
@@ -263,16 +262,28 @@ class CharacterScene: SKScene {
     
     func deleteP1()
     {
+        playCharOne.removeFromParent()
+        deleteCharOne.removeFromParent()
+        characterOne.removeFromParent()
+        prepSlot(1, charPresent: false)
         settings.characters[0] = Character(fightType: 1)
     }
     
     func deleteP2()
     {
+        playCharTwo.removeFromParent()
+        deleteCharTwo.removeFromParent()
+        characterTwo.removeFromParent()
+        prepSlot(2, charPresent: false)
         settings.characters[1] = Character(fightType: 2)
     }
     
     func deleteP3()
     {
+        playCharThree.removeFromParent()
+        deleteCharThree.removeFromParent()
+        characterThree.removeFromParent()
+        prepSlot(3, charPresent: false)
         settings.characters[2] = Character(fightType: 3)
     }
     
