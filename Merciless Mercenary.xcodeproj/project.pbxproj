@@ -12,8 +12,6 @@
 		3F344C4A1C763EF70027247E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C481C763EF70027247E /* Main.storyboard */; };
 		3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3F344C4D1C763EF70027247E /* LaunchScreen.storyboard */; };
 		3F344C771C76427F0027247E /* Inventory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F344C761C76427F0027247E /* Inventory.swift */; };
-		3F45E3AC1CB43CBB00C39ABE /* pew-pew-lei.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */; };
-		3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */; };
 		3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */; };
 		3FC7F0D91CD1687A00E090EC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0D81CD1687A00E090EC /* Assets.xcassets */; };
 		3FC7F0DD1CDA64B500E090EC /* adventurous theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0DA1CDA64B400E090EC /* adventurous theme.mp3 */; };
@@ -23,10 +21,13 @@
 		3FC7F0E41CDA65EB00E090EC /* boss.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E11CDA65EB00E090EC /* boss.mp3 */; };
 		3FC7F0E51CDA65EB00E090EC /* death theme.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */; };
 		3FC7F0E71CDE18A800E090EC /* Enemy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC7F0E61CDE18A700E090EC /* Enemy.swift */; };
+		3FC7F0F01CE8FD3800E090EC /* bowNoise2.0.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0EC1CE8DF1B00E090EC /* bowNoise2.0.m4a */; };
+		3FC7F0F11CE8FD3B00E090EC /* magicNoise2.0.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0ED1CE8DF1B00E090EC /* magicNoise2.0.m4a */; };
+		3FC7F0F21CE8FD3E00E090EC /* shurikenNoise2.0.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0EE1CE8DF1B00E090EC /* shurikenNoise2.0.m4a */; };
+		3FC7F0F31CE8FD4100E090EC /* swordNoise2.0.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 3FC7F0EF1CE8DF1B00E090EC /* swordNoise2.0.m4a */; };
 		3FE64BD81CB69EDB00F6BB4C /* Map.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD71CB69EDB00F6BB4C /* Map.swift */; };
 		3FE64BDA1CB69F8800F6BB4C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BD91CB69F8800F6BB4C /* Settings.swift */; };
 		3FE64BDC1CB6A00C00F6BB4C /* Character.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BDB1CB6A00C00F6BB4C /* Character.swift */; };
-		3FE64BE61CBE849B00F6BB4C /* StartScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BE51CBE849B00F6BB4C /* StartScene.swift */; };
 		3FE64BE81CBE84AA00F6BB4C /* CharacterScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BE71CBE84AA00F6BB4C /* CharacterScene.swift */; };
 		3FE64BEC1CBE84C400F6BB4C /* SettingsScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE64BEB1CBE84C400F6BB4C /* SettingsScene.swift */; };
 /* End PBXBuildFile section */
@@ -39,8 +40,6 @@
 		3F344C4E1C763EF70027247E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3F344C501C763EF70027247E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3F344C761C76427F0027247E /* Inventory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Inventory.swift; sourceTree = "<group>"; };
-		3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "pew-pew-lei.caf"; sourceTree = "<group>"; };
-		3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "background-music-aac.caf"; sourceTree = "<group>"; };
 		3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		3FC7F0D81CD1687A00E090EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3FC7F0DA1CDA64B400E090EC /* adventurous theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "adventurous theme.mp3"; sourceTree = "<group>"; };
@@ -50,10 +49,13 @@
 		3FC7F0E11CDA65EB00E090EC /* boss.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = boss.mp3; sourceTree = "<group>"; };
 		3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "death theme.mp3"; sourceTree = "<group>"; };
 		3FC7F0E61CDE18A700E090EC /* Enemy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enemy.swift; sourceTree = "<group>"; };
+		3FC7F0EC1CE8DF1B00E090EC /* bowNoise2.0.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = bowNoise2.0.m4a; sourceTree = "<group>"; };
+		3FC7F0ED1CE8DF1B00E090EC /* magicNoise2.0.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = magicNoise2.0.m4a; sourceTree = "<group>"; };
+		3FC7F0EE1CE8DF1B00E090EC /* shurikenNoise2.0.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = shurikenNoise2.0.m4a; sourceTree = "<group>"; };
+		3FC7F0EF1CE8DF1B00E090EC /* swordNoise2.0.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = swordNoise2.0.m4a; sourceTree = "<group>"; };
 		3FE64BD71CB69EDB00F6BB4C /* Map.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Map.swift; sourceTree = "<group>"; };
 		3FE64BD91CB69F8800F6BB4C /* Settings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3FE64BDB1CB6A00C00F6BB4C /* Character.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Character.swift; sourceTree = "<group>"; };
-		3FE64BE51CBE849B00F6BB4C /* StartScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartScene.swift; sourceTree = "<group>"; };
 		3FE64BE71CBE84AA00F6BB4C /* CharacterScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterScene.swift; sourceTree = "<group>"; };
 		3FE64BEB1CBE84C400F6BB4C /* SettingsScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -90,7 +92,6 @@
 			children = (
 				3F344C441C763EF70027247E /* AppDelegate.swift */,
 				3F3296771CC15DC100661CC0 /* MainVC.swift */,
-				3FE64BE51CBE849B00F6BB4C /* StartScene.swift */,
 				3FE64BE71CBE84AA00F6BB4C /* CharacterScene.swift */,
 				3FBF2AE11CAEF75C00C3FFE4 /* GameScene.swift */,
 				3FC7F0E61CDE18A700E090EC /* Enemy.swift */,
@@ -106,8 +107,10 @@
 				3FC7F0E01CDA65EB00E090EC /* barren lands.mp3 */,
 				3FC7F0E11CDA65EB00E090EC /* boss.mp3 */,
 				3FC7F0E21CDA65EB00E090EC /* death theme.mp3 */,
-				3F45E3AB1CB43CBB00C39ABE /* pew-pew-lei.caf */,
-				3F45E3AD1CB43CC400C39ABE /* background-music-aac.caf */,
+				3FC7F0EC1CE8DF1B00E090EC /* bowNoise2.0.m4a */,
+				3FC7F0ED1CE8DF1B00E090EC /* magicNoise2.0.m4a */,
+				3FC7F0EE1CE8DF1B00E090EC /* shurikenNoise2.0.m4a */,
+				3FC7F0EF1CE8DF1B00E090EC /* swordNoise2.0.m4a */,
 				3FC7F0D81CD1687A00E090EC /* Assets.xcassets */,
 				3F344C4D1C763EF70027247E /* LaunchScreen.storyboard */,
 				3F344C501C763EF70027247E /* Info.plist */,
@@ -179,12 +182,14 @@
 				3FC7F0DF1CDA64B500E090EC /* victory jingle.mp3 in Resources */,
 				3FC7F0E31CDA65EB00E090EC /* barren lands.mp3 in Resources */,
 				3FC7F0E51CDA65EB00E090EC /* death theme.mp3 in Resources */,
+				3FC7F0F01CE8FD3800E090EC /* bowNoise2.0.m4a in Resources */,
 				3FC7F0DD1CDA64B500E090EC /* adventurous theme.mp3 in Resources */,
-				3F45E3AE1CB43CC400C39ABE /* background-music-aac.caf in Resources */,
+				3FC7F0F11CE8FD3B00E090EC /* magicNoise2.0.m4a in Resources */,
 				3F344C4F1C763EF70027247E /* LaunchScreen.storyboard in Resources */,
 				3F344C4A1C763EF70027247E /* Main.storyboard in Resources */,
-				3F45E3AC1CB43CBB00C39ABE /* pew-pew-lei.caf in Resources */,
+				3FC7F0F31CE8FD4100E090EC /* swordNoise2.0.m4a in Resources */,
 				3FC7F0D91CD1687A00E090EC /* Assets.xcassets in Resources */,
+				3FC7F0F21CE8FD3E00E090EC /* shurikenNoise2.0.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,7 +210,6 @@
 				3FBF2AE21CAEF75C00C3FFE4 /* GameScene.swift in Sources */,
 				3F344C451C763EF70027247E /* AppDelegate.swift in Sources */,
 				3FE64BE81CBE84AA00F6BB4C /* CharacterScene.swift in Sources */,
-				3FE64BE61CBE849B00F6BB4C /* StartScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
