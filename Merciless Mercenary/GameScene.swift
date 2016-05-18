@@ -2150,7 +2150,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func openChest(name: String)
     {
-        self.paused = true
+        canDoStuff = false
+        for child in (self.scene?.children)!
+        {
+            if child.name != "backgroundMusic"
+            {
+                child.paused = true
+            }
+        }
+        
+        for timer in buffTimers
+        {
+            timer.invalidate()
+        }
         openNotify(name)
     }
     
@@ -2418,7 +2430,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func closeChest()
     {
         chestNotification.removeFromSuperview()
-        self.paused = false
+        canDoStuff = true
+        if tempSpeed > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
+        }
+        if tempBlock > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
+            view?.addSubview(blockPotBG)
+            view?.addSubview(blockPot)
+        }
+        if tempDamage > 0
+        {
+            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
+            view?.addSubview(damagePotBG)
+            view?.addSubview(damagePot)
+        }
+        for child in (self.scene?.children)!
+        {
+            child.paused = false
+        }
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
@@ -2458,10 +2490,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
                 heartPicture.image = UIImage(named: "8BitHeartHalf")
                 heartBar.addSubview(heartPicture)
-                if missingHealth == 1
-                {
-                    return
-                }
+                missingHealth -= 1
                 xMulti += 1
                 if(xMulti % 5 == 0)
                 {
