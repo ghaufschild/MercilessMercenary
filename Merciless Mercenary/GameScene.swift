@@ -203,14 +203,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let buttonWid = size.width * 0.15
         
-        moveView = UIView(frame: CGRect(x: 0, y: 0, width: size.width * 0.4, height: size.height))
+        moveView = UIView(frame: CGRect(x: 0, y: 0, width: size.width * 0.5, height: size.height))
         moveView.addGestureRecognizer(moveHold)
         moveJoystickOuter = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
         moveJoystickOuter.image = UIImage(named: "joystick")
         moveJoystickOuter.alpha = 0.4
         
-        
-        attackView = UIView(frame: CGRect(x: size.width * 0.6, y: 0, width: size.width * 0.4, height: size.height))
+        attackView = UIView(frame: CGRect(x: size.width * 0.5, y: 0, width: size.width * 0.5, height: size.height))
         attackView.addGestureRecognizer(attackHold)
         attackJoystickOuter = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
         attackJoystickOuter.image = UIImage(named: "joystick")
@@ -410,6 +409,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(wall3)
         addChild(wall4)
         
+        roomCleared = true
+        
         loadScreen()
         
         physicsWorld.gravity = CGVectorMake(0, 0)
@@ -430,28 +431,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 projectile = SKSpriteNode(imageNamed: "Sword2")
                 projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.8)
-                distance = 50
+                distance = size.width * 0.1
                 soundName = "swordNoise2.0.m4a"
             }
             if(character.equippedWeapon == "Short Range")
             {
                 projectile = SKSpriteNode(imageNamed: "movingShuriken")
                 projectile.size = CGSize(width: player.size.width * 0.3, height: player.size.height * 0.3)
-                distance = 100
+                distance = size.width * 0.2
                 soundName = "shurikenNoise2.0.m4a"
             }
             if(character.equippedWeapon == "Magic")
             {
                 projectile = SKSpriteNode(imageNamed: "Fireball")
                 projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.4)
-                distance = 200
+                distance = size.width * 0.4
                 soundName = "magicNoise2.0.m4a"
             }
             if(character.equippedWeapon == "Long Range")
             {
                 projectile = SKSpriteNode(imageNamed: "Long Range")
                 projectile.size = CGSize(width: player.size.width * 0.2, height: player.size.height * 0.5)
-                distance = 400
+                distance = size.width * 0.8
                 soundName = "bowNoise2.0.m4a"
             }
             
@@ -606,7 +607,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let absY = abs(yOffset)
             var realDest = newPoint
             
-            let moveDist: CGFloat = 7 + CGFloat(character.moveSpeed)/5 + CGFloat(tempSpeed)
+            let moveDist: CGFloat = size.width * 0.01 + (CGFloat(character.moveSpeed)/5 + CGFloat(tempSpeed)) * size.width * 0.002
             let diagMove: CGFloat = moveDist/sqrt(2)
             
             if xOffset > 0 && absX >= absY // Left
@@ -898,6 +899,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func transitionClose()      //Teleporting error with self.paused and error with moving out of bounds when no door present
     {
+        save()
         canDoStuff = false
         transitionView = UIView(frame: CGRect(x: 0, y: 0, width: size.width*2.5, height: size.width*2.5))
         transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
@@ -956,11 +958,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(transitionView.layer.borderWidth <= 0)
         {
             transTimer.invalidate()
+            transitionView.removeFromSuperview()
             if(!view!.subviews.contains(menu))
             {
+                player.paused = false
                 canDoStuff = true
             }
-            transitionView.removeFromSuperview()
         }
     }
     
@@ -1011,6 +1014,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addMonster(2)
             addMonster(2)
             addMonster(2)
+            roomCleared = false
         }
     }
     
@@ -1175,7 +1179,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             projectile = SKSpriteNode(imageNamed: "BossShot")
         }
         
-        let distance: CGFloat = 400
+        let distance: CGFloat = size.width * 0.8
         
         projectile.position = loc
         projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.4)
@@ -1579,6 +1583,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 place.addSubview(symbol)
             }
             place.layer.cornerRadius = place.frame.width * 0.2
+            if map.cleared.contains(spot)
+            {
+                let fastTravel = UITapGestureRecognizer(target: self, action: #selector(GameScene.fastTravel))
+                place.addGestureRecognizer(fastTravel)
+                place.tag = spot.x * 10 + spot.y
+            }
             mapView.addSubview(place)
         }
     }
@@ -1727,7 +1737,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let sectionWidth = (armorView.frame.width - armorView.frame.height * 0.75)/7
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: armorView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: armorView.frame.height * 0.2, width: sectionWidth, height: armorView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: armorView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: armorView.frame.height * 0.2, width: sectionWidth, height: armorView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1757,7 +1767,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let agilAmount = (settings.characters[settings.selectedPlayer].inventory.get("Agility")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: agilityView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: agilityView.frame.height * 0.2, width: sectionWidth, height: agilityView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: agilityView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: agilityView.frame.height * 0.2, width: sectionWidth, height: agilityView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1787,7 +1797,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let healAmount = (settings.characters[settings.selectedPlayer].inventory.get("Health")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: healthView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: healthView.frame.height * 0.2, width: sectionWidth, height: healthView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: healthView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: healthView.frame.height * 0.2, width: sectionWidth, height: healthView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1817,7 +1827,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let criAmount = (settings.characters[settings.selectedPlayer].inventory.get("Crit Chance")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: critView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: critView.frame.height * 0.2, width: sectionWidth, height: critView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: critView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: critView.frame.height * 0.2, width: sectionWidth, height: critView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1847,7 +1857,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let bloAmount = (settings.characters[settings.selectedPlayer].inventory.get("Block Chance")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: blockView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: blockView.frame.height * 0.2, width: sectionWidth, height: blockView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: blockView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: blockView.frame.height * 0.2, width: sectionWidth, height: blockView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1899,7 +1909,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let sectionWidth = (swordView.frame.width - swordView.frame.height * 0.75)/7
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: swordView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: swordView.frame.height * 0.2, width: sectionWidth, height: swordView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: swordView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: swordView.frame.height * 0.2, width: sectionWidth, height: swordView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1931,7 +1941,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let sRAmount = (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: shortRangeView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: shortRangeView.frame.height * 0.2, width: sectionWidth, height: shortRangeView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: shortRangeView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: shortRangeView.frame.height * 0.2, width: sectionWidth, height: shortRangeView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1963,7 +1973,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let magAmount = (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: magicView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: magicView.frame.height * 0.2, width: sectionWidth, height: magicView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: magicView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: magicView.frame.height * 0.2, width: sectionWidth, height: magicView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -1995,7 +2005,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let lRAmount = (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount() % 5)
         for num in 0...4
         {
-            let progressBar = UIView(frame: CGRect(x: longRangeView.frame.height * 0.75 + sectionWidth * (CGFloat(num) + 1), y: longRangeView.frame.height * 0.2, width: sectionWidth, height: longRangeView.frame.height * 0.15))
+            let progressBar = UIView(frame: CGRect(x: longRangeView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: longRangeView.frame.height * 0.2, width: sectionWidth, height: longRangeView.frame.height * 0.15))
             progressBar.layer.borderColor = UIColor.grayColor().CGColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
@@ -2049,6 +2059,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func exitGame()
     {
+        if !roomCleared
+        {
+            map.currLoc = map.respawnPoint
+        }
         for viewThing in view!.subviews
         {
             viewThing.removeFromSuperview()
@@ -2684,6 +2698,51 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func random(min min: CGFloat, max: CGFloat) -> CGFloat {
         return random() * (max - min) + min
+    }
+    
+    func fastTravel(sender: UITapGestureRecognizer)     //Working
+    {
+        if roomCleared
+        {
+            let x = sender.view!.tag / 10
+            let y = sender.view!.tag % 10
+            moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
+            map.update(Coordinate(xCoor: x, yCoor: y))
+            map.cleared(map.getCurr())
+            transitionClose()
+            mapView.removeFromSuperview()
+            menu.removeFromSuperview()
+        }
+        else
+        {
+            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.35, y: size.height * 0.35, width: size.width * 0.3, height: size.height * 0.3))
+            cantTravelBG.backgroundColor = UIColor.brownColor()
+            cantTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
+            cantTravelBG.layer.borderWidth = cantTravelBG.frame.height * 0.05
+            mapView.addSubview(cantTravelBG)
+            let cantTravelMessage = UILabel(frame: CGRect(x: cantTravelBG.frame.width * 0.1, y: cantTravelBG.frame.height * 0.2, width: cantTravelBG.frame.width * 0.8, height: cantTravelBG.frame.height * 0.2))
+            cantTravelMessage.textAlignment = .Center
+            cantTravelMessage.numberOfLines = 0
+            cantTravelMessage.text = "I'M SORRY, BUT YOU HAVE TO CLEAR THE ROOM FIRST."
+            cantTravelBG.addSubview(cantTravelMessage)
+            let cantTravelButton = UIButton(frame: CGRect(x: cantTravelBG.frame.width * 0.3, y: cantTravelBG.frame.height * 0.6, width: cantTravelBG.frame.width * 0.4, height: cantTravelBG.frame.height * 0.3))
+            cantTravelButton.setTitle("OKAY", forState: .Normal)
+            cantTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), forControlEvents: .TouchUpInside)
+            cantTravelButton.backgroundColor = UIColor.brownColor()
+            cantTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            cantTravelButton.layer.borderWidth = cantTravelButton.frame.height * 0.1
+            cantTravelBG.addSubview(cantTravelButton)
+        }
+    }
+    
+    func removeView(sender: UIButton)
+    {
+        sender.superview!.removeFromSuperview()
+    }
+    
+    func reaffirmTravel()
+    {
+        //Are you sure, yes, cancel
     }
     
     func checkWin()
