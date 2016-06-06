@@ -172,25 +172,25 @@ class Map: NSObject, NSCoding {
         {
             if !(spot.equals(keyPoint) || spot.equals(bossPoint) || spot.equals(spawnPoint))
             {
-                if(Int(arc4random_uniform(100)) < 10)    //10% chance
+                if(Int(arc4random_uniform(100)) < 33)    //33% chance
                 {
                     let type = Int(arc4random_uniform(100))
-                    if(type < 2)   //2% legendary
+                    if(type < 5)   //5% legendary
                     {
                         spot.chest = "legendary"
                         chests.append(spot)
                     }
-                    else if(type < 12)    //10% rare
+                    else if(type < 20)    //15% rare
                     {
                         spot.chest = "rare"
                         chests.append(spot)
                     }
-                    else if(type < 37)    //25% uncommon
+                    else if(type < 55)    //30% uncommon
                     {
                         spot.chest = "uncommon"
                         chests.append(spot)
                     }
-                    else
+                    else                  //45% common
                     {
                         spot.chest = "common"
                         chests.append(spot)

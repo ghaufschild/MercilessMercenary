@@ -109,6 +109,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var rewardNotifications: [UIView] = []
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
+    var fastTravelRoom = UIView()
     
     var moveHold: UILongPressGestureRecognizer!
     var attackHold: UILongPressGestureRecognizer!
@@ -1536,7 +1537,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         closeMapButton.layer.borderWidth = closeMapButton.frame.width * 0.1
         mapView.addSubview(closeMapButton)
         
-        let maxW = CGFloat(map.getWidth()) + 1
+        let maxW = CGFloat(map.getWidth()) + 2
         let maxW2 = maxW + 1
         let max2 = maxW * 2
         
@@ -2704,14 +2705,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if roomCleared
         {
-            let x = sender.view!.tag / 10
-            let y = sender.view!.tag % 10
-            moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
-            map.update(Coordinate(xCoor: x, yCoor: y))
-            map.cleared(map.getCurr())
-            transitionClose()
-            mapView.removeFromSuperview()
-            menu.removeFromSuperview()
+            fastTravelRoom = sender.view!
+            let checkTravelBG = UIView(frame: CGRect(x: size.width * 0.35, y: size.height * 0.35, width: size.width * 0.3, height: size.height * 0.3))
+            checkTravelBG.backgroundColor = UIColor.brownColor()
+            checkTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
+            checkTravelBG.layer.borderWidth = checkTravelBG.frame.height * 0.05
+            mapView.addSubview(checkTravelBG)
+            let checkTravelMessage = UILabel(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.2, width: checkTravelBG.frame.width * 0.8, height: checkTravelBG.frame.height * 0.2))
+            checkTravelMessage.textAlignment = .Center
+            checkTravelMessage.numberOfLines = 0
+            checkTravelMessage.text = "ARE YOU SURE YOU WISH TO FAST TRAVEL?"
+            checkTravelBG.addSubview(checkTravelMessage)
+            let checkTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.5, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.4, height: checkTravelBG.frame.height * 0.3))
+            checkTravelButton.setTitle("CANCEL", forState: .Normal)
+            checkTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), forControlEvents: .TouchUpInside)
+            checkTravelButton.backgroundColor = UIColor.brownColor()
+            checkTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            checkTravelButton.layer.borderWidth = checkTravelButton.frame.height * 0.1
+            checkTravelBG.addSubview(checkTravelButton)
+            let fastTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.3, height: checkTravelBG.frame.height * 0.3))
+            fastTravelButton.setTitle("YES", forState: .Normal)
+            fastTravelButton.addTarget(self, action: #selector(GameScene.reaffirmTravel), forControlEvents: .TouchUpInside)
+            fastTravelButton.backgroundColor = UIColor.brownColor()
+            fastTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            fastTravelButton.layer.borderWidth = fastTravelButton.frame.height * 0.1
+            checkTravelBG.addSubview(fastTravelButton)
         }
         else
         {
@@ -2742,7 +2760,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func reaffirmTravel()
     {
-        //Are you sure, yes, cancel
+        let x = fastTravelRoom.tag / 10
+        let y = fastTravelRoom.tag % 10
+        moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
+        map.update(Coordinate(xCoor: x, yCoor: y))
+        map.cleared(map.getCurr())
+        transitionClose()
+        mapView.removeFromSuperview()
+        menu.removeFromSuperview()
     }
     
     func checkWin()
