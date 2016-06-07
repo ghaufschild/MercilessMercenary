@@ -109,6 +109,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var rewardNotifications: [UIView] = []
     var toggleSoundButton = UIButton()
     var toggleMusicButton = UIButton()
+    var fastTravelRoom = UIView()
     
     var moveHold: UILongPressGestureRecognizer!
     var attackHold: UILongPressGestureRecognizer!
@@ -453,6 +454,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             var offset =  tempAttack - attackLoc
             offset.x *= -1
             addChild(projectile)
+            
+            extraNodes.append(projectile)
             
             let direction = offset.normalized()
             let shootAmount = direction * distance
@@ -883,7 +886,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        TRANSITION FUNCTIONS          //////////////////////////////
     
-    func transitionClose()      //Teleporting error with self.paused and error with moving out of bounds when no door present
+    func transitionClose()
     {
         save()
         canDoStuff = false
@@ -960,9 +963,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func loadScreen()
     {
-        for heart in extraNodes
+        for node in extraNodes
         {
-            heart.removeFromParent()
+            node.removeFromParent()
         }
         
         if(character.map.getCurr().chest != nil)
@@ -1180,6 +1183,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let offset = player.position - loc
         addChild(projectile)
         
+        extraNodes.append(projectile)
+        
         let direction = offset.normalized()
         let shootAmount = direction * distance
         let realDest = shootAmount + projectile.position
@@ -1201,20 +1206,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var damage = tempDamage
         if(character.equippedWeapon == "Melee")
         {
-            damage = 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/10 + 1)
+            damage += 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)
         }
         if(character.equippedWeapon == "Short Range")
         {
-            damage = 3 * (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/10 + 1)
+            damage += 3 * (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5 + 1)
         }
         if(character.equippedWeapon == "Magic")
         {
-            damage = 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/10 + 1)
+            damage += 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5 + 1)
             
         }
         if(character.equippedWeapon == "Long Range")
         {
-            damage = (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/10 + 1)
+            damage += (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5 + 1)
         }
         
         for num in 0..<enemyObjects.count
@@ -1522,7 +1527,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         closeMapButton.layer.borderWidth = closeMapButton.frame.width * 0.1
         mapView.addSubview(closeMapButton)
         
-        let maxW = CGFloat(map.getWidth()) + 1
+        let maxW = CGFloat(map.getWidth()) + 2
         let maxW2 = maxW + 1
         let max2 = maxW * 2
         
@@ -2566,7 +2571,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         var health = character.currentHealth
-        var missingHealth = character.maxHealth - character.currentHealth
+        var missingHealth = character.maxHealth + character.inventory.get("Health")!.getAmount()/5 - character.currentHealth
         var xMulti: CGFloat = 0
         var yMulti: CGFloat = 0
         
@@ -2690,18 +2695,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     {
         if roomCleared
         {
-            let x = sender.view!.tag / 10
-            let y = sender.view!.tag % 10
-            moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
-            map.update(Coordinate(xCoor: x, yCoor: y))
-            map.cleared(map.getCurr())
-            transitionClose()
-            mapView.removeFromSuperview()
-            menu.removeFromSuperview()
+            fastTravelRoom = sender.view!
+            let checkTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
+            checkTravelBG.backgroundColor = UIColor.brownColor()
+            checkTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
+            checkTravelBG.layer.borderWidth = checkTravelBG.frame.height * 0.05
+            mapView.addSubview(checkTravelBG)
+            let checkTravelMessage = UILabel(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.2, width: checkTravelBG.frame.width * 0.8, height: checkTravelBG.frame.height * 0.2))
+            checkTravelMessage.textAlignment = .Center
+            checkTravelMessage.numberOfLines = 0
+            checkTravelMessage.text = "ARE YOU SURE YOU WISH TO FAST TRAVEL?"
+            checkTravelBG.addSubview(checkTravelMessage)
+            let checkTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.5, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.4, height: checkTravelBG.frame.height * 0.3))
+            checkTravelButton.setTitle("CANCEL", forState: .Normal)
+            checkTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), forControlEvents: .TouchUpInside)
+            checkTravelButton.backgroundColor = UIColor.brownColor()
+            checkTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            checkTravelButton.layer.borderWidth = checkTravelButton.frame.height * 0.1
+            checkTravelBG.addSubview(checkTravelButton)
+            let fastTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.3, height: checkTravelBG.frame.height * 0.3))
+            fastTravelButton.setTitle("YES", forState: .Normal)
+            fastTravelButton.addTarget(self, action: #selector(GameScene.reaffirmTravel), forControlEvents: .TouchUpInside)
+            fastTravelButton.backgroundColor = UIColor.brownColor()
+            fastTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            fastTravelButton.layer.borderWidth = fastTravelButton.frame.height * 0.1
+            checkTravelBG.addSubview(fastTravelButton)
         }
         else
         {
-            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.35, y: size.height * 0.35, width: size.width * 0.3, height: size.height * 0.3))
+            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
             cantTravelBG.backgroundColor = UIColor.brownColor()
             cantTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
             cantTravelBG.layer.borderWidth = cantTravelBG.frame.height * 0.05
@@ -2728,7 +2750,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func reaffirmTravel()
     {
-        //Are you sure, yes, cancel
+        let x = fastTravelRoom.tag / 10
+        let y = fastTravelRoom.tag % 10
+        moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
+        map.update(Coordinate(xCoor: x, yCoor: y))
+        map.cleared(map.getCurr())
+        transitionClose()
+        mapView.removeFromSuperview()
+        menu.removeFromSuperview()
     }
     
     func checkWin()
@@ -2772,7 +2801,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func nextLevel()
     {
         character.map = Map(version: character.level)
-        loadScreen()
+        map.update(map.spawnPoint)
+        congrats.removeFromSuperview()
+        transitionClose()
+        moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
     }
     
     func endGame()

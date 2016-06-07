@@ -423,7 +423,6 @@ class CharacterScene: SKScene {
             settings.selectedPlayer = settings.howManyCharacters() - 1
         }
         save()
-        print("here", settings.howManyCharacters(), settings.selectedPlayer)
         let scene = GameScene(size: view!.bounds.size)
         scene.scaleMode = .ResizeFill
         view!.presentScene(scene)
