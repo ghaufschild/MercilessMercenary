@@ -469,6 +469,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             offset.x *= -1
             addChild(projectile)
             
+            extraNodes.append(projectile)
+            
             let direction = offset.normalized()
             let shootAmount = direction * distance
             let realDest = shootAmount + projectile.position
@@ -898,7 +900,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        TRANSITION FUNCTIONS          //////////////////////////////
     
-    func transitionClose()      //Teleporting error with self.paused and error with moving out of bounds when no door present
+    func transitionClose()
     {
         save()
         canDoStuff = false
@@ -975,9 +977,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func loadScreen()
     {
-        for heart in extraNodes
+        for node in extraNodes
         {
-            heart.removeFromParent()
+            node.removeFromParent()
         }
         
         if(character.map.getCurr().chest != nil)
@@ -1195,6 +1197,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let offset = player.position - loc
         addChild(projectile)
         
+        extraNodes.append(projectile)
+        
         let direction = offset.normalized()
         let shootAmount = direction * distance
         let realDest = shootAmount + projectile.position
@@ -1216,20 +1220,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var damage = tempDamage
         if(character.equippedWeapon == "Melee")
         {
-            damage = 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/10 + 1)
+            damage += 4 * (settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)
         }
         if(character.equippedWeapon == "Short Range")
         {
-            damage = 3 * (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/10 + 1)
+            damage += 3 * (settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5 + 1)
         }
         if(character.equippedWeapon == "Magic")
         {
-            damage = 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/10 + 1)
+            damage += 2 * (settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5 + 1)
             
         }
         if(character.equippedWeapon == "Long Range")
         {
-            damage = (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/10 + 1)
+            damage += (settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5 + 1)
         }
         
         for num in 0..<enemyObjects.count
@@ -2581,7 +2585,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         var health = character.currentHealth
-        var missingHealth = character.maxHealth - character.currentHealth
+        var missingHealth = character.maxHealth + character.inventory.get("Health")!.getAmount()/5 - character.currentHealth
         var xMulti: CGFloat = 0
         var yMulti: CGFloat = 0
         
@@ -2706,7 +2710,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if roomCleared
         {
             fastTravelRoom = sender.view!
-            let checkTravelBG = UIView(frame: CGRect(x: size.width * 0.35, y: size.height * 0.35, width: size.width * 0.3, height: size.height * 0.3))
+            let checkTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
             checkTravelBG.backgroundColor = UIColor.brownColor()
             checkTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
             checkTravelBG.layer.borderWidth = checkTravelBG.frame.height * 0.05
@@ -2733,7 +2737,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else
         {
-            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.35, y: size.height * 0.35, width: size.width * 0.3, height: size.height * 0.3))
+            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
             cantTravelBG.backgroundColor = UIColor.brownColor()
             cantTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
             cantTravelBG.layer.borderWidth = cantTravelBG.frame.height * 0.05
@@ -2811,7 +2815,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func nextLevel()
     {
         character.map = Map(version: character.level)
-        loadScreen()
+        map.update(map.spawnPoint)
+        congrats.removeFromSuperview()
+        transitionClose()
+        moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
     }
     
     func endGame()
