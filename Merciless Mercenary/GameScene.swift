@@ -238,41 +238,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         exitButton.addTarget(self, action: #selector(GameScene.exitGame), forControlEvents: .TouchUpInside)
         menu.addSubview(exitButton)
         
-        let menuTitle = UILabel(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.075))
-        menuTitle.text = "MENU"
-        menuTitle.textAlignment = .Center
-        menuTitle.adjustsFontSizeToFitWidth = true
+        let menuTitle = UIImageView(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
+        menuTitle.image = UIImage(named: "MenuButton")
         menu.addSubview(menuTitle)
         
         let mapButton = UIButton(frame: CGRect(x: menu.frame.width * 0.15, y: menu.frame.height * 0.2, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        mapButton.setTitle("MAP", forState: .Normal)
-        mapButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        mapButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
-        mapButton.layer.borderWidth = mapButton.frame.height * 0.1
+        mapButton.setBackgroundImage(UIImage(named: "Map"), forState: .Normal)
         mapButton.addTarget(self, action: #selector(GameScene.openMap), forControlEvents: .TouchUpInside)
         menu.addSubview(mapButton)
         
         let inventoryButton = UIButton(frame: CGRect(x: menu.frame.width * 0.55, y: menu.frame.height * 0.2, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        inventoryButton.setTitle("INVENTORY", forState: .Normal)
-        inventoryButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        inventoryButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
-        inventoryButton.layer.borderWidth = mapButton.frame.height * 0.1
+        inventoryButton.setBackgroundImage(UIImage(named: "Inventory"), forState: .Normal)
         inventoryButton.addTarget(self, action: #selector(GameScene.openInventory), forControlEvents: .TouchUpInside)
         menu.addSubview(inventoryButton)
         
         let skillsButton = UIButton(frame: CGRect(x: menu.frame.width * 0.15, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        skillsButton.setTitle("SKILLS", forState: .Normal)
-        skillsButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        skillsButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
-        skillsButton.layer.borderWidth = mapButton.frame.height * 0.1
+        skillsButton.setBackgroundImage(UIImage(named: "Skills"), forState: .Normal)
         skillsButton.addTarget(self, action: #selector(GameScene.openSkills), forControlEvents: .TouchUpInside)
         menu.addSubview(skillsButton)
         
         let chooseAttackButton = UIButton(frame: CGRect(x: menu.frame.width * 0.55, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        chooseAttackButton.setTitle("ATTACK TYPE", forState: .Normal)
-        chooseAttackButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        chooseAttackButton.layer.backgroundColor = UIColor(red: 0.6, green: 0.45, blue: 0.25, alpha: 1).CGColor
-        chooseAttackButton.layer.borderWidth = mapButton.frame.height * 0.1
+        chooseAttackButton.setBackgroundImage(UIImage(named:"AttackType"), forState: .Normal)
         chooseAttackButton.addTarget(self, action: #selector(GameScene.openChooseAttack), forControlEvents: .TouchUpInside)
         menu.addSubview(chooseAttackButton)
         
