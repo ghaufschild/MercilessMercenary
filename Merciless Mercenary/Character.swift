@@ -6,14 +6,15 @@
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
+import Foundation
 import UIKit
 
 class Character: NSObject, NSCoding {
-
+    
     var fighterType: Int!   //1 is melee, 2 is archery, 3 is mage
     var equippedWeapon: String!
     var inventory: Inventory!
-
+    
     var currentHealth: Int!
     var maxHealth: Int!
     var moveSpeed: Int!
@@ -24,26 +25,26 @@ class Character: NSObject, NSCoding {
     override init() {}
     
     required init(coder aDecoder: NSCoder) {
-        self.fighterType = aDecoder.decodeIntegerForKey("fighterType")
-        self.currentHealth = aDecoder.decodeIntegerForKey("currentHealth")
-        self.maxHealth = aDecoder.decodeIntegerForKey("maxHealth")
-        self.moveSpeed = aDecoder.decodeIntegerForKey("moveSpeed")
-        self.level = aDecoder.decodeIntegerForKey("level")
-        self.map = aDecoder.decodeObjectForKey("map") as! Map
-        self.equippedWeapon = aDecoder.decodeObjectForKey("equippedWeapon") as! String
-        self.inventory = aDecoder.decodeObjectForKey("inventory") as! Inventory
+        self.fighterType = aDecoder.decodeObject(forKey: "fighterType") as? Int
+        self.currentHealth = aDecoder.decodeObject(forKey: "currentHealth") as? Int
+        self.maxHealth = aDecoder.decodeObject(forKey: "maxHealth") as? Int
+        self.moveSpeed = aDecoder.decodeObject(forKey: "moveSpeed") as? Int
+        self.level = aDecoder.decodeObject(forKey: "level") as? Int
+        self.map = aDecoder.decodeObject(forKey: "map") as? Map
+        self.equippedWeapon = aDecoder.decodeObject(forKey: "equippedWeapon") as? String
+        self.inventory = aDecoder.decodeObject(forKey: "inventory") as? Inventory
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeInteger(self.fighterType, forKey: "fighterType")
-        coder.encodeInteger(self.currentHealth, forKey: "currentHealth")
-        coder.encodeInteger(self.maxHealth, forKey: "maxHealth")
-        coder.encodeInteger(self.moveSpeed, forKey: "moveSpeed")
-        coder.encodeInteger(self.level, forKey: "level")
-        coder.encodeObject(self.map, forKey: "map")
-        coder.encodeObject(self.equippedWeapon, forKey: "equippedWeapon")
-        coder.encodeObject(self.inventory, forKey: "inventory")
+        coder.encode(self.fighterType, forKey: "fighterType")
+        coder.encode(self.currentHealth, forKey: "currentHealth")
+        coder.encode(self.maxHealth, forKey: "maxHealth")
+        coder.encode(self.moveSpeed, forKey: "moveSpeed")
+        coder.encode(self.level, forKey: "level")
+        coder.encode(self.map, forKey: "map")
+        coder.encode(self.equippedWeapon, forKey: "equippedWeapon")
+        coder.encode(self.inventory, forKey: "inventory")
     }
     
     init(fightType: Int)
@@ -82,3 +83,4 @@ class Character: NSObject, NSCoding {
         map = Map(version: 1)
     }
 }
+

@@ -6,6 +6,7 @@
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
+import Foundation
 import UIKit
 import SpriteKit
 
@@ -18,7 +19,7 @@ class Enemy: NSObject {
     var type: Int!
     var sprite: SKSpriteNode!
     var flickerCounter = 0
-    var timer = NSTimer()
+    var timer = Timer()
     
     init(h: Int, dam: Int, move: Int, num: Int, enemy: SKSpriteNode)
     {
@@ -30,7 +31,7 @@ class Enemy: NSObject {
         sprite = enemy
     }
     
-    func gotHit(dam: Int) -> Bool       //return true if still alive, false if dead
+    func gotHit(_ dam: Int) -> Bool       //return true if still alive, false if dead
     {
         currentHealth = currentHealth - dam
         if currentHealth > 0
@@ -44,10 +45,10 @@ class Enemy: NSObject {
     {
         timer.invalidate()
         flickerCounter = 0
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(Enemy.changeAlpha), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(Enemy.changeAlpha), userInfo: nil, repeats: true)
     }
     
-    func changeAlpha()
+    @objc func changeAlpha()
     {
         flickerCounter += 1
         if(flickerCounter < 6)
@@ -84,5 +85,5 @@ class Enemy: NSObject {
     {
         return maxHealth
     }
-
+    
 }

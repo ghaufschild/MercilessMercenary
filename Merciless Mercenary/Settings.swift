@@ -16,26 +16,30 @@ class Settings: NSObject, NSCoding {
     var characters: [Character] = []
     var selectedPlayer: Int = 1
     
-    override init() {}
+    override init() {
+        super.init()
+        print("ran this shit")
+        save()
+    }
     
     required init(coder aDecoder: NSCoder) {
-        self.difficulty = aDecoder.decodeIntegerForKey("difficulty")
-        self.selectedPlayer = aDecoder.decodeIntegerForKey("selectedPlayer")
-        self.soundOn = aDecoder.decodeBoolForKey("sound")
-        self.musicOn = aDecoder.decodeBoolForKey("music")
-        self.characters = aDecoder.decodeObjectForKey("characters") as! [Character]
+        self.difficulty = aDecoder.decodeInteger(forKey: "difficulty")
+        self.selectedPlayer = aDecoder.decodeInteger(forKey: "selectedPlayer")
+        self.soundOn = aDecoder.decodeBool(forKey: "sound")
+        self.musicOn = aDecoder.decodeBool(forKey: "music")
+        self.characters = aDecoder.decodeObject(forKey: "characters") as! [Character]
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeInteger(self.difficulty, forKey: "difficulty")
-        coder.encodeInteger(self.selectedPlayer, forKey: "selectedPlayer")
-        coder.encodeBool(self.soundOn, forKey: "sound")
-        coder.encodeBool(self.musicOn, forKey: "music")
-        coder.encodeObject(self.characters, forKey: "characters")
+        coder.encode(self.difficulty, forKey: "difficulty")
+        coder.encode(self.selectedPlayer, forKey: "selectedPlayer")
+        coder.encode(self.soundOn, forKey: "sound")
+        coder.encode(self.musicOn, forKey: "music")
+        coder.encode(self.characters, forKey: "characters")
     }
     
-    func addCharacter(fight: Int)
+    func addCharacter(_ fight: Int)
     {
         characters.append(Character(fightType: fight))
     }
@@ -46,19 +50,20 @@ class Settings: NSObject, NSCoding {
     }
     
     func save() {
-        let data = NSKeyedArchiver.archivedDataWithRootObject(self)
-        NSUserDefaults.standardUserDefaults().setObject(data, forKey: "settings")
+        let data = NSKeyedArchiver.archivedData(withRootObject: self)
+        UserDefaults.standard.set(data, forKey: "settings")
     }
     
     class func loadSaved() -> Settings? {
-        if let data = NSUserDefaults.standardUserDefaults().objectForKey("settings") as? NSData {
-            return NSKeyedUnarchiver.unarchiveObjectWithData(data) as? Settings
+        let data = UserDefaults.standard.object(forKey: "settings") as? Data
+        if  data != nil {
+            return NSKeyedUnarchiver.unarchiveObject(with: data!) as? Settings
         }
         return nil
     }
     
     func clear() {
-        NSUserDefaults.standardUserDefaults().removeObjectForKey("settings")
+        UserDefaults.standard.removeObject(forKey: "settings")
     }
     
 }

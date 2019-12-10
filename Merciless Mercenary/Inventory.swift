@@ -6,21 +6,23 @@
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
+
+import Foundation
 import UIKit
 
 class Inventory: NSObject, NSCoding {
-
+    
     var items: [Item] = []
     
     override init() {}
     
     required init(coder aDecoder: NSCoder) {
-        self.items = aDecoder.decodeObjectForKey("items") as! [Item]
+        self.items = aDecoder.decodeObject(forKey: "items") as! [Item]
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeObject(self.items, forKey: "items")
+        coder.encode(self.items, forKey: "items")
     }
     
     init(type: Int)
@@ -66,7 +68,7 @@ class Inventory: NSObject, NSCoding {
         items.append(Item(n: "Crit Chance", c: 99, a: 0))
     }
     
-    func add(name: String) -> Bool    //Return true if picked up, false if full
+    func add(_ name: String) -> Bool    //Return true if picked up, false if full
     {
         for item in items
         {
@@ -78,7 +80,7 @@ class Inventory: NSObject, NSCoding {
         return false
     }
     
-    func get(name: String) -> Item?
+    func get(_ name: String) -> Item?
     {
         for item in items
         {
@@ -90,22 +92,12 @@ class Inventory: NSObject, NSCoding {
         return nil
     }
     
-    func remove(name: String) -> Bool   //True if removed, false if none
+    func remove(_ name: String) -> Bool   //True if removed, false if none
     {
-        for item in items
-        {
-            if(item.getName() == name)
-            {
-                if(item.getAmount() > 0)
-                {
-                    item.amount = item.amount - 1
-                    return true
-                }
-                else
-                {
-                    return false
-                }
-            }
+        let item = get(name)
+        if item?.amount ?? 0 > 0 {
+            item?.amount -= 1
+            return true
         }
         return false
     }
@@ -116,7 +108,7 @@ class Inventory: NSObject, NSCoding {
     //Valiant
     //Juice Box
     //Dagger
-
+    
 }
 
 class Item: NSObject, NSCoding
@@ -128,16 +120,16 @@ class Item: NSObject, NSCoding
     override init() {}
     
     required init(coder aDecoder: NSCoder) {
-        self.cap = aDecoder.decodeIntegerForKey("cap")
-        self.amount = aDecoder.decodeIntegerForKey("amount")
-        self.name = aDecoder.decodeObjectForKey("name") as! String
+        self.cap = aDecoder.decodeInteger(forKey: "cap")
+        self.amount = aDecoder.decodeInteger(forKey: "amount")
+        self.name = aDecoder.decodeObject(forKey: "name") as! String
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeInteger(self.cap, forKey: "cap")
-        coder.encodeInteger(self.amount, forKey: "amount")
-        coder.encodeObject(self.name, forKey: "name")
+        coder.encode(self.cap, forKey: "cap")
+        coder.encode(self.amount, forKey: "amount")
+        coder.encode(self.name, forKey: "name")
     }
     
     init(n: String, c: Int, a: Int)
@@ -164,9 +156,64 @@ class Item: NSObject, NSCoding
     
     func upgrade() -> Bool
     {
-        if(!(amount + 1 > cap))
-        {
+        if amount < cap {
             amount += 1
+            return true
+        }
+        return false
+    }
+    
+    func equals(other: Item) -> Bool {
+        return name == other.name
+    }
+}
+
+class Skill: NSObject, NSCoding {
+    var name: String = ""
+    var cap: Int = 0
+    var level: Int = 0
+    
+    override init() {}
+    
+    required init(coder aDecoder: NSCoder) {
+        self.cap = aDecoder.decodeInteger(forKey: "cap")
+        self.level = aDecoder.decodeInteger(forKey: "level")
+        self.name = aDecoder.decodeObject(forKey: "name") as! String
+    }
+    
+    func encode(with coder: NSCoder)
+    {
+        coder.encode(self.cap, forKey: "cap")
+        coder.encode(self.level, forKey: "level")
+        coder.encode(self.name, forKey: "name")
+    }
+    
+    init(n: String, c: Int, l: Int)
+    {
+        cap = c
+        name = n
+        level = l
+    }
+    
+    func getCap() -> Int
+    {
+        return cap
+    }
+    
+    func getName() -> String
+    {
+        return name
+    }
+    
+    func getLevel() -> Int
+    {
+        return level
+    }
+    
+    func upgrade() -> Bool
+    {
+        if level < cap {
+            level += 1
             return true
         }
         return false

@@ -5,9 +5,9 @@
 //  Created by Garrett Haufschild, and Ryan Ziolkowski on 4/1/16.
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
-
 //  Coordinates (0,0) are in bottom left
 
+import Foundation
 import SpriteKit
 
 
@@ -28,9 +28,9 @@ func / (point: CGPoint, scalar: CGFloat) -> CGPoint {
 }
 
 #if !(arch(x86_64) || arch(arm64))
-    func sqrt(a: CGFloat) -> CGFloat {
-        return CGFloat(sqrtf(Float(a)))
-    }
+func sqrt(a: CGFloat) -> CGFloat {
+    return CGFloat(sqrtf(Float(a)))
+}
 #endif
 
 extension CGPoint {
@@ -69,11 +69,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var roomCleared: Bool = true
     var hasKey = false
     
-    var attackTimer = NSTimer()
-    var moveTimer = NSTimer()
-    var transTimer = NSTimer()
-    var buffTimers: [NSTimer] = []
-    var immortalTimer = NSTimer()
+    var attackTimer = Timer()
+    var moveTimer = Timer()
+    var transTimer = Timer()
+    var buffTimers: [Timer] = []
+    var immortalTimer = Timer()
     var tempSpeed = 0
     var tempBlock = 0
     var tempDamage = 0
@@ -120,7 +120,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let playerUp = SKTexture(imageNamed: "playerUp")
     let playerRight = SKTexture(imageNamed: "playerRight")
     let playerDown = SKTexture(imageNamed: "playerDown")
-
+    
     
     var menuButton = SKSpriteNode(imageNamed: "MenuButton")
     
@@ -129,8 +129,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var doors = [SKSpriteNode]()
     var enemyObjects = [Enemy]()
     var healthBars = [SKSpriteNode]()       //Shows health on enemy
-    var attackEnemyTimer = NSTimer()        //Controls how enemies attack
-    var moveEnemyTimer = NSTimer()          //Controls how enemies move
+    var attackEnemyTimer = Timer()        //Controls how enemies attack
+    var moveEnemyTimer = Timer()          //Controls how enemies move
     var availableEnemyLocs = [CGPoint]()    //Locations that an enemy can spawn in
     var extraNodes = [SKSpriteNode]()       //Clear every time you enter a new room
     var extraViews = [UIView]()       //Clear every time you enter a new room
@@ -143,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var invincibleCounter = 0       //After taking damage
     
     //View Did Load
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         
         if let settings = Settings.loadSaved()
         {
@@ -159,7 +159,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         character = settings.characters[settings.selectedPlayer]
         map = character.map
         
-        self.view?.multipleTouchEnabled = true
+        self.view?.isMultipleTouchEnabled = true
         
         backgroundMusic.autoplayLooped = true
         backgroundMusic.name = "backgroundMusic"
@@ -178,24 +178,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menuButton.name = "menu"
         menuButton.position = CGPoint(x: size.width * 0.2, y: size.height * 0.95)
         menuButton.size = CGSize(width: size.width * 0.2, height: size.height * 0.1)
-        menuButton.userInteractionEnabled = false
+        menuButton.isUserInteractionEnabled = false
         menuButton.alpha = 0.8
         addChild(menuButton)
         
-        let playerText = SKTexture(CGImage: (UIImage(named: "playerDown")?.CGImage)!)
+        let playerText = SKTexture(cgImage: (UIImage(named: "playerDown")?.cgImage)!)
         player.position = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
         player.size = CGSize(width: size.height*CGFloat(0.06), height: size.height*CGFloat(0.12 ))
         player.physicsBody = SKPhysicsBody(texture: playerText, size: player.size)
-        player.physicsBody?.dynamic = true
+        player.physicsBody?.isDynamic = true
         player.physicsBody?.categoryBitMask = PhysicsCategory.Player
         player.physicsBody?.contactTestBitMask = PhysicsCategory.Monster
         player.physicsBody?.collisionBitMask = PhysicsCategory.None
         player.physicsBody?.usesPreciseCollisionDetection = true
         
         menu = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
-        menu.layer.borderColor = UIColor.grayColor().CGColor
+        menu.layer.borderColor = UIColor.gray.cgColor
         menu.layer.borderWidth = menu.frame.width * 0.01
-        menu.layer.backgroundColor = UIColor.brownColor().CGColor
+        menu.layer.backgroundColor = UIColor.brown.cgColor
         
         moveHold = UILongPressGestureRecognizer(target: self, action: #selector(GameScene.moveOnTouch))
         moveHold.minimumPressDuration = 0.0
@@ -204,7 +204,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let buttonWid = size.width * 0.15
         
-        moveView = UIView(frame: CGRect(x: 0, y: 0, width: size.width * 0.5, height: size.height))
+        moveView = UIView(frame: CGRect(x: 0, y: size.height * 0.075, width: size.width * 0.5, height: size.height * 0.925))
         moveView.addGestureRecognizer(moveHold)
         moveJoystickOuter = UIImageView(frame: CGRect(x: 0, y: 0, width: buttonWid, height: buttonWid))
         moveJoystickOuter.image = UIImage(named: "joystick")
@@ -221,22 +221,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view.addSubview(heartBar)
         
         let memeLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
-        memeLabel.backgroundColor = UIColor.clearColor()
+        memeLabel.backgroundColor = UIColor.clear
         moveView.addSubview(memeLabel)
         
         let closeMenuButton = UIButton(frame: CGRect(x: menu.frame.width - menu.frame.height * 0.2, y: menu.frame.height * 0.05, width: menu.frame.height * 0.15, height: menu.frame.height * 0.15))
-        closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), forControlEvents: .TouchUpInside)
-        closeMenuButton.backgroundColor = UIColor.redColor()
-        closeMenuButton.setTitle("X", forState: .Normal)
-        closeMenuButton.layer.borderColor = UIColor.darkGrayColor().CGColor
-        closeMenuButton.layer.borderWidth = closeMenuButton.frame.width * 0.1
+        closeMenuButton.addTarget(self, action: #selector(GameScene.closeMenu), for: .touchUpInside)
+        closeMenuButton.backgroundColor = UIColor.red
+        closeMenuButton.setTitle("X", for: UIControl.State())
+        closeMenuButton.layer.borderColor = UIColor.darkGray.cgColor
+        closeMenuButton.layer.borderWidth = closeMenuButton.frame.width * 0.05
         menu.addSubview(closeMenuButton)
         
         let exitButton = UIButton(frame: CGRect(x: menu.frame.width * 0.7, y: menu.frame.height * 0.85, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
-        exitButton.backgroundColor = UIColor.redColor()
-        exitButton.setTitle("QUIT", forState: .Normal)
-        exitButton.titleLabel?.textColor = UIColor.blackColor()
-        exitButton.addTarget(self, action: #selector(GameScene.exitGame), forControlEvents: .TouchUpInside)
+        exitButton.backgroundColor = UIColor.red
+        exitButton.setTitle("QUIT", for: UIControl.State())
+        exitButton.titleLabel?.textColor = UIColor.black
+        exitButton.addTarget(self, action: #selector(GameScene.exitGame), for: .touchUpInside)
         menu.addSubview(exitButton)
         
         let menuTitle = UIImageView(frame: CGRect(x: menu.frame.width * 0.4, y: menu.frame.height * 0.05, width: menu.frame.width * 0.2, height: menu.frame.height * 0.1))
@@ -244,31 +244,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menu.addSubview(menuTitle)
         
         let mapButton = UIButton(frame: CGRect(x: menu.frame.width * 0.15, y: menu.frame.height * 0.2, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        mapButton.setBackgroundImage(UIImage(named: "Map"), forState: .Normal)
-        mapButton.addTarget(self, action: #selector(GameScene.openMap), forControlEvents: .TouchUpInside)
+        mapButton.setBackgroundImage(UIImage(named: "Map"), for: UIControl.State())
+        mapButton.addTarget(self, action: #selector(GameScene.openMap), for: .touchUpInside)
         menu.addSubview(mapButton)
         
         let inventoryButton = UIButton(frame: CGRect(x: menu.frame.width * 0.55, y: menu.frame.height * 0.2, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        inventoryButton.setBackgroundImage(UIImage(named: "Inventory"), forState: .Normal)
-        inventoryButton.addTarget(self, action: #selector(GameScene.openInventory), forControlEvents: .TouchUpInside)
+        inventoryButton.setBackgroundImage(UIImage(named: "Inventory"), for: UIControl.State())
+        inventoryButton.addTarget(self, action: #selector(GameScene.openInventory), for: .touchUpInside)
         menu.addSubview(inventoryButton)
         
         let skillsButton = UIButton(frame: CGRect(x: menu.frame.width * 0.15, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        skillsButton.setBackgroundImage(UIImage(named: "Skills"), forState: .Normal)
-        skillsButton.addTarget(self, action: #selector(GameScene.openSkills), forControlEvents: .TouchUpInside)
+        skillsButton.setBackgroundImage(UIImage(named: "Skills"), for: UIControl.State())
+        skillsButton.addTarget(self, action: #selector(GameScene.openSkills), for: .touchUpInside)
         menu.addSubview(skillsButton)
         
         let chooseAttackButton = UIButton(frame: CGRect(x: menu.frame.width * 0.55, y: menu.frame.height * 0.4, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
-        chooseAttackButton.setBackgroundImage(UIImage(named:"AttackType"), forState: .Normal)
-        chooseAttackButton.addTarget(self, action: #selector(GameScene.openChooseAttack), forControlEvents: .TouchUpInside)
+        chooseAttackButton.setBackgroundImage(UIImage(named:"AttackType"), for: UIControl.State())
+        chooseAttackButton.addTarget(self, action: #selector(GameScene.openChooseAttack), for: .touchUpInside)
         menu.addSubview(chooseAttackButton)
         
         toggleMusicButton = UIButton(frame: CGRect(x: menu.frame.width * 0.6, y: menu.frame.height * 0.55, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
         toggleMusicButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
-        toggleMusicButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleMusicButton.layer.borderColor = UIColor.lightGray.cgColor
+        toggleMusicButton.layer.backgroundColor = UIColor.green.cgColor
         toggleMusicButton.layer.borderWidth = toggleMusicButton.frame.width * 0.1
-        toggleMusicButton.addTarget(self, action: #selector(GameScene.toggleMusic), forControlEvents: .TouchUpInside)
+        toggleMusicButton.addTarget(self, action: #selector(GameScene.toggleMusic), for: .touchUpInside)
         menu.addSubview(toggleMusicButton)
         
         let toggleMusicLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.55, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
@@ -277,10 +277,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         toggleSoundButton = UIButton(frame: CGRect(x: menu.frame.width * 0.6, y: menu.frame.height * 0.7, width: menu.frame.height * 0.1, height: menu.frame.height * 0.1))
         toggleSoundButton.layer.cornerRadius = toggleMusicButton.frame.width * 0.5
-        toggleSoundButton.layer.borderColor = UIColor.lightGrayColor().CGColor
-        toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+        toggleSoundButton.layer.borderColor = UIColor.lightGray.cgColor
+        toggleSoundButton.layer.backgroundColor = UIColor.green.cgColor
         toggleSoundButton.layer.borderWidth = toggleSoundButton.frame.width * 0.1
-        toggleSoundButton.addTarget(self, action: #selector(GameScene.toggleSound), forControlEvents: .TouchUpInside)
+        toggleSoundButton.addTarget(self, action: #selector(GameScene.toggleSound), for: .touchUpInside)
         menu.addSubview(toggleSoundButton)
         
         let toggleSoundLabel = UILabel(frame: CGRect(x: menu.frame.width * 0.25, y: menu.frame.height * 0.7, width: menu.frame.width * 0.3, height: menu.frame.height * 0.1))
@@ -290,20 +290,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view.addSubview(attackView)
         view.addSubview(moveView)
         
-        if map.getUp() != nil
-        {
+        if map.getUp() != nil {
             setDoor("up")
         }
-        if map.getRight() != nil
-        {
+        if map.getRight() != nil {
             setDoor("right")
         }
-        if map.getDown() != nil
-        {
+        if map.getDown() != nil {
             setDoor("down")
         }
-        if map.getLeft() != nil
-        {
+        if map.getLeft() != nil {
             setDoor("left")
         }
         unlockDoors()
@@ -314,43 +310,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         changeRewards = UITapGestureRecognizer(target: self, action: #selector(GameScene.continueRewards))
         
         chestNotification = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
-        chestNotification.backgroundColor = UIColor.brownColor()
+        chestNotification.backgroundColor = UIColor.brown
         chestNotification.addGestureRecognizer(changeRewards)
         
         let congratsLabel = UILabel(frame: CGRect(x: chestNotification.frame.width * 0.2, y: chestNotification.frame.height * 0.075, width: chestNotification.frame.width * 0.6, height: chestNotification.frame.height * 0.1))
         congratsLabel.text = "CONGRATULATIONS"
         congratsLabel.adjustsFontSizeToFitWidth = true
-        congratsLabel.textAlignment = .Center
+        congratsLabel.textAlignment = .center
         chestNotification.addSubview(congratsLabel)
         
         speedPotBG = UIView(frame: CGRect(x: size.width * 0.02, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
-        speedPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
-        speedPotBG.layer.borderColor = UIColor.grayColor().CGColor
+        speedPotBG.layer.backgroundColor = UIColor.brown.cgColor
+        speedPotBG.layer.borderColor = UIColor.gray.cgColor
         speedPotBG.layer.borderWidth = speedPotBG.frame.width * 0.05
         speedPot = UIImageView(frame: CGRect(x: size.width * 0.03, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         speedPot.image = UIImage(named: "SpeedPot")
         blockPotBG = UIView(frame: CGRect(x: size.width * 0.09, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
-        blockPotBG.layer.backgroundColor = UIColor.brownColor().CGColor
-        blockPotBG.layer.borderColor = UIColor.grayColor().CGColor
+        blockPotBG.layer.backgroundColor = UIColor.brown.cgColor
+        blockPotBG.layer.borderColor = UIColor.gray.cgColor
         blockPotBG.layer.borderWidth = blockPotBG.frame.width * 0.05
         blockPot = UIImageView(frame: CGRect(x: size.width * 0.1, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         blockPot.image = UIImage(named: "BlockPot")
         damagePotBG = UIView(frame: CGRect(x: size.width * 0.16, y: size.height * 0.11, width: size.width * 0.07, height: size.width * 0.07))
-        damagePotBG.layer.backgroundColor = UIColor.brownColor().CGColor
-        damagePotBG.layer.borderColor = UIColor.grayColor().CGColor
+        damagePotBG.layer.backgroundColor = UIColor.brown.cgColor
+        damagePotBG.layer.borderColor = UIColor.gray.cgColor
         damagePotBG.layer.borderWidth = damagePotBG.frame.width * 0.05
         damagePot = UIImageView(frame: CGRect(x: size.width * 0.17, y: size.height * 0.11 + size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
         damagePot.image = UIImage(named: "DamagePot")
         
         checkForKey()
         
-        let wallText = SKTexture(CGImage: (UIImage(named: "Wall")?.CGImage)!)
+        let wallText = SKTexture(cgImage: (UIImage(named: "Wall")?.cgImage)!)
         let wall1 = SKSpriteNode(texture: wallText)
         wall1.size = CGSize(width: size.width, height: size.height * 0.1)
         wall1.position = CGPoint(x: size.width * 0.5, y: size.height * 0.05)
         wall1.zPosition = -2
         wall1.physicsBody = SKPhysicsBody(texture: wallText, size: wall1.size)
-        wall1.physicsBody?.dynamic = true
+        wall1.physicsBody?.isDynamic = true
         wall1.physicsBody?.categoryBitMask = PhysicsCategory.Wall
         wall1.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
         wall1.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -361,7 +357,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall2.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
         wall2.zPosition = -2
         wall2.physicsBody = SKPhysicsBody(texture: wallText, size: wall2.size)
-        wall2.physicsBody?.dynamic = true
+        wall2.physicsBody?.isDynamic = true
         wall2.physicsBody?.categoryBitMask = PhysicsCategory.Wall
         wall2.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
         wall2.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -371,9 +367,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall3.size = CGSize(width: size.width, height: size.height * 0.1)
         wall3.position = CGPoint(x: size.height * 0.05, y: size.height * 0.5)
         wall3.zPosition = -2
-        wall3.zRotation = CGFloat(M_PI_2)
+        wall3.zRotation = CGFloat(Double.pi/2)
         wall3.physicsBody = SKPhysicsBody(texture: wallText, size: wall3.size)
-        wall3.physicsBody?.dynamic = true
+        wall3.physicsBody?.isDynamic = true
         wall3.physicsBody?.categoryBitMask = PhysicsCategory.Wall
         wall3.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
         wall3.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -383,9 +379,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         wall4.size = CGSize(width: size.width, height: size.height * 0.1)
         wall4.position = CGPoint(x: size.width - size.height * 0.05, y: size.height * 0.5)
         wall4.zPosition = -2
-        wall4.zRotation = CGFloat(M_PI_2)
+        wall4.zRotation = CGFloat(Double.pi/2)
         wall4.physicsBody = SKPhysicsBody(texture: wallText, size: wall4.size)
-        wall4.physicsBody?.dynamic = true
+        wall4.physicsBody?.isDynamic = true
         wall4.physicsBody?.categoryBitMask = PhysicsCategory.Wall
         wall4.physicsBody?.contactTestBitMask = PhysicsCategory.EnemyProjectile
         wall4.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -400,14 +396,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         loadScreen()
         
-        physicsWorld.gravity = CGVectorMake(0, 0)
+        physicsWorld.gravity = CGVector(dx: 0, dy: 0)
         physicsWorld.contactDelegate = self
     }
     
     //////////////////////////      JOYSTICK FUNCTIONS      //////////////////////////////
     
     //Attack Function
-    func attack()
+    @objc func attack()
     {
         if(canAttack && canDoStuff)
         {
@@ -444,8 +440,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
             
             projectile.position = player.position
-            projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
-            projectile.physicsBody?.dynamic = true
+            projectile.physicsBody = SKPhysicsBody(rectangleOf: projectile.size)
+            projectile.physicsBody?.isDynamic = true
             projectile.physicsBody?.categoryBitMask = PhysicsCategory.Projectile
             projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Wall
             projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -467,7 +463,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let yOffset = offset.y
             let absX = abs(xOffset)
             let absY = abs(yOffset)
-
+            
             if xOffset > 0 && absX >= absY // Right
             {
                 player.texture = playerRight
@@ -489,27 +485,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 player.texture = playerDown
             }
             
-            let actionMove = SKAction.moveTo(realDest, duration: (1/400) * Double(distance))
+            let actionMove = SKAction.move(to: realDest, duration: (1/400) * Double(distance))
             let actionMoveDone = SKAction.removeFromParent()
             if(offset.x != 0 && offset.y != 0)
             {
-                projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+                projectile.run(SKAction.sequence([actionMove, actionMoveDone]))
                 canAttack = false
-                _ = NSTimer.scheduledTimerWithTimeInterval(0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
+                _ = Timer.scheduledTimer(timeInterval: 0.16, target: self, selector: #selector(GameScene.letAttack), userInfo: nil, repeats: false)
                 if(settings.soundOn)
                 {
-                    runAction(SKAction.playSoundFileNamed(soundName, waitForCompletion: false))
+                    run(SKAction.playSoundFileNamed(soundName, waitForCompletion: false))
                 }
             }
             else
             {
-                projectile.runAction(actionMoveDone)
+                projectile.run(actionMoveDone)
             }
             
         }
     }
     
-    func setEnemyLocs(place: CGPoint)
+    func setEnemyLocs(_ place: CGPoint)
     {
         if(place.y > size.height * 0.4)  //Above
         {
@@ -560,12 +556,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func letAttack()
+    @objc func letAttack()
     {
         canAttack = true
     }
     
-    func mortal()
+    @objc func mortal()
     {
         invincibleCounter += 1
         if(invincibleCounter < 6)
@@ -585,7 +581,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     //Move Function
-    func move()
+    @objc func move()
     {
         if canDoStuff
         {
@@ -772,13 +768,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
             if !door{
-                let actionMove = SKAction.moveTo(realDest, duration: 0.1)
-                player.runAction(actionMove)
+                let actionMove = SKAction.move(to: realDest, duration: 0.1)
+                player.run(actionMove)
             }
         }
     }
     
-    func checkForBoss(coor: Coordinate) -> Bool
+    func checkForBoss(_ coor: Coordinate) -> Bool
     {
         if coor.equals(map.getBoss())
         {
@@ -787,17 +783,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return true
     }
     
-    func checkForKey()
-    {
-        if map.visited.contains(map.getKey())
-        {
+    func checkForKey() {
+        if map.visited.contains(map.getKey()) {
             keyView = UIImageView(frame: CGRect(x: size.width * 0.65, y: size.width * 0.01, width: size.width * 0.05, height: size.width * 0.05))
             keyView.image = UIImage(named: "key")
             view?.addSubview(keyView)
             hasKey = true
-        }
-        else
-        {
+        } else {
             hasKey = false
         }
     }
@@ -805,16 +797,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func unlockDoors()      //Chance image of doors
     {
         checkForKey()
-        for door in doors
-        {
-            if(door.texture == doorLocked)
-            {
+        for door in doors {
+            if(door.texture == doorLocked) {
                 door.texture = doorUnlocked
-            }
-            else if(door.texture == doorBoss)
-            {
-                if hasKey
-                {
+            } else if(door.texture == doorBoss) {
+                if hasKey {
                     door.texture = doorUnlocked
                 }
             }
@@ -823,62 +810,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////////////       TOUCH FUNCTIONS        /////////////////////////////////
     
-    func moveOnTouch()
-    {
-        if(!moveTimer.valid)
-        {
-            tempMove = moveHold.locationInView(moveView)
-            moveLoc = moveHold.locationInView(moveView)
+    @objc func moveOnTouch() {
+        if(!moveTimer.isValid) {
+            tempMove = moveHold.location(in: moveView)
+            moveLoc = moveHold.location(in: moveView)
             
             moveJoystickOuter.center = moveLoc
             moveView.addSubview(moveJoystickOuter)
             
-            moveTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.move), userInfo: nil, repeats: true)
+            moveTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(move as () -> Void), userInfo: nil, repeats: true)
             move()
         }
-        else if(moveHold.state == UIGestureRecognizerState.Changed)
-        {
-            moveLoc = moveHold.locationInView(moveView)
-        }
-        else
-        {
+        else if(moveHold.state == UIGestureRecognizer.State.changed) {
+            moveLoc = moveHold.location(in: moveView)
+        } else {
             moveTimer.invalidate()
             moveJoystickOuter.removeFromSuperview()
         }
     }
     
-    func attackOnTouch()
-    {
-        if(!attackTimer.valid)
-        {
-            tempAttack = attackHold.locationInView(attackView)
-            attackLoc = attackHold.locationInView(attackView)
+    @objc func attackOnTouch() {
+        if(!attackTimer.isValid) {
+            tempAttack = attackHold.location(in: attackView)
+            attackLoc = attackHold.location(in: attackView)
             
             attackJoystickOuter.center = attackLoc
             attackView.addSubview(attackJoystickOuter)
             
-            attackTimer = NSTimer.scheduledTimerWithTimeInterval(0.2, target: self, selector: #selector(GameScene.attack), userInfo: nil, repeats: true)
+            attackTimer = Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(GameScene.attack), userInfo: nil, repeats: true)
             attack()
-        }
-        else if(attackHold.state == UIGestureRecognizerState.Changed)
-        {
-            attackLoc = attackHold.locationInView(attackView)
-        }
-        else
-        {
+        } else if(attackHold.state == UIGestureRecognizer.State.changed) {
+            attackLoc = attackHold.location(in: attackView)
+        } else {
             attackJoystickOuter.removeFromSuperview()
             attackTimer.invalidate()
         }
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let positionInScene = touches.first?.locationInNode(self)
-        let touchedNode = self.nodeAtPoint(positionInScene!)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let positionInScene = touches.first?.location(in: self)
+        let touchedNode = self.atPoint(positionInScene!)
         
-        if(touchedNode.name == "menu")
-        {
-            if(!self.paused)
-            {
+        if(touchedNode.name == "menu") {
+            if(!self.isPaused) {
                 openMenu()
             }
         }
@@ -886,47 +860,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////        TRANSITION FUNCTIONS          //////////////////////////////
     
-    func transitionClose()
-    {
+    func transitionClose() {
         save()
         canDoStuff = false
         transitionView = UIView(frame: CGRect(x: 0, y: 0, width: size.width*2.5, height: size.width*2.5))
         transitionView.layer.cornerRadius = transitionView.frame.width * 0.5
-        transitionView.layer.backgroundColor = UIColor.clearColor().CGColor
-        transitionView.layer.borderColor = UIColor.blackColor().CGColor
+        transitionView.layer.backgroundColor = UIColor.clear.cgColor
+        transitionView.layer.borderColor = UIColor.black.cgColor
         transitionView.layer.borderWidth = 10
         transitionView.clipsToBounds = true
         transitionView.center = player.position
         fixY()
         self.view?.addSubview(transitionView)
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
+        transTimer = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(GameScene.incWidth), userInfo: nil, repeats: true)
     }
     
     func transitionOpen()
     {
-        removeChildrenInArray(doors)
+        removeChildren(in: doors)
         doors.removeAll()
-        if map.getUp() != nil
-        {
+        if map.getUp() != nil {
             setDoor("up")
         }
-        if map.getRight() != nil
-        {
+        if map.getRight() != nil {
             setDoor("right")
         }
-        if map.getDown() != nil
-        {
+        if map.getDown() != nil {
             setDoor("down")
         }
-        if map.getLeft() != nil
-        {
+        if map.getLeft() != nil {
             setDoor("left")
         }
         loadScreen()
-        transTimer = NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
+        transTimer = Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(GameScene.decWidth), userInfo: nil, repeats: true)
     }
     
-    func incWidth()
+    @objc func incWidth()
     {
         transitionView.layer.borderWidth += transitionView.frame.width * 0.01
         if(transitionView.layer.borderWidth >= transitionView.frame.width * 0.5)
@@ -941,7 +910,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func decWidth()
+    @objc func decWidth()
     {
         transitionView.layer.borderWidth -= transitionView.frame.width * 0.01
         if(transitionView.layer.borderWidth <= 0)
@@ -950,7 +919,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             transitionView.removeFromSuperview()
             if(!view!.subviews.contains(menu))
             {
-                player.paused = false
+                player.isPaused = false
                 canDoStuff = true
             }
         }
@@ -970,16 +939,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if(character.map.getCurr().chest != nil)
         {
-            let chest = SKSpriteNode(imageNamed: character.map.getCurr().chest!)
+            let chest = SKSpriteNode(imageNamed: "\(character.map.getCurr().chest!)")
             chest.position = CGPoint(x: size.width * 0.2, y: size.height * 0.8)
             chest.size = CGSize(width: size.width * 0.05, height: size.height * 0.05)
-            chest.physicsBody = SKPhysicsBody(rectangleOfSize: chest.size)
-            chest.physicsBody?.dynamic = true
+            chest.physicsBody = SKPhysicsBody(rectangleOf: chest.size)
+            chest.physicsBody?.isDynamic = true
             chest.physicsBody?.categoryBitMask = PhysicsCategory.Chest
             chest.physicsBody?.contactTestBitMask = PhysicsCategory.Player
             chest.physicsBody?.collisionBitMask = PhysicsCategory.None
             chest.physicsBody?.usesPreciseCollisionDetection = false
-            chest.name = character.map.getCurr().chest
+            chest.name = "\(character.map.getCurr().chest!)"
             addChild(chest)
             extraNodes.append(chest)
         }
@@ -1009,7 +978,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     /////////////////////////////////       MONSTER COLLISIONS      //////////////////////////
     
-    func addMonster(num : Int)      //Num is type of enemy, 1 is ranged, 2 is melee(run into you), 3 is boss
+    func addMonster(_ num : Int)      //Num is type of enemy, 1 is ranged, 2 is melee(run into you), 3 is boss
     {
         // Create sprite
         let monster: SKSpriteNode!
@@ -1033,8 +1002,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             enemy = Enemy(h: 25, dam: 3, move: 5, num: 3, enemy: monster)
         }
         
-        monster.physicsBody = SKPhysicsBody(rectangleOfSize: monster.size) // 1
-        monster.physicsBody?.dynamic = true // 2
+        monster.physicsBody = SKPhysicsBody(rectangleOf: monster.size) // 1
+        monster.physicsBody?.isDynamic = true // 2
         monster.physicsBody?.categoryBitMask = PhysicsCategory.Monster // 3
         monster.physicsBody?.contactTestBitMask = PhysicsCategory.Projectile // 4
         monster.physicsBody?.collisionBitMask = PhysicsCategory.None // 5
@@ -1044,25 +1013,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if availableEnemyLocs.count > 0
         {
             monster.position = availableEnemyLocs[index]
-            availableEnemyLocs.removeAtIndex(index)
-        
+            availableEnemyLocs.remove(at: index)
+            
             addChild(monster)
             enemyObjects.append(enemy)
         }
         
-        if !attackEnemyTimer.valid
+        if !attackEnemyTimer.isValid
         {
-            attackEnemyTimer = NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(GameScene.attackPerson), userInfo: nil, repeats: true)
+            attackEnemyTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(GameScene.attackPerson), userInfo: nil, repeats: true)
         }
-        if !moveEnemyTimer.valid
+        if !moveEnemyTimer.isValid
         {
-            moveEnemyTimer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(GameScene.moveEnemyAround), userInfo: nil, repeats: true)
+            moveEnemyTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(GameScene.moveEnemyAround), userInfo: nil, repeats: true)
         }
         
-        let totalHealthView = SKSpriteNode(color: UIColor.redColor(), size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
+        let totalHealthView = SKSpriteNode(color: UIColor.red, size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
         totalHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
         addChild(totalHealthView)
-        let currHealthView = SKSpriteNode(color: UIColor.greenColor(), size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
+        let currHealthView = SKSpriteNode(color: UIColor.green, size: CGSize(width: monster.size.width, height: monster.size.height * 0.1))
         currHealthView.position = CGPoint(x: monster.frame.midX, y: monster.frame.maxY + totalHealthView.frame.height/2 + 10)
         addChild(currHealthView)
         
@@ -1070,7 +1039,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         healthBars.append(currHealthView)
     }
     
-    func moveEnemyAround()
+    @objc func moveEnemyAround()
     {
         if(canDoStuff)
         {
@@ -1123,17 +1092,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let loc = CGPoint(x: actualX, y: actualY)
                 
                 let delta: CGVector = CGVector(dx: loc.x - currLoc.x, dy: loc.y - currLoc.y)
-                let move = SKAction.moveTo(loc, duration: 1.0)
-                let displacement = SKAction.moveBy(delta, duration: 1.0)
+                let move = SKAction.move(to: loc, duration: 1.0)
+                let displacement = SKAction.move(by: delta, duration: 1.0)
                 
-                healthBars[num * 2].runAction(displacement)
-                healthBars[num * 2 + 1].runAction(displacement)
-                enemyObjects[num].sprite.runAction(move)
+                healthBars[num * 2].run(displacement)
+                healthBars[num * 2 + 1].run(displacement)
+                enemyObjects[num].sprite.run(move)
             }
         }
     }
     
-    func attackPerson()
+    @objc func attackPerson()
     {
         if(canDoStuff)
         {
@@ -1156,7 +1125,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func enemyProjectile(loc: CGPoint, dam: Int)
+    func enemyProjectile(_ loc: CGPoint, dam: Int)
     {
         let projectile: SKSpriteNode!
         if(dam == 1)
@@ -1172,8 +1141,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         projectile.position = loc
         projectile.size = CGSize(width: player.size.width * 0.4, height: player.size.height * 0.4)
-        projectile.physicsBody = SKPhysicsBody(rectangleOfSize: projectile.size)
-        projectile.physicsBody?.dynamic = true
+        projectile.physicsBody = SKPhysicsBody(rectangleOf: projectile.size)
+        projectile.physicsBody?.isDynamic = true
         projectile.physicsBody?.categoryBitMask = PhysicsCategory.EnemyProjectile
         projectile.physicsBody?.contactTestBitMask = PhysicsCategory.Player
         projectile.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -1191,9 +1160,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         projectile.zRotation = atan2(direction.x * -1, direction.y)
         
-        let actionMove = SKAction.moveTo(realDest, duration: 3.5)
+        let actionMove = SKAction.move(to: realDest, duration: 3.5)
         let actionMoveDone = SKAction.removeFromParent()
-        projectile.runAction(SKAction.sequence([actionMove, actionMoveDone]))
+        projectile.run(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
     func playerDies()
@@ -1201,7 +1170,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         map.currLoc = map.respawnPoint
     }
     
-    func projectileDidCollideWithMonster(monster: SKSpriteNode, projectile: SKSpriteNode) {     //Check for damage against enemy
+    func projectileDidCollideWithMonster(_ monster: SKSpriteNode, projectile: SKSpriteNode) {     //Check for damage against enemy
         projectile.removeFromParent()
         var damage = tempDamage
         if(character.equippedWeapon == "Melee")
@@ -1228,11 +1197,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if !enemyObjects[num].gotHit(damage)
                 {
-                    enemyObjects.removeAtIndex(num)
+                    enemyObjects.remove(at: num)
                     healthBars[num * 2].removeFromParent()
-                    healthBars.removeAtIndex(num * 2)
+                    healthBars.remove(at: num * 2)
                     healthBars[num * 2].removeFromParent()
-                    healthBars.removeAtIndex(num * 2)
+                    healthBars.remove(at: num * 2)
                     monster.removeFromParent()
                     dropHeart(monster.position)
                     if enemyObjects.count == 0
@@ -1254,7 +1223,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func dropHeart(place: CGPoint)
+    func dropHeart(_ place: CGPoint)
     {
         if(Int(arc4random_uniform(100)) < 20)
         {
@@ -1264,7 +1233,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             heart.size = CGSize(width: player.size.width * 0.5 , height: player.size.height * 0.5)
             heart.zPosition = -1
             heart.physicsBody = SKPhysicsBody(texture: heartText, size: heart.size)
-            heart.physicsBody?.dynamic = true
+            heart.physicsBody?.isDynamic = true
             heart.physicsBody?.categoryBitMask = PhysicsCategory.Heart
             heart.physicsBody?.contactTestBitMask = PhysicsCategory.Player
             heart.physicsBody?.collisionBitMask = PhysicsCategory.None
@@ -1274,12 +1243,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func flickerMonster(num: Int)
+    func flickerMonster(_ num: Int)
     {
         enemyObjects[num].flicker()
     }
     
-    func PlayerDidCollideWithHeart(player: SKSpriteNode, heart: SKSpriteNode) {
+    func PlayerDidCollideWithHeart(_ player: SKSpriteNode, heart: SKSpriteNode) {
         if(character.currentHealth < character.maxHealth + (character.inventory.get("Health")!.getAmount()/5))
         {
             character.currentHealth = min(character.currentHealth + 1, character.maxHealth + (character.inventory.get("Health")!.getAmount()/5))
@@ -1288,7 +1257,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         heart.removeFromParent()
     }
     
-    func projectileDidCollideWithPlayer(projectile: SKSpriteNode, player: SKSpriteNode) {
+    func projectileDidCollideWithPlayer(_ projectile: SKSpriteNode, player: SKSpriteNode) {
         projectile.removeFromParent()
         if(character.currentHealth > 0)
         {
@@ -1297,7 +1266,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if(canTakeDamage)
                 {
                     canTakeDamage = false
-                    immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                    immortalTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
                     character.currentHealth = character.currentHealth - Int(projectile.name!)!
                 }
             }
@@ -1305,7 +1274,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if(settings.soundOn)
                 {
-                    runAction(SKAction.playSoundFileNamed("blockNoise2.0", waitForCompletion: false))
+                    run(SKAction.playSoundFileNamed("blockNoise2.0.m4a", waitForCompletion: false))
                 }
             }
         }
@@ -1321,27 +1290,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func playerDidCollideWithMonster(monster: SKSpriteNode, player: SKSpriteNode) {
-        if(character.currentHealth > 0)
-        {
-                if(canTakeDamage)
+    func playerDidCollideWithMonster(_ monster: SKSpriteNode, player: SKSpriteNode) {
+        if(character.currentHealth > 0) {
+            if(canTakeDamage) {
+                canTakeDamage = false
+                immortalTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
+                if(Int(arc4random_uniform(25)) > character.inventory.get("Armor")!.getAmount()/5)
                 {
-                    canTakeDamage = false
-                    immortalTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.mortal), userInfo: nil, repeats: true)
-                    if(Int(arc4random_uniform(25)) > character.inventory.get("Armor")!.getAmount()/5)
-                    {
-                        character.currentHealth = character.currentHealth - 2
-                    }
-                    else
-                    {
-                        if(settings.soundOn)
-                        {
-                            runAction(SKAction.playSoundFileNamed("armorNoise2.0", waitForCompletion: false))
-                        }
-                    }
-                    
+                    character.currentHealth = character.currentHealth - 2
                 }
-
+                else
+                {
+                    if(settings.soundOn)
+                    {
+                        run(SKAction.playSoundFileNamed("armorNoise2.0.m4a", waitForCompletion: false))
+                    }
+                }
+                
+            }
+            
         }
         if character.currentHealth > 0
         {
@@ -1355,19 +1322,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func playerDidCollideWithChest(player: SKSpriteNode, chest: SKSpriteNode)
+    func playerDidCollideWithChest(_ player: SKSpriteNode, chest: SKSpriteNode)
     {
         openChest(chest.name!)
         character.map.getCurr().chest = nil
         chest.removeFromParent()
     }
     
-    func projectileDidCollideWithWall(projectile: SKSpriteNode, wall: SKSpriteNode)
+    func projectileDidCollideWithWall(_ projectile: SKSpriteNode, wall: SKSpriteNode)
     {
         projectile.removeFromParent()
     }
     
-    func didBeginContact(contact: SKPhysicsContact)
+    func didBegin(_ contact: SKPhysicsContact)
     {
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
@@ -1448,7 +1415,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             if child.name != "backgroundMusic"
             {
-                child.paused = true
+                child.isPaused = true
             }
         }
         
@@ -1459,71 +1426,71 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view?.addSubview(menu)
     }
     
-    func closeMenu()
+    @objc func closeMenu()
     {
         menu.removeFromSuperview()
         canDoStuff = true
         if tempSpeed > 0
         {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
         }
         if tempBlock > 0
         {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
             view?.addSubview(blockPotBG)
             view?.addSubview(blockPot)
         }
         if tempDamage > 0
         {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
             view?.addSubview(damagePotBG)
             view?.addSubview(damagePot)
         }
         for child in (self.scene?.children)!
         {
-            child.paused = false
+            child.isPaused = false
         }
     }
     
-    func toggleSound()
+    @objc func toggleSound()
     {
         settings.soundOn = !settings.soundOn
         if(settings.soundOn)
         {
-            toggleSoundButton.layer.backgroundColor = UIColor.greenColor().CGColor
+            toggleSoundButton.layer.backgroundColor = UIColor.green.cgColor
         }
         else
         {
-            toggleSoundButton.layer.backgroundColor = UIColor.redColor().CGColor
+            toggleSoundButton.layer.backgroundColor = UIColor.red.cgColor
         }
     }
     
-    func toggleMusic()
+    @objc func toggleMusic()
     {
         settings.musicOn = !settings.musicOn
         if(settings.musicOn)
         {
-            toggleMusicButton.layer.backgroundColor = UIColor.greenColor().CGColor
-            let volumeUp = SKAction.changeVolumeTo(1, duration: 0)
-            backgroundMusic.runAction(volumeUp)
+            toggleMusicButton.layer.backgroundColor = UIColor.green.cgColor
+            let volumeUp = SKAction.changeVolume(to: 1, duration: 0)
+            backgroundMusic.run(volumeUp)
         }
         else
         {
-            toggleMusicButton.layer.backgroundColor = UIColor.redColor().CGColor
-            let volumeDown = SKAction.changeVolumeTo(0, duration: 0)
-            backgroundMusic.runAction(volumeDown)
+            toggleMusicButton.layer.backgroundColor = UIColor.red.cgColor
+            let volumeDown = SKAction.changeVolume(to: 0, duration: 0)
+            backgroundMusic.run(volumeDown)
         }
     }
     
-    func openMap()
+    @objc func openMap()
     {
         mapView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
-        mapView.backgroundColor = UIColor.brownColor()
+        mapView.backgroundColor = UIColor.brown
         let closeMapButton = UIButton(frame: CGRect(x: mapView.frame.width - mapView.frame.height * 0.2, y: mapView.frame.height * 0.05, width: mapView.frame.height * 0.15, height: mapView.frame.height * 0.15))
-        closeMapButton.addTarget(self, action: #selector(GameScene.closeMap), forControlEvents: .TouchUpInside)
-        closeMapButton.backgroundColor = UIColor.redColor()
-        closeMapButton.setTitle("X", forState: .Normal)
-        closeMapButton.layer.borderColor = UIColor.darkGrayColor().CGColor
+        closeMapButton.addTarget(self, action: #selector(GameScene.closeMap), for: .touchUpInside)
+        closeMapButton.backgroundColor = UIColor.red
+        closeMapButton.setTitle("X", for: UIControl.State())
+        closeMapButton.layer.borderColor = UIColor.darkGray.cgColor
         closeMapButton.layer.borderWidth = closeMapButton.frame.width * 0.1
         mapView.addSubview(closeMapButton)
         
@@ -1534,43 +1501,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menu.addSubview(mapView)
         for spot in map.known
         {
-            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
-            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            var x = CGFloat(spot.getCoor().0)
+            x *= mapView.frame.width
+            x *= 1/maxW
+            x += mapView.frame.width * 1/max2
+            var y = CGFloat(spot.getCoor().1)
+            y *= mapView.frame.height
+            y *= 1/maxW
+            y += mapView.frame.width * 1/max2
             let width = mapView.frame.width * 1/maxW2
             let height = mapView.frame.height * 1/maxW2
             let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
-            place.layer.backgroundColor = UIColor.blackColor().CGColor
+            place.layer.backgroundColor = UIColor.black.cgColor
             place.layer.cornerRadius = place.frame.width * 0.2
+            if(spot.equals(map.getBoss())) {
+                place.layer.backgroundColor = UIColor.red.cgColor
+            }
             mapView.addSubview(place)
         }
         for spot in map.visited
         {
-            let x = CGFloat(spot.getCoor().0) * mapView.frame.width * 1/maxW + mapView.frame.width * 1/max2
-            let y = CGFloat(spot.getCoor().1) * mapView.frame.height * 1/maxW + mapView.frame.width * 1/max2
+            var x = CGFloat(spot.getCoor().0)
+            x *= mapView.frame.width
+            x *= 1/maxW
+            x += mapView.frame.width * 1/max2
+            var y = CGFloat(spot.getCoor().1)
+            y *= mapView.frame.height
+            y *= 1/maxW
+            y += mapView.frame.width * 1/max2
             let width = mapView.frame.width * 1/maxW2
             let height = mapView.frame.height * 1/maxW2
             let place = UIView(frame: CGRect(x: x, y: y, width: width, height: height))
-            place.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-            if(spot.equals(map.getBoss()))
-            {
+            place.layer.backgroundColor = UIColor.lightGray.cgColor
+            if(spot.equals(map.getBoss())) {
                 let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
-                symbol.backgroundColor = UIColor.blackColor()
-                place.addSubview(symbol)
-            }
+                symbol.backgroundColor = UIColor.red
+                place.addSubview(symbol)            }
             if(spot.equals(map.getCurr()))
             {
-                place.layer.backgroundColor = UIColor.whiteColor().CGColor
+                place.layer.backgroundColor = UIColor.white.cgColor
             }
             if(spot.equals(map.getSpawn()))
             {
                 let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
-                symbol.backgroundColor = UIColor.yellowColor()
+                symbol.backgroundColor = UIColor.yellow
                 place.addSubview(symbol)
             }
             if(spot.equals(map.getKey()))
             {
                 let symbol = UIView(frame: CGRect(x: place.frame.width * 0.4, y: place.frame.height * 0.3, width: place.frame.width * 0.2, height: place.frame.height * 0.4))
-                symbol.backgroundColor = UIColor.greenColor()
+                symbol.backgroundColor = UIColor.green
                 place.addSubview(symbol)
             }
             place.layer.cornerRadius = place.frame.width * 0.2
@@ -1584,34 +1564,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func closeMap()
+    @objc func closeMap()
     {
         mapView.removeFromSuperview()
     }
     
-    func openInventory()
+    @objc func openInventory()
     {
         potionsView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
-        potionsView.backgroundColor = UIColor.brownColor()
+        potionsView.backgroundColor = UIColor.brown
         let closeInventoryButton = UIButton(frame: CGRect(x: potionsView.frame.width - potionsView.frame.height * 0.2, y: potionsView.frame.height * 0.05, width: potionsView.frame.height * 0.15, height: potionsView.frame.height * 0.15))
-        closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), forControlEvents: .TouchUpInside)
-        closeInventoryButton.backgroundColor = UIColor.redColor()
-        closeInventoryButton.setTitle("X", forState: .Normal)
-        closeInventoryButton.layer.borderColor = UIColor.darkGrayColor().CGColor
+        closeInventoryButton.addTarget(self, action: #selector(GameScene.closeInventory), for: .touchUpInside)
+        closeInventoryButton.backgroundColor = UIColor.red
+        closeInventoryButton.setTitle("X", for: UIControl.State())
+        closeInventoryButton.layer.borderColor = UIColor.darkGray.cgColor
         closeInventoryButton.layer.borderWidth = closeInventoryButton.frame.width * 0.1
         potionsView.addSubview(closeInventoryButton)
         
         //HEALTH POT INFO
         let healthPotView = UIView(frame: CGRect(x: potionsView.frame.width * 0.125, y: potionsView.frame.height * 0.075, width: potionsView.frame.width * 0.3, height: potionsView.frame.height * 0.4))
-        healthPotView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        healthPotView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        healthPotView.layer.backgroundColor = UIColor.lightGray.cgColor
+        healthPotView.layer.borderColor = UIColor.darkGray.cgColor
         healthPotView.layer.borderWidth = healthPotView.frame.height * 0.05
         let healthPotImage = UIImageView(frame: CGRect(x: healthPotView.frame.height * 0.1, y: healthPotView.frame.height * 0.1, width: healthPotView.frame.height * 0.6, height: healthPotView.frame.height * 0.6))
         healthPotImage.image = UIImage(named: "HealthPot")
         healthPotView.addSubview(healthPotImage)
         let healthPotLabel = UILabel(frame: CGRect(x: healthPotView.frame.width * 0.05, y: healthPotView.frame.height * 0.75, width: healthPotView.frame.width * 0.95, height: healthPotView.frame.height * 0.2))
         healthPotLabel.text = "Health Potions"
-        healthPotLabel.textAlignment = .Center
+        healthPotLabel.textAlignment = .center
         healthPotView.addSubview(healthPotLabel)
         let healthPotAmount = UILabel(frame: CGRect(x: healthPotView.frame.width * 0.7, y: healthPotView.frame.height * 0.6, width: healthPotView.frame.width * 0.25, height: healthPotView.frame.height * 0.15))
         healthPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Health Potions")!.getAmount())"
@@ -1622,15 +1602,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //SPEED POT INFO
         let speedPotView = UIView(frame: CGRect(x: potionsView.frame.width * 0.55, y: potionsView.frame.height * 0.075, width: potionsView.frame.width * 0.3, height: potionsView.frame.height * 0.4))
-        speedPotView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        speedPotView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        speedPotView.layer.backgroundColor = UIColor.lightGray.cgColor
+        speedPotView.layer.borderColor = UIColor.darkGray.cgColor
         speedPotView.layer.borderWidth = speedPotView.frame.height * 0.05
         let speedPotImage = UIImageView(frame: CGRect(x: speedPotView.frame.height * 0.1, y: speedPotView.frame.height * 0.1, width: speedPotView.frame.height * 0.6, height: speedPotView.frame.height * 0.6))
         speedPotImage.image = UIImage(named: "SpeedPot")
         speedPotView.addSubview(speedPotImage)
         let speedPotLabel = UILabel(frame: CGRect(x: speedPotView.frame.width * 0.05, y: speedPotView.frame.height * 0.75, width: speedPotView.frame.width * 0.95, height: speedPotView.frame.height * 0.2))
         speedPotLabel.text = "Speed Potions"
-        speedPotLabel.textAlignment = .Center
+        speedPotLabel.textAlignment = .center
         speedPotView.addSubview(speedPotLabel)
         let speedPotAmount = UILabel(frame: CGRect(x: speedPotView.frame.width * 0.7, y: speedPotView.frame.height * 0.6, width: speedPotView.frame.width * 0.25, height: speedPotView.frame.height * 0.15))
         speedPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Speed Potions")!.getAmount())"
@@ -1641,15 +1621,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //DAMAGE POT INFO
         let damagePotView = UIView(frame: CGRect(x: potionsView.frame.width * 0.125, y: potionsView.frame.height * 0.525, width: potionsView.frame.width * 0.3, height: potionsView.frame.height * 0.4))
-        damagePotView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        damagePotView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        damagePotView.layer.backgroundColor = UIColor.lightGray.cgColor
+        damagePotView.layer.borderColor = UIColor.darkGray.cgColor
         damagePotView.layer.borderWidth = damagePotView.frame.height * 0.05
         let damagePotImage = UIImageView(frame: CGRect(x: damagePotView.frame.height * 0.1, y: damagePotView.frame.height * 0.1, width: damagePotView.frame.height * 0.6, height: damagePotView.frame.height * 0.6))
         damagePotImage.image = UIImage(named: "DamagePot")
         damagePotView.addSubview(damagePotImage)
         let damagePotLabel = UILabel(frame: CGRect(x: damagePotView.frame.width * 0.05, y: damagePotView.frame.height * 0.75, width: damagePotView.frame.width * 0.95, height: damagePotView.frame.height * 0.2))
         damagePotLabel.text = "Damage Potions"
-        damagePotLabel.textAlignment = .Center
+        damagePotLabel.textAlignment = .center
         damagePotView.addSubview(damagePotLabel)
         let damagePotAmount = UILabel(frame: CGRect(x: damagePotView.frame.width * 0.7, y: damagePotView.frame.height * 0.6, width: damagePotView.frame.width * 0.25, height: damagePotView.frame.height * 0.15))
         damagePotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Damage Potions")!.getAmount())"
@@ -1660,15 +1640,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //BLOCK POT INFO
         let blockPotView = UIView(frame: CGRect(x: potionsView.frame.width * 0.55, y: potionsView.frame.height * 0.525, width: potionsView.frame.width * 0.3, height: potionsView.frame.height * 0.4))
-        blockPotView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        blockPotView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        blockPotView.layer.backgroundColor = UIColor.lightGray.cgColor
+        blockPotView.layer.borderColor = UIColor.darkGray.cgColor
         blockPotView.layer.borderWidth = blockPotView.frame.height * 0.05
         let blockPotImage = UIImageView(frame: CGRect(x: blockPotView.frame.height * 0.1, y: blockPotView.frame.height * 0.1, width: blockPotView.frame.height * 0.6, height: blockPotView.frame.height * 0.6))
         blockPotImage.image = UIImage(named: "BlockPot")
         blockPotView.addSubview(blockPotImage)
         let blockPotLabel = UILabel(frame: CGRect(x: blockPotView.frame.width * 0.05, y: blockPotView.frame.height * 0.75, width: blockPotView.frame.width * 0.95, height: blockPotView.frame.height * 0.2))
         blockPotLabel.text = "Block Potions"
-        blockPotLabel.textAlignment = .Center
+        blockPotLabel.textAlignment = .center
         blockPotView.addSubview(blockPotLabel)
         let blockPotAmount = UILabel(frame: CGRect(x: blockPotView.frame.width * 0.7, y: blockPotView.frame.height * 0.6, width: blockPotView.frame.width * 0.25, height: blockPotView.frame.height * 0.15))
         blockPotAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Block Potions")!.getAmount())"
@@ -1679,48 +1659,48 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if(tempDamage > 0)
         {
-            damagePotView.layer.backgroundColor = UIColor.blueColor().CGColor
+            damagePotView.layer.backgroundColor = UIColor.blue.cgColor
         }
         if(tempSpeed > 0)
         {
-            speedPotView.layer.backgroundColor = UIColor.blueColor().CGColor
+            speedPotView.layer.backgroundColor = UIColor.blue.cgColor
         }
         if(tempBlock > 0)
         {
-            blockPotView.layer.backgroundColor = UIColor.blueColor().CGColor
+            blockPotView.layer.backgroundColor = UIColor.blue.cgColor
         }
         
         menu.addSubview(potionsView)
     }
     
-    func closeInventory()
+    @objc func closeInventory()
     {
         potionsView.removeFromSuperview()
     }
     
-    func openSkills()
+    @objc func openSkills()
     {
         skillsView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
-        skillsView.backgroundColor = UIColor.brownColor()
+        skillsView.backgroundColor = UIColor.brown
         let closeSkillsButton = UIButton(frame: CGRect(x: skillsView.frame.width - skillsView.frame.height * 0.2, y: skillsView.frame.height * 0.05, width: skillsView.frame.height * 0.15, height: skillsView.frame.height * 0.15))
-        closeSkillsButton.addTarget(self, action: #selector(GameScene.closeSkills), forControlEvents: .TouchUpInside)
-        closeSkillsButton.backgroundColor = UIColor.redColor()
-        closeSkillsButton.setTitle("X", forState: .Normal)
-        closeSkillsButton.layer.borderColor = UIColor.darkGrayColor().CGColor
+        closeSkillsButton.addTarget(self, action: #selector(GameScene.closeSkills), for: .touchUpInside)
+        closeSkillsButton.backgroundColor = UIColor.red
+        closeSkillsButton.setTitle("X", for: UIControl.State())
+        closeSkillsButton.layer.borderColor = UIColor.darkGray.cgColor
         closeSkillsButton.layer.borderWidth = closeSkillsButton.frame.width * 0.1
         skillsView.addSubview(closeSkillsButton)
         
         //ARMOR  INFO
         let armorView = UIView(frame: CGRect(x: skillsView.frame.width * 0.13, y: skillsView.frame.height * 0.075, width: skillsView.frame.width * 0.3, height: skillsView.frame.height * 0.4))
-        armorView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        armorView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        armorView.layer.backgroundColor = UIColor.lightGray.cgColor
+        armorView.layer.borderColor = UIColor.darkGray.cgColor
         armorView.layer.borderWidth = armorView.frame.height * 0.05
         let armorImage = UIImageView(frame: CGRect(x: armorView.frame.height * 0.1, y: armorView.frame.height * 0.1, width: armorView.frame.height * 0.6, height: armorView.frame.height * 0.6))
         armorImage.image = UIImage(named: "Armor")
         armorView.addSubview(armorImage)
         let armorLabel = UILabel(frame: CGRect(x: armorView.frame.width * 0.05, y: armorView.frame.height * 0.75, width: armorView.frame.width * 0.95, height: armorView.frame.height * 0.2))
         armorLabel.text = "Armor"
-        armorLabel.textAlignment = .Center
+        armorLabel.textAlignment = .center
         armorView.addSubview(armorLabel)
         let armorAmount = UILabel(frame: CGRect(x: armorView.frame.width * 0.7, y: armorView.frame.height * 0.6, width: armorView.frame.width * 0.25, height: armorView.frame.height * 0.15))
         armorAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Armor")!.getAmount()/5)"
@@ -1729,12 +1709,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: armorView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: armorView.frame.height * 0.2, width: sectionWidth, height: armorView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < armAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             armorView.addSubview(progressBar)
         }
@@ -1743,15 +1723,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //agility  INFO
         let agilityView = UIView(frame: CGRect(x: skillsView.frame.width * 0.56, y: skillsView.frame.height * 0.075, width: skillsView.frame.width * 0.3, height: skillsView.frame.height * 0.4))
-        agilityView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        agilityView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        agilityView.layer.backgroundColor = UIColor.lightGray.cgColor
+        agilityView.layer.borderColor = UIColor.darkGray.cgColor
         agilityView.layer.borderWidth = agilityView.frame.height * 0.05
         let agilityImage = UIImageView(frame: CGRect(x: agilityView.frame.height * 0.1, y: agilityView.frame.height * 0.1, width: agilityView.frame.height * 0.6, height: agilityView.frame.height * 0.6))
         agilityImage.image = UIImage(named: "Speed")
         agilityView.addSubview(agilityImage)
         let agilityLabel = UILabel(frame: CGRect(x: agilityView.frame.width * 0.05, y: agilityView.frame.height * 0.75, width: agilityView.frame.width * 0.95, height: agilityView.frame.height * 0.2))
         agilityLabel.text = "Agility"
-        agilityLabel.textAlignment = .Center
+        agilityLabel.textAlignment = .center
         agilityView.addSubview(agilityLabel)
         let agilityAmount = UILabel(frame: CGRect(x: agilityView.frame.width * 0.7, y: agilityView.frame.height * 0.6, width: agilityView.frame.width * 0.25, height: agilityView.frame.height * 0.15))
         agilityAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Agility")!.getAmount()/5)"
@@ -1759,12 +1739,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: agilityView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: agilityView.frame.height * 0.2, width: sectionWidth, height: agilityView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < agilAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             agilityView.addSubview(progressBar)
         }
@@ -1773,15 +1753,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //health  INFO
         let healthView = UIView(frame: CGRect(x: skillsView.frame.width * 0.025, y: skillsView.frame.height * 0.525, width: skillsView.frame.width * 0.3, height: skillsView.frame.height * 0.4))
-        healthView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        healthView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        healthView.layer.backgroundColor = UIColor.lightGray.cgColor
+        healthView.layer.borderColor = UIColor.darkGray.cgColor
         healthView.layer.borderWidth = healthView.frame.height * 0.05
         let healthImage = UIImageView(frame: CGRect(x: healthView.frame.height * 0.1, y: healthView.frame.height * 0.1, width: healthView.frame.height * 0.6, height: healthView.frame.height * 0.6))
         healthImage.image = UIImage(named: "8BitHeart")
         healthView.addSubview(healthImage)
         let healthLabel = UILabel(frame: CGRect(x: healthView.frame.width * 0.05, y: healthView.frame.height * 0.75, width: healthView.frame.width * 0.95, height: healthView.frame.height * 0.2))
         healthLabel.text = "Health"
-        healthLabel.textAlignment = .Center
+        healthLabel.textAlignment = .center
         healthView.addSubview(healthLabel)
         let healthAmount = UILabel(frame: CGRect(x: healthView.frame.width * 0.7, y: healthView.frame.height * 0.6, width: healthView.frame.width * 0.25, height: healthView.frame.height * 0.15))
         healthAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Health")!.getAmount()/5)"
@@ -1789,12 +1769,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: healthView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: healthView.frame.height * 0.2, width: sectionWidth, height: healthView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < healAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             healthView.addSubview(progressBar)
         }
@@ -1803,15 +1783,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //crit  INFO
         let critView = UIView(frame: CGRect(x: skillsView.frame.width * 0.35, y: skillsView.frame.height * 0.525, width: skillsView.frame.width * 0.3, height: skillsView.frame.height * 0.4))
-        critView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        critView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        critView.layer.backgroundColor = UIColor.lightGray.cgColor
+        critView.layer.borderColor = UIColor.darkGray.cgColor
         critView.layer.borderWidth = critView.frame.height * 0.05
         let critImage = UIImageView(frame: CGRect(x: critView.frame.height * 0.1, y: critView.frame.height * 0.1, width: critView.frame.height * 0.6, height: critView.frame.height * 0.6))
         critImage.image = UIImage(named: "Crit Chance")
         critView.addSubview(critImage)
         let critLabel = UILabel(frame: CGRect(x: critView.frame.width * 0.05, y: critView.frame.height * 0.75, width: critView.frame.width * 0.95, height: critView.frame.height * 0.2))
         critLabel.text = "Crit Chance"
-        critLabel.textAlignment = .Center
+        critLabel.textAlignment = .center
         critView.addSubview(critLabel)
         let critAmount = UILabel(frame: CGRect(x: critView.frame.width * 0.7, y: critView.frame.height * 0.6, width: critView.frame.width * 0.25, height: critView.frame.height * 0.15))
         critAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Crit Chance")!.getAmount()/5)"
@@ -1819,12 +1799,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: critView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: critView.frame.height * 0.2, width: sectionWidth, height: critView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < criAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             critView.addSubview(progressBar)
         }
@@ -1833,15 +1813,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //BLOCK  INFO
         let blockView = UIView(frame: CGRect(x: skillsView.frame.width * 0.675, y: skillsView.frame.height * 0.525, width: skillsView.frame.width * 0.3, height: skillsView.frame.height * 0.4))
-        blockView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        blockView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        blockView.layer.backgroundColor = UIColor.lightGray.cgColor
+        blockView.layer.borderColor = UIColor.darkGray.cgColor
         blockView.layer.borderWidth = blockView.frame.height * 0.05
         let blockImage = UIImageView(frame: CGRect(x: blockView.frame.height * 0.1, y: blockView.frame.height * 0.1, width: blockView.frame.height * 0.6, height: blockView.frame.height * 0.6))
         blockImage.image = UIImage(named: "Block")
         blockView.addSubview(blockImage)
         let blockLabel = UILabel(frame: CGRect(x: blockView.frame.width * 0.05, y: blockView.frame.height * 0.75, width: blockView.frame.width * 0.95, height: blockView.frame.height * 0.2))
         blockLabel.text = "Block Chance"
-        blockLabel.textAlignment = .Center
+        blockLabel.textAlignment = .center
         blockView.addSubview(blockLabel)
         let blockAmount = UILabel(frame: CGRect(x: blockView.frame.width * 0.7, y: blockView.frame.height * 0.6, width: blockView.frame.width * 0.25, height: blockView.frame.height * 0.15))
         blockAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Block Chance")!.getAmount()/5)"
@@ -1849,12 +1829,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: blockView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: blockView.frame.height * 0.2, width: sectionWidth, height: blockView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < bloAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             blockView.addSubview(progressBar)
         }
@@ -1864,34 +1844,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menu.addSubview(skillsView)
     }
     
-    func closeSkills()
+    @objc func closeSkills()
     {
         skillsView.removeFromSuperview()
     }
     
-    func openChooseAttack()
+    @objc func openChooseAttack()
     {
         chooseAttackView = UIView(frame: CGRect(x: 0, y: 0, width: menu.frame.width, height: menu.frame.height))
-        chooseAttackView.backgroundColor = UIColor.brownColor()
+        chooseAttackView.backgroundColor = UIColor.brown
         let closeAttackButton = UIButton(frame: CGRect(x: chooseAttackView.frame.width - chooseAttackView.frame.height * 0.2, y: chooseAttackView.frame.height * 0.05, width: chooseAttackView.frame.height * 0.15, height: chooseAttackView.frame.height * 0.15))
-        closeAttackButton.addTarget(self, action: #selector(GameScene.closeChooseAttack), forControlEvents: .TouchUpInside)
-        closeAttackButton.backgroundColor = UIColor.redColor()
-        closeAttackButton.setTitle("X", forState: .Normal)
-        closeAttackButton.layer.borderColor = UIColor.darkGrayColor().CGColor
+        closeAttackButton.addTarget(self, action: #selector(GameScene.closeChooseAttack), for: .touchUpInside)
+        closeAttackButton.backgroundColor = UIColor.red
+        closeAttackButton.setTitle("X", for: UIControl.State())
+        closeAttackButton.layer.borderColor = UIColor.darkGray.cgColor
         closeAttackButton.layer.borderWidth = closeAttackButton.frame.width * 0.1
         chooseAttackView.addSubview(closeAttackButton)
         
         //SWORD INFO
         let swordView = UIView(frame: CGRect(x: chooseAttackView.frame.width * 0.125, y: chooseAttackView.frame.height * 0.075, width: chooseAttackView.frame.width * 0.3, height: chooseAttackView.frame.height * 0.4))
-        swordView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        swordView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        swordView.layer.backgroundColor = UIColor.lightGray.cgColor
+        swordView.layer.borderColor = UIColor.darkGray.cgColor
         swordView.layer.borderWidth = swordView.frame.height * 0.05
         let swordImage = UIImageView(frame: CGRect(x: swordView.frame.height * 0.1, y: swordView.frame.height * 0.1, width: swordView.frame.height * 0.6, height: swordView.frame.height * 0.6))
         swordImage.image = UIImage(named: "Sword")
         swordView.addSubview(swordImage)
         let swordLabel = UILabel(frame: CGRect(x: swordView.frame.width * 0.05, y: swordView.frame.height * 0.75, width: swordView.frame.width * 0.95, height: swordView.frame.height * 0.2))
         swordLabel.text = "Melee"
-        swordLabel.textAlignment = .Center
+        swordLabel.textAlignment = .center
         swordView.addSubview(swordLabel)
         let swordAmount = UILabel(frame: CGRect(x: swordView.frame.width * 0.7, y: swordView.frame.height * 0.4, width: swordView.frame.width * 0.25, height: swordView.frame.height * 0.3))
         swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5)"
@@ -1901,12 +1881,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: swordView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: swordView.frame.height * 0.2, width: sectionWidth, height: swordView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < swoAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             swordView.addSubview(progressBar)
         }
@@ -1916,15 +1896,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //SHORT RANGE INFO
         let shortRangeView = UIView(frame: CGRect(x: chooseAttackView.frame.width * 0.55, y: chooseAttackView.frame.height * 0.075, width: chooseAttackView.frame.width * 0.3, height: chooseAttackView.frame.height * 0.4))
-        shortRangeView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        shortRangeView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        shortRangeView.layer.backgroundColor = UIColor.lightGray.cgColor
+        shortRangeView.layer.borderColor = UIColor.darkGray.cgColor
         shortRangeView.layer.borderWidth = shortRangeView.frame.height * 0.05
         let shortRangeImage = UIImageView(frame: CGRect(x: shortRangeView.frame.height * 0.1, y: shortRangeView.frame.height * 0.1, width: shortRangeView.frame.height * 0.6, height: shortRangeView.frame.height * 0.6))
         shortRangeImage.image = UIImage(named: "Shuriken")
         shortRangeView.addSubview(shortRangeImage)
         let shortRangeLabel = UILabel(frame: CGRect(x: shortRangeView.frame.width * 0.05, y: shortRangeView.frame.height * 0.75, width: shortRangeView.frame.width * 0.95, height: shortRangeView.frame.height * 0.2))
         shortRangeLabel.text = "Short Range"
-        shortRangeLabel.textAlignment = .Center
+        shortRangeLabel.textAlignment = .center
         shortRangeView.addSubview(shortRangeLabel)
         let shortRangeAmount = UILabel(frame: CGRect(x: shortRangeView.frame.width * 0.7, y: shortRangeView.frame.height * 0.4, width: shortRangeView.frame.width * 0.25, height: shortRangeView.frame.height * 0.3))
         shortRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5)"
@@ -1933,12 +1913,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: shortRangeView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: shortRangeView.frame.height * 0.2, width: sectionWidth, height: shortRangeView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < sRAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             shortRangeView.addSubview(progressBar)
         }
@@ -1948,15 +1928,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //MAGIC INFO
         let magicView = UIView(frame: CGRect(x: chooseAttackView.frame.width * 0.125, y: chooseAttackView.frame.height * 0.525, width: chooseAttackView.frame.width * 0.3, height: chooseAttackView.frame.height * 0.4))
-        magicView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        magicView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        magicView.layer.backgroundColor = UIColor.lightGray.cgColor
+        magicView.layer.borderColor = UIColor.darkGray.cgColor
         magicView.layer.borderWidth = magicView.frame.height * 0.05
         let magicImage = UIImageView(frame: CGRect(x: magicView.frame.height * 0.1, y: magicView.frame.height * 0.1, width: magicView.frame.height * 0.6, height: magicView.frame.height * 0.6))
         magicImage.image = UIImage(named: "Fireball")
         magicView.addSubview(magicImage)
         let magicLabel = UILabel(frame: CGRect(x: magicView.frame.width * 0.05, y: magicView.frame.height * 0.75, width: magicView.frame.width * 0.95, height: magicView.frame.height * 0.2))
         magicLabel.text = "Magic"
-        magicLabel.textAlignment = .Center
+        magicLabel.textAlignment = .center
         magicView.addSubview(magicLabel)
         let magicAmount = UILabel(frame: CGRect(x: magicView.frame.width * 0.7, y: magicView.frame.height * 0.4, width: magicView.frame.width * 0.25, height: magicView.frame.height * 0.3))
         magicAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5)"
@@ -1965,12 +1945,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: magicView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: magicView.frame.height * 0.2, width: sectionWidth, height: magicView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < magAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             magicView.addSubview(progressBar)
         }
@@ -1980,15 +1960,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //LONG RANGE INFO
         let longRangeView = UIView(frame: CGRect(x: chooseAttackView.frame.width * 0.55, y: chooseAttackView.frame.height * 0.525, width: chooseAttackView.frame.width * 0.3, height: chooseAttackView.frame.height * 0.4))
-        longRangeView.layer.backgroundColor = UIColor.lightGrayColor().CGColor
-        longRangeView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        longRangeView.layer.backgroundColor = UIColor.lightGray.cgColor
+        longRangeView.layer.borderColor = UIColor.darkGray.cgColor
         longRangeView.layer.borderWidth = longRangeView.frame.height * 0.05
         let longRangeImage = UIImageView(frame: CGRect(x: longRangeView.frame.height * 0.1, y: longRangeView.frame.height * 0.1, width: longRangeView.frame.height * 0.6, height: longRangeView.frame.height * 0.6))
         longRangeImage.image = UIImage(named: "Bow and Arrow")
         longRangeView.addSubview(longRangeImage)
         let longRangeLabel = UILabel(frame: CGRect(x: longRangeView.frame.width * 0.05, y: longRangeView.frame.height * 0.75, width: longRangeView.frame.width * 0.95, height: longRangeView.frame.height * 0.2))
         longRangeLabel.text = "Long Range"
-        longRangeLabel.textAlignment = .Center
+        longRangeLabel.textAlignment = .center
         longRangeView.addSubview(longRangeLabel)
         let longRangeAmount = UILabel(frame: CGRect(x: longRangeView.frame.width * 0.7, y: longRangeView.frame.height * 0.4, width: longRangeView.frame.width * 0.25, height: longRangeView.frame.height * 0.3))
         longRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5)"
@@ -1997,12 +1977,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         for num in 0...4
         {
             let progressBar = UIView(frame: CGRect(x: longRangeView.frame.height * 0.725 + sectionWidth * (CGFloat(num) + 1), y: longRangeView.frame.height * 0.2, width: sectionWidth, height: longRangeView.frame.height * 0.15))
-            progressBar.layer.borderColor = UIColor.grayColor().CGColor
+            progressBar.layer.borderColor = UIColor.gray.cgColor
             progressBar.layer.cornerRadius = progressBar.frame.width * 0.2
             progressBar.layer.borderWidth = progressBar.frame.width * 0.2
             if num < lRAmount
             {
-                progressBar.layer.backgroundColor = UIColor.greenColor().CGColor
+                progressBar.layer.backgroundColor = UIColor.green.cgColor
             }
             longRangeView.addSubview(progressBar)
         }
@@ -2012,29 +1992,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if(character.equippedWeapon == "Melee")
         {
-            swordView.layer.backgroundColor = UIColor.blueColor().CGColor
+            swordView.layer.backgroundColor = UIColor.blue.cgColor
         }
         if(character.equippedWeapon == "Short Range")
         {
-            shortRangeView.layer.backgroundColor = UIColor.blueColor().CGColor
+            shortRangeView.layer.backgroundColor = UIColor.blue.cgColor
         }
         if(character.equippedWeapon == "Magic")
         {
-            magicView.layer.backgroundColor = UIColor.blueColor().CGColor
+            magicView.layer.backgroundColor = UIColor.blue.cgColor
         }
         if(character.equippedWeapon == "Long Range")
         {
-            longRangeView.layer.backgroundColor = UIColor.blueColor().CGColor
+            longRangeView.layer.backgroundColor = UIColor.blue.cgColor
         }
         
         switch character.fighterType {
         case 1:
             swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)"
-        case 2:
+        case 4:
             shortRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount()/5 + 1)"
         case 3:
             magicAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount()/5 + 1)"
-        case 4:
+        case 2:
             longRangeAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount()/5 + 1)"
         default:
             swordAmount.text = "\(settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount()/5 + 1)"
@@ -2043,12 +2023,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menu.addSubview(chooseAttackView)
     }
     
-    func closeChooseAttack()
+    @objc func closeChooseAttack()
     {
         chooseAttackView.removeFromSuperview()
     }
     
-    func exitGame()
+    @objc func exitGame()
     {
         if !roomCleared
         {
@@ -2060,13 +2040,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         save()
         let scene = CharacterScene(size: view!.bounds.size)
-        scene.scaleMode = .ResizeFill
+        scene.scaleMode = .resizeFill
         view!.presentScene(scene)
     }
     
     /////////////////////////////////       POTIONS         /////////////////////////////////
     
-    func useHealth()
+    @objc func useHealth()
     {
         if(character.currentHealth < character.maxHealth + (character.inventory.get("Health")!.getAmount()/5))
         {
@@ -2080,7 +2060,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func useSpeed()
+    @objc func useSpeed()
     {
         if(character.inventory.remove("Speed Potions"))
         {
@@ -2094,15 +2074,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 speedPotBG.alpha = 1.0
                 view?.insertSubview(speedPot, belowSubview: menu)
                 view?.insertSubview(speedPotBG, belowSubview: speedPot)
-            }
-            else
-            {
+            } else {
                 character.inventory.add("Speed Potions")
             }
         }
     }
     
-    func reduceSpeed()      //Call image that oscillates alphas from .2 to .9
+    @objc func reduceSpeed()      //Call image that oscillates alphas from .2 to .9
     {
         speedCounter += 1
         if(speedCounter >= 100)
@@ -2118,7 +2096,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func useBlock()
+    @objc func useBlock()
     {
         if(character.inventory.remove("Block Potions"))
         {
@@ -2140,7 +2118,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func reduceBlock()
+    @objc func reduceBlock()
     {
         blockCounter += 1
         if(blockCounter >= 100)
@@ -2156,7 +2134,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func useDamage()
+    @objc func useDamage()
     {
         if(character.inventory.remove("Damage Potions"))
         {
@@ -2178,7 +2156,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func reduceDamage()
+    @objc func reduceDamage()
     {
         if(damageCounter >= 100)
         {
@@ -2195,9 +2173,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func findPotAlpha(count: Int) -> CGFloat
+    func findPotAlpha(_ count: Int) -> CGFloat
     {
-        let alpha: CGFloat = (CGFloat(count)/10)%2
+        let alpha: CGFloat = (CGFloat(count)/10).truncatingRemainder(dividingBy: 2)
         if alpha <= 1
         {
             return 1 - alpha
@@ -2210,9 +2188,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     ///////////////////////////////      ATTACK TYPE FUNCTIONS       ///////////////////////////
     
-    func goMelee()
+    @objc func goMelee()
     {
-        if settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount() > 0
+        if settings.characters[settings.selectedPlayer].inventory.get("Melee")!.getAmount() / 5 > 0 || settings.characters[settings.selectedPlayer].fighterType == 1
         {
             character.equippedWeapon = "Melee"
             chooseAttackView.removeFromSuperview()
@@ -2220,9 +2198,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func goShortRange()
+    @objc func goShortRange()
     {
-        if settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount() > 0
+        if settings.characters[settings.selectedPlayer].inventory.get("Short Range")!.getAmount() / 5 > 0 || settings.characters[settings.selectedPlayer].fighterType == 4
         {
             character.equippedWeapon = "Short Range"
             chooseAttackView.removeFromSuperview()
@@ -2230,9 +2208,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func goMagic()
+    @objc func goMagic()
     {
-        if settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount() > 0
+        if settings.characters[settings.selectedPlayer].inventory.get("Magic")!.getAmount() / 5 > 0 || settings.characters[settings.selectedPlayer].fighterType == 3
         {
             character.equippedWeapon = "Magic"
             chooseAttackView.removeFromSuperview()
@@ -2240,9 +2218,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func goLongRange()
+    @objc func goLongRange()
     {
-        if settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount() > 0
+        if settings.characters[settings.selectedPlayer].inventory.get("Long Range")!.getAmount() / 5 > 0 || settings.characters[settings.selectedPlayer].fighterType == 2
         {
             character.equippedWeapon = "Long Range"
             chooseAttackView.removeFromSuperview()
@@ -2256,14 +2234,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //                  Sword Upgrade, Bow Upgrade, Fire Ball Upgrade, Shuriken Upgrade, Crit Chance Upgrade        2
     //                  Armor Upgrade, Speed Upgrade, Health Upgrade, Block Chance Upgrade                          3
     
-    func openChest(name: String)
+    func openChest(_ name: String)
     {
         canDoStuff = false
         for child in (self.scene?.children)!
         {
             if child.name != "backgroundMusic"
             {
-                child.paused = true
+                child.isPaused = true
             }
         }
         
@@ -2274,27 +2252,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         openNotify(name)
     }
     
-    func openNotify(chestRarity: String)    //Array of bonuses
+    func openNotify(_ chestRarity: String)    //Array of bonuses
     {
         var times = 0
         var itemNum: [Int] = []
         var pictures: [UIImage] = []
         
         //Set up UIView - Image, congrats, close
-        if(chestRarity == "common")
-        {
+        if chestRarity == "common" {
             times = 1
-        }
-        else if(chestRarity == "uncommon")
-        {
+        } else if chestRarity == "uncommon" {
             times = 4
-        }
-        else if(chestRarity == "rare")
-        {
+        } else if chestRarity == "rare" {
             times = 10
-        }
-        else if(chestRarity == "legendary")
-        {
+        } else if chestRarity == "legendary" {
             times = 24
         }
         
@@ -2333,8 +2304,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if(itemNum[i] == itemNum[j])
                 {
                     timesAppear[i] += 1
-                    itemNum.removeAtIndex(j)
-                    pictures.removeAtIndex(j)
+                    itemNum.remove(at: j)
+                    pictures.remove(at: j)
                     tempSizeOne -= 1
                     j -= 1
                 }
@@ -2347,15 +2318,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         {
             let reward = UIView(frame: CGRect(x: 0, y: chestNotification.frame.height * 0.1, width: chestNotification.frame.width, height: chestNotification.frame.height * 0.9))
             let upgrade = UIImageView(frame: CGRect(x: chestNotification.frame.width * 0.1, y: chestNotification.frame.height * 0.2, width: chestNotification.frame.width * 0.5, height: chestNotification.frame.height * 0.6))
-            upgrade.contentMode = .ScaleAspectFit
+            upgrade.contentMode = .scaleAspectFit
             upgrade.image = pictures[things]
-            upgrade.backgroundColor = UIColor.brownColor()
+            upgrade.backgroundColor = UIColor.brown
             let arrow = UIImageView(frame: CGRect(x: chestNotification.frame.width * 0.65, y: chestNotification.frame.height * 0.6, width: chestNotification.frame.width * 0.1, height: chestNotification.frame.height * 0.2))
             arrow.image = UIImage(named: "Arrow")
             let amount = UILabel(frame: CGRect(x: chestNotification.frame.width * 0.8, y: chestNotification.frame.height * 0.69, width: chestNotification.frame.width * 0.1, height: chestNotification.frame.height * 0.1))
             amount.text = "\(timesAppear[things])"
             amount.adjustsFontSizeToFitWidth = true
-            amount.backgroundColor = UIColor.brownColor()
+            amount.backgroundColor = UIColor.brown
             reward.addSubview(upgrade)
             reward.addSubview(arrow)
             reward.addSubview(amount)
@@ -2365,7 +2336,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         view?.addSubview(chestNotification)
     }
     
-    func continueRewards()
+    @objc func continueRewards()
     {
         if rewardNotifications.count > 0
         {
@@ -2374,18 +2345,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if rewardNotifications.count < 1
             {
                 let closeChestButton = UIButton(frame: CGRect(x: chestNotification.frame.width - chestNotification.frame.height * 0.2, y: chestNotification.frame.height * 0.05, width: chestNotification.frame.height * 0.15, height: chestNotification.frame.height * 0.15))
-                closeChestButton.setTitle("X", forState: .Normal)
-                closeChestButton.titleLabel?.textColor = UIColor.blackColor()
-                closeChestButton.layer.backgroundColor = UIColor.redColor().CGColor
-                closeChestButton.layer.borderWidth = closeChestButton.frame.height * 0.1
-                closeChestButton.layer.borderColor = UIColor.darkGrayColor().CGColor
-                closeChestButton.addTarget(self, action: #selector(GameScene.closeChest), forControlEvents: .TouchUpInside)
+                closeChestButton.setTitle("X", for: UIControl.State())
+                closeChestButton.titleLabel?.textColor = UIColor.black
+                closeChestButton.layer.backgroundColor = UIColor.red.cgColor
+                closeChestButton.layer.borderWidth = closeChestButton.frame.height * 0.05
+                closeChestButton.layer.borderColor = UIColor.darkGray.cgColor
+                closeChestButton.addTarget(self, action: #selector(GameScene.closeChest), for: .touchUpInside)
                 chestNotification.addSubview(closeChestButton)
             }
         }
     }
     
-    func findName(type: Int) -> String  //Helper method for inventory
+    func findName(_ type: Int) -> String  //Helper method for inventory
     {
         switch type
         {
@@ -2418,10 +2389,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func findPhoto(type: Int) -> UIImage
-    {
-        switch type
-        {
+    func findPhoto(_ type: Int) -> UIImage {
+        switch type {
         case 1:
             return UIImage(named: "HealthPot")!
         case 2:
@@ -2453,24 +2422,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func chestType() -> Int
     {
-        let chestType = Int(arc4random_uniform(100))
-        if(chestType < 25)  //25% chance
-        {
+        let chestType = Int.random(in: 0..<100)
+        if(chestType < 0) {        //25% chance
             return 3    //Defense
-        }
-        else if(chestType < 50) //25% chance
-        {
+        } else if(chestType < 100) { //25% chance
             return 2    //Attack
-        }
-        else    //50% chance
-        {
+        } else {                    //50% chance
             return 1    //Potions
         }
     }
     
     func randomPotion() -> Int
     {
-        let chestType = Int(arc4random_uniform(100))
+        let chestType = Int.random(in: 0..<100)
         if(chestType < 40)  //40% chance
         {
             return 1    //Health Potions
@@ -2491,12 +2455,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func randomAttack() -> Int
     {
-        let chestType = Int(arc4random_uniform(100))
-        if(chestType < 23)  //23% chance
+        let chestType = Int.random(in: 0..<100)
+        if(chestType < 0)  //23% chance
         {
             return 5    //Sword Upgrade
         }
-        else if(chestType < 46) //23% chance
+        else if(chestType < 100) //23% chance
         {
             return 6    //Bow Upgrade
         }
@@ -2516,7 +2480,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func randomDefense() -> Int
     {
-        let chestType = Int(arc4random_uniform(100))
+        let chestType = Int.random(in: 0..<100)
         if(chestType < 40)  //40% chance
         {
             return 10    //Armor Upgrade
@@ -2535,38 +2499,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func closeChest()
-    {
+    @objc func closeChest() {
         chestNotification.removeFromSuperview()
         canDoStuff = true
-        if tempSpeed > 0
-        {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
+        if tempSpeed > 0 {
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceSpeed), userInfo: nil, repeats: true))
+            view?.addSubview(speedPotBG)
+            view?.addSubview(speedPot)
         }
-        if tempBlock > 0
-        {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
+        if tempBlock > 0 {
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceBlock), userInfo: nil, repeats: true))
             view?.addSubview(blockPotBG)
             view?.addSubview(blockPot)
         }
-        if tempDamage > 0
-        {
-            buffTimers.append(NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
+        if tempDamage > 0 {
+            buffTimers.append(Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(GameScene.reduceDamage), userInfo: nil, repeats: true))
             view?.addSubview(damagePotBG)
             view?.addSubview(damagePot)
         }
-        for child in (self.scene?.children)!
-        {
-            child.paused = false
+        for child in (self.scene?.children)! {
+            child.isPaused = false
         }
     }
     
     /////////////////////////////////       HELPER FUNCTIONS       ///////////////////////////
     
-    func setHearts()
-    {
-        for heart in heartBar.subviews
-        {
+    func setHearts() {
+        for heart in heartBar.subviews {
             heart.removeFromSuperview()
         }
         
@@ -2575,39 +2534,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var xMulti: CGFloat = 0
         var yMulti: CGFloat = 0
         
-        while(health - 2 >= 0)
-        {
+        while(health! - 2 >= 0) {
             var heartPicture: UIImageView
             heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
             heartPicture.image = UIImage(named: "8BitHeart")
             heartBar.addSubview(heartPicture)
-            health = health - 2
+            health = health! - 2
             xMulti += 1
-            if(xMulti % 5 == 0)
-            {
+            if(xMulti.truncatingRemainder(dividingBy: 5) == 0) {
                 xMulti = 0
                 yMulti += 1
             }
         }
         
-        if health == 1
-        {
-            if missingHealth != 0
-            {
+        if health == 1 {
+            if missingHealth != 0 {
                 var heartPicture: UIImageView
                 heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
                 heartPicture.image = UIImage(named: "8BitHeartHalf")
                 heartBar.addSubview(heartPicture)
                 missingHealth -= 1
                 xMulti += 1
-                if(xMulti % 5 == 0)
-                {
+                if(xMulti.truncatingRemainder(dividingBy: 5) == 0) {
                     xMulti = 0
                     yMulti += 1
                 }
-            }
-            else
-            {
+            } else {
                 var heartPicture: UIImageView
                 heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.1, height: heartBar.frame.height * (1/3)))
                 heartPicture.image = UIImage(named: "8BitHeartHalfFull")
@@ -2615,23 +2567,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        while(missingHealth - 2 >= 0)
-        {
+        while(missingHealth - 2 >= 0) {
             var heartPicture: UIImageView
             heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.2, height: heartBar.frame.height * (1/3)))
             heartPicture.image = UIImage(named: "8BitHeartEmpty")
             heartBar.addSubview(heartPicture)
             missingHealth -= 2
             xMulti += 1
-            if(xMulti % 5 == 0)
-            {
+            if(xMulti.truncatingRemainder(dividingBy: 5) == 0) {
                 xMulti = 0
                 yMulti += 1
             }
         }
         
-        if missingHealth == 1
-        {
+        if missingHealth == 1 {
             var heartPicture: UIImageView
             heartPicture = UIImageView(frame: CGRect(x: heartBar.frame.width*0.2*xMulti, y: heartBar.frame.height * (1/3) * yMulti, width: heartBar.frame.width * 0.1, height: heartBar.frame.height * (1/3)))
             heartPicture.image = UIImage(named: "8BitHeartEmptyHalf")
@@ -2639,43 +2588,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    func setDoor(place: String)
+    func setDoor(_ place: String)
     {
         let door = SKSpriteNode(texture: doorLocked)
         door.zPosition = -1
         doors.append(door)
         switch place {
         case "up":
-            if map.getUp()!.equals(map.bossPoint)
-            {
+            if map.getUp()!.equals(map.bossPoint) {
                 door.texture = doorBoss
             }
             door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
             door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
         case "right":
-            if map.getRight()!.equals(map.bossPoint)
-            {
+            if map.getRight()!.equals(map.bossPoint) {
                 door.texture = doorBoss
             }
             door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
             door.position = CGPoint(x: size.width - size.height * 0.05, y: size.height * 0.5)
-            door.zRotation = CGFloat(M_PI_2) * 3
+            door.zRotation = CGFloat(Double.pi/2) * 3
         case "down":
-            if map.getDown()!.equals(map.bossPoint)
-            {
+            if map.getDown()!.equals(map.bossPoint) {
                 door.texture = doorBoss
             }
             door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
             door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.05)
-            door.zRotation = CGFloat(M_PI)
+            door.zRotation = CGFloat(Double.pi)
         case "left":
-            if map.getLeft()!.equals(map.bossPoint)
-            {
+            if map.getLeft()!.equals(map.bossPoint) {
                 door.texture = doorBoss
             }
             door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
             door.position = CGPoint(x: size.height * 0.05, y: size.height * 0.5)
-            door.zRotation = CGFloat(M_PI_2)
+            door.zRotation = CGFloat(Double.pi/2)
         default:
             door.size = CGSize(width: size.width * 0.1, height: size.height * 0.1)
             door.position = CGPoint(x: size.width * 0.5, y: size.height * 0.95)
@@ -2683,73 +2628,59 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(door)
     }
     
-    func random() -> CGFloat {
-        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
-    }
-    
-    func random(min min: CGFloat, max: CGFloat) -> CGFloat {
-        return random() * (max - min) + min
-    }
-    
-    func fastTravel(sender: UITapGestureRecognizer)     //Working
-    {
-        if roomCleared
-        {
+    @objc func fastTravel(_ sender: UITapGestureRecognizer) {    //Working
+        if roomCleared {
             fastTravelRoom = sender.view!
-            let checkTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
-            checkTravelBG.backgroundColor = UIColor.brownColor()
-            checkTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
+            let checkTravelBG = UIView(frame: CGRect(x: mapView.frame.width * 0.15, y: mapView.frame.height * 0.15, width: mapView.frame.width * 0.7, height: mapView.frame.height * 0.7))
+            checkTravelBG.backgroundColor = UIColor.brown
+            checkTravelBG.layer.borderColor = UIColor.lightGray.cgColor
             checkTravelBG.layer.borderWidth = checkTravelBG.frame.height * 0.05
             mapView.addSubview(checkTravelBG)
-            let checkTravelMessage = UILabel(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.2, width: checkTravelBG.frame.width * 0.8, height: checkTravelBG.frame.height * 0.2))
-            checkTravelMessage.textAlignment = .Center
+            let checkTravelMessage = UILabel(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.1, width: checkTravelBG.frame.width * 0.8, height: checkTravelBG.frame.height * 0.3))
+            checkTravelMessage.textAlignment = .center
             checkTravelMessage.numberOfLines = 0
             checkTravelMessage.text = "ARE YOU SURE YOU WISH TO FAST TRAVEL?"
             checkTravelBG.addSubview(checkTravelMessage)
             let checkTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.5, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.4, height: checkTravelBG.frame.height * 0.3))
-            checkTravelButton.setTitle("CANCEL", forState: .Normal)
-            checkTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), forControlEvents: .TouchUpInside)
-            checkTravelButton.backgroundColor = UIColor.brownColor()
-            checkTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            checkTravelButton.setTitle("CANCEL", for: UIControl.State())
+            checkTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), for: .touchUpInside)
+            checkTravelButton.backgroundColor = UIColor.brown
+            checkTravelButton.layer.borderColor = UIColor.lightGray.cgColor
             checkTravelButton.layer.borderWidth = checkTravelButton.frame.height * 0.1
             checkTravelBG.addSubview(checkTravelButton)
             let fastTravelButton = UIButton(frame: CGRect(x: checkTravelBG.frame.width * 0.1, y: checkTravelBG.frame.height * 0.6, width: checkTravelBG.frame.width * 0.3, height: checkTravelBG.frame.height * 0.3))
-            fastTravelButton.setTitle("YES", forState: .Normal)
-            fastTravelButton.addTarget(self, action: #selector(GameScene.reaffirmTravel), forControlEvents: .TouchUpInside)
-            fastTravelButton.backgroundColor = UIColor.brownColor()
-            fastTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            fastTravelButton.setTitle("YES", for: UIControl.State())
+            fastTravelButton.addTarget(self, action: #selector(GameScene.reaffirmTravel), for: .touchUpInside)
+            fastTravelButton.backgroundColor = UIColor.brown
+            fastTravelButton.layer.borderColor = UIColor.lightGray.cgColor
             fastTravelButton.layer.borderWidth = fastTravelButton.frame.height * 0.1
             checkTravelBG.addSubview(fastTravelButton)
-        }
-        else
-        {
-            let cantTravelBG = UIView(frame: CGRect(x: size.width * 0.25, y: size.height * 0.25, width: size.width * 0.5, height: size.height * 0.5))
-            cantTravelBG.backgroundColor = UIColor.brownColor()
-            cantTravelBG.layer.borderColor = UIColor.lightGrayColor().CGColor
+        } else {
+            let cantTravelBG = UIView(frame: CGRect(x: mapView.frame.width * 0.15, y: mapView.frame.height * 0.15, width: mapView.frame.width * 0.7, height: mapView.frame.height * 0.7))
+            cantTravelBG.backgroundColor = UIColor.brown
+            cantTravelBG.layer.borderColor = UIColor.lightGray.cgColor
             cantTravelBG.layer.borderWidth = cantTravelBG.frame.height * 0.05
             mapView.addSubview(cantTravelBG)
-            let cantTravelMessage = UILabel(frame: CGRect(x: cantTravelBG.frame.width * 0.1, y: cantTravelBG.frame.height * 0.2, width: cantTravelBG.frame.width * 0.8, height: cantTravelBG.frame.height * 0.2))
-            cantTravelMessage.textAlignment = .Center
+            let cantTravelMessage = UILabel(frame: CGRect(x: cantTravelBG.frame.width * 0.1, y: cantTravelBG.frame.height * 0.1, width: cantTravelBG.frame.width * 0.8, height: cantTravelBG.frame.height * 0.3))
+            cantTravelMessage.textAlignment = .center
             cantTravelMessage.numberOfLines = 0
             cantTravelMessage.text = "I'M SORRY, BUT YOU HAVE TO CLEAR THE ROOM FIRST."
             cantTravelBG.addSubview(cantTravelMessage)
             let cantTravelButton = UIButton(frame: CGRect(x: cantTravelBG.frame.width * 0.3, y: cantTravelBG.frame.height * 0.6, width: cantTravelBG.frame.width * 0.4, height: cantTravelBG.frame.height * 0.3))
-            cantTravelButton.setTitle("OKAY", forState: .Normal)
-            cantTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), forControlEvents: .TouchUpInside)
-            cantTravelButton.backgroundColor = UIColor.brownColor()
-            cantTravelButton.layer.borderColor = UIColor.lightGrayColor().CGColor
+            cantTravelButton.setTitle("OKAY", for: UIControl.State())
+            cantTravelButton.addTarget(self, action: #selector(GameScene.removeView(_:)), for: .touchUpInside)
+            cantTravelButton.backgroundColor = UIColor.brown
+            cantTravelButton.layer.borderColor = UIColor.lightGray.cgColor
             cantTravelButton.layer.borderWidth = cantTravelButton.frame.height * 0.1
             cantTravelBG.addSubview(cantTravelButton)
         }
     }
     
-    func removeView(sender: UIButton)
-    {
+    @objc func removeView(_ sender: UIButton) {
         sender.superview!.removeFromSuperview()
     }
     
-    func reaffirmTravel()
-    {
+    @objc func reaffirmTravel() {
         let x = fastTravelRoom.tag / 10
         let y = fastTravelRoom.tag % 10
         moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
@@ -2760,46 +2691,40 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         menu.removeFromSuperview()
     }
     
-    func checkWin()
-    {
-        if map.cleared.contains(map.getBoss())
-        {
+    func checkWin() {
+        if map.cleared.contains(map.getBoss()) {
             canDoStuff = false
-            for child in (self.scene?.children)!
-            {
-                if child.name != "backgroundMusic"
-                {
-                    child.paused = true
+            for child in (self.scene?.children)! {
+                if child.name != "backgroundMusic" {
+                    child.isPaused = true
                 }
             }
             
-            for timer in buffTimers
-            {
+            for timer in buffTimers {
                 timer.invalidate()
             }
             
             congrats = UIView(frame: CGRect(x: size.width * 0.05, y: size.height * 0.05, width: size.width * 0.9, height: size.height * 0.9))
-            congrats.layer.borderColor = UIColor.grayColor().CGColor
+            congrats.layer.borderColor = UIColor.gray.cgColor
             congrats.layer.borderWidth = congrats.frame.width * 0.01
-            congrats.layer.backgroundColor = UIColor.brownColor().CGColor
+            congrats.layer.backgroundColor = UIColor.brown.cgColor
             view?.addSubview(congrats)
             character.level = character.level + 1
             let quitButton = UIButton(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.7, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
-            quitButton.addTarget(self, action: #selector(GameScene.nextLevel), forControlEvents: .TouchUpInside)
-            quitButton.setTitle("NEXT LEVEL", forState: .Normal)
-            quitButton.layer.borderColor = UIColor.grayColor().CGColor
+            quitButton.addTarget(self, action: #selector(GameScene.nextLevel), for: .touchUpInside)
+            quitButton.setTitle("NEXT LEVEL", for: UIControl.State())
+            quitButton.layer.borderColor = UIColor.gray.cgColor
             quitButton.layer.borderWidth = quitButton.frame.height * 0.05
-            quitButton.layer.backgroundColor = UIColor.blueColor().CGColor
+            quitButton.layer.backgroundColor = UIColor.blue.cgColor
             congrats.addSubview(quitButton)
             let congratsLabel = UILabel(frame: CGRect(x: congrats.frame.width * 0.3, y: congrats.frame.height * 0.3, width: congrats.frame.width * 0.4, height: congrats.frame.height * 0.15))
-            congratsLabel.textAlignment = .Center
+            congratsLabel.textAlignment = .center
             congratsLabel.text = "CONGRATULATIONS"
             congrats.addSubview(congratsLabel)
         }
     }
     
-    func nextLevel()
-    {
+    @objc func nextLevel() {
         character.map = Map(version: character.level)
         map.update(map.spawnPoint)
         congrats.removeFromSuperview()
@@ -2807,21 +2732,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         moveTo = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
     }
     
-    func endGame()
-    {
-        for viewThing in view!.subviews
-        {
+    func endGame() {
+        for viewThing in view!.subviews {
             viewThing.removeFromSuperview()
         }
         save()
         settings.characters[settings.selectedPlayer] = Character(fightType: character.fighterType)
         let scene = CharacterScene(size: view!.bounds.size)
-        scene.scaleMode = .ResizeFill
+        scene.scaleMode = .resizeFill
         view!.presentScene(scene)
     }
     
-    func save()
-    {
+    func save() {
         settings.save()
         scene?.removeFromParent()
     }

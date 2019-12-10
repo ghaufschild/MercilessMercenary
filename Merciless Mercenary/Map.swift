@@ -6,10 +6,11 @@
 //  Copyright © 2016 Swag Productions. All rights reserved.
 //
 
+import Foundation
 import UIKit
 
 class Map: NSObject, NSCoding {
-
+    
     var realMapLoc: [Coordinate] = []
     var visited: [Coordinate] = []
     var known: [Coordinate] = []
@@ -25,32 +26,32 @@ class Map: NSObject, NSCoding {
     override init() {}
     
     required init(coder aDecoder: NSCoder) {
-        self.maxWidth = aDecoder.decodeIntegerForKey("maxWidth")
-        self.respawnPoint = aDecoder.decodeObjectForKey("respawn") as! Coordinate
-        self.cleared = aDecoder.decodeObjectForKey("cleared") as! [Coordinate]
-        self.realMapLoc = aDecoder.decodeObjectForKey("realMapLoc") as! [Coordinate]
-        self.visited = aDecoder.decodeObjectForKey("visited") as! [Coordinate]
-        self.known = aDecoder.decodeObjectForKey("known") as! [Coordinate]
-        self.chests = aDecoder.decodeObjectForKey("chests") as! [Coordinate]
-        self.currLoc = aDecoder.decodeObjectForKey("currLoc") as! Coordinate
-        self.spawnPoint = aDecoder.decodeObjectForKey("spawnPoint") as! Coordinate
-        self.keyPoint = aDecoder.decodeObjectForKey("keyPoint") as! Coordinate
-        self.bossPoint = aDecoder.decodeObjectForKey("bossPoint") as! Coordinate
+        self.maxWidth = aDecoder.decodeObject(forKey: "maxWidth") as? Int
+        self.respawnPoint = aDecoder.decodeObject(forKey: "respawn") as? Coordinate
+        self.cleared = aDecoder.decodeObject(forKey: "cleared") as! [Coordinate]
+        self.realMapLoc = aDecoder.decodeObject(forKey: "realMapLoc") as! [Coordinate]
+        self.visited = aDecoder.decodeObject(forKey: "visited") as! [Coordinate]
+        self.known = aDecoder.decodeObject(forKey: "known") as! [Coordinate]
+        self.chests = aDecoder.decodeObject(forKey: "chests") as! [Coordinate]
+        self.currLoc = aDecoder.decodeObject(forKey: "currLoc") as? Coordinate
+        self.spawnPoint = aDecoder.decodeObject(forKey: "spawnPoint") as? Coordinate
+        self.keyPoint = aDecoder.decodeObject(forKey: "keyPoint") as? Coordinate
+        self.bossPoint = aDecoder.decodeObject(forKey: "bossPoint") as? Coordinate
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeInteger(self.maxWidth, forKey: "maxWidth")
-        coder.encodeObject(self.respawnPoint, forKey: "respawn")
-        coder.encodeObject(self.cleared, forKey: "cleared")
-        coder.encodeObject(self.realMapLoc, forKey: "realMapLoc")
-        coder.encodeObject(self.visited, forKey: "visited")
-        coder.encodeObject(self.known, forKey: "known")
-        coder.encodeObject(self.chests, forKey: "chests")
-        coder.encodeObject(self.currLoc, forKey: "currLoc")
-        coder.encodeObject(self.spawnPoint, forKey: "spawnPoint")
-        coder.encodeObject(self.keyPoint, forKey: "keyPoint")
-        coder.encodeObject(self.bossPoint, forKey: "bossPoint")
+        coder.encode(self.maxWidth, forKey: "maxWidth")
+        coder.encode(self.respawnPoint, forKey: "respawn")
+        coder.encode(self.cleared, forKey: "cleared")
+        coder.encode(self.realMapLoc, forKey: "realMapLoc")
+        coder.encode(self.visited, forKey: "visited")
+        coder.encode(self.known, forKey: "known")
+        coder.encode(self.chests, forKey: "chests")
+        coder.encode(self.currLoc, forKey: "currLoc")
+        coder.encode(self.spawnPoint, forKey: "spawnPoint")
+        coder.encode(self.keyPoint, forKey: "keyPoint")
+        coder.encode(self.bossPoint, forKey: "bossPoint")
     }
     
     init(version: Int)
@@ -58,146 +59,100 @@ class Map: NSObject, NSCoding {
         super.init()
         switch version {
         case 1:
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 1))
-            spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
-            generateLocs(realMapLoc)
+            let map: [[Int]] =
+                [[0, 3, 1, 1, 0, 0, 0],
+                 [0, 0, 0, 1, 1, 1, 1],
+                 [0, 0, 0, 1, 0, 0, 4],
+                 [1, 1, 1, 2, 0, 1, 1],
+                 [1, 0, 0, 1, 0, 1, 0],
+                 [1, 1, 0, 1, 1, 1, 0],
+                 [0, 4, 0, 0, 3, 0, 0]]
+            generateLocs(map)
             currLoc = spawnPoint
-            maxWidth = 7
+            maxWidth = map.count
         case 2:
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 7))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 0))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 7))   //KEY
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 1))   //KEY
-            spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
-            generateLocs(realMapLoc)
+            let map: [[Int]] =
+                [[0, 4, 0, 0, 1, 1, 0],
+                 [0, 1, 1, 1, 0, 1, 3],
+                 [1, 1, 0, 1, 0, 1, 1],
+                 [1, 0, 0, 2, 1, 1, 0],
+                 [1, 1, 1, 1, 0, 0, 0],
+                 [1, 0, 1, 0, 0, 0, 3],
+                 [4, 1, 1, 1, 1, 1, 1]]
+            generateLocs(map)
             currLoc = spawnPoint
-            maxWidth = 7
+            maxWidth = map.count
         default:
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 6, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 3))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 0, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 2))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 1))
-            realMapLoc.append(Coordinate(xCoor: 5, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 4, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 5))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 4))
-            realMapLoc.append(Coordinate(xCoor: 3, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 2, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 6))
-            realMapLoc.append(Coordinate(xCoor: 1, yCoor: 1))
-            spawnPoint = Coordinate(xCoor: 3, yCoor: 3)
-            generateLocs(realMapLoc)
+            let map: [[Int]] =
+                [[0, 3, 1, 1, 0, 0, 0],
+                 [0, 0, 0, 1, 1, 1, 1],
+                 [0, 0, 0, 1, 0, 0, 4],
+                 [1, 1, 1, 2, 0, 1, 1],
+                 [1, 0, 0, 1, 0, 1, 0],
+                 [1, 1, 0, 1, 1, 1, 0],
+                 [0, 4, 0, 0, 3, 0, 0]]
+            generateLocs(map)
             currLoc = spawnPoint
-            maxWidth = 7
+            maxWidth = map.count
         }
         update(currLoc)
     }
     
-    func generateLocs(locs: [Coordinate])
+    func generateLocs(_ map: [[Int]])
     {
-        respawnPoint = spawnPoint
-        var check: Int = Int(arc4random_uniform(2))
-        if(check == 0)
-        {
-            keyPoint = locs[locs.count - 1]
-        }
-        else if (check == 1)
-        {
-            keyPoint = locs[locs.count - 2]
-        }
-        check = Int(arc4random_uniform(6))
-        bossPoint = locs[check]
-        for spot in realMapLoc
-        {
-            if !(spot.equals(keyPoint) || spot.equals(bossPoint) || spot.equals(spawnPoint))
-            {
-                if(Int(arc4random_uniform(100)) < 33)    //33% chance
-                {
-                    let type = Int(arc4random_uniform(100))
-                    if(type < 5)   //5% legendary
-                    {
-                        spot.chest = "legendary"
-                        chests.append(spot)
+        let firstKey = Bool.random()
+        let firstBoss = Bool.random()
+        var seenFirstKey = false
+        var seenFirstBoss = false
+        for x in 0...6 {
+            for y in 0...6 {
+                switch map[x][y] {
+                case 1:     //Regular Locaiton
+                    let coord: Coordinate = Coordinate(xCoor: x, yCoor: y)
+                    if(Int.random(in: 0..<100) < 100) {  //33% chance
+                        print("\(coord.x!), \(coord.y!)")
+                        let type: Int = Int.random(in: 0..<100)
+                        if(type < 100) {              //5% legendary
+                            coord.chest = "legendary"
+                        } else if(type < 20) {      //15% rare
+                            coord.chest = "rare"
+                        } else if(type < 55) {      //35% uncommon
+                            coord.chest = "uncommon"
+                        } else {                    //45% common
+                            coord.chest = "common"
+                        }
                     }
-                    else if(type < 20)    //15% rare
-                    {
-                        spot.chest = "rare"
-                        chests.append(spot)
+ 
+                    realMapLoc.append(coord)
+                case 2:     //Spawn Point
+                    realMapLoc.append(Coordinate(xCoor: x, yCoor: y))
+                    spawnPoint = realMapLoc[realMapLoc.count - 1]
+                case 3:     //Key Location
+                    realMapLoc.append(Coordinate(xCoor: x, yCoor: y))
+                    if(firstKey) {
+                        if(!seenFirstKey) {
+                            keyPoint = realMapLoc[realMapLoc.count - 1]
+                        }
+                        seenFirstKey = true
+                    } else if(!firstKey && seenFirstKey) {
+                        keyPoint = realMapLoc[realMapLoc.count - 1]
                     }
-                    else if(type < 55)    //30% uncommon
-                    {
-                        spot.chest = "uncommon"
-                        chests.append(spot)
+                case 4:     //Boss Location
+                    realMapLoc.append(Coordinate(xCoor: x, yCoor: y))
+                    if(firstBoss) {
+                        if(!seenFirstBoss) {
+                            bossPoint = realMapLoc[realMapLoc.count - 1]
+                        }
+                        seenFirstBoss = true
+                    } else if(!firstBoss && seenFirstBoss) {
+                        bossPoint = realMapLoc[realMapLoc.count - 1]
                     }
-                    else                  //45% common
-                    {
-                        spot.chest = "common"
-                        chests.append(spot)
-                    }
+                default: break
                 }
             }
         }
+        
+        respawnPoint = spawnPoint
         cleared.append(spawnPoint)
     }
     
@@ -274,7 +229,7 @@ class Map: NSObject, NSCoding {
         return nil
     }
     
-    func getAdjacent(loc: Coordinate) -> [Coordinate]
+    func getAdjacent(_ loc: Coordinate) -> [Coordinate]
     {
         var nextTo: [Coordinate] = []
         for spot in realMapLoc
@@ -287,12 +242,7 @@ class Map: NSObject, NSCoding {
         return nextTo
     }
     
-    func getChest() -> [Coordinate]
-    {
-        return chests
-    }
-    
-    func updateVisited(loc: Coordinate)
+    func updateVisited(_ loc: Coordinate)
     {
         if(!visited.contains(loc))
         {
@@ -300,7 +250,7 @@ class Map: NSObject, NSCoding {
         }
     }
     
-    func updateKnown(locs: [Coordinate])
+    func updateKnown(_ locs: [Coordinate])
     {
         for spot in locs
         {
@@ -311,7 +261,7 @@ class Map: NSObject, NSCoding {
         }
     }
     
-    func update(loc: Coordinate)
+    func update(_ loc: Coordinate)
     {
         respawnPoint = currLoc
         currLoc = loc
@@ -319,7 +269,7 @@ class Map: NSObject, NSCoding {
         updateKnown(getAdjacent(loc))
     }
     
-    func cleared(loc: Coordinate)
+    func cleared(_ loc: Coordinate)
     {
         if(!cleared.contains(loc))
         {
@@ -331,25 +281,28 @@ class Map: NSObject, NSCoding {
 class Coordinate: NSObject, NSCoding {
     var x: Int!
     var y: Int!
+    var visited: Bool!
+    var known: Bool!
+    var cleared: Bool!
     var chest: String?
-    
+
     override var description:String {
-        return "(\(x), \(y)): \(chest)"
+        return "(\(x ?? -1), \(y ?? -1)): \(chest ?? "No Chest")"
     }
     
     override init() {}
     
     required init(coder aDecoder: NSCoder) {
-        self.x = aDecoder.decodeIntegerForKey("x")
-        self.y = aDecoder.decodeIntegerForKey("y")
-        self.chest = aDecoder.decodeObjectForKey("chest") as? String
+        self.x = aDecoder.decodeObject(forKey: "x") as? Int
+        self.y = aDecoder.decodeObject(forKey: "y") as? Int
+        self.chest = aDecoder.decodeObject(forKey: "chest") as? String
     }
     
-    func encodeWithCoder(coder: NSCoder)
+    func encode(with coder: NSCoder)
     {
-        coder.encodeInteger(self.x, forKey: "x")
-        coder.encodeInteger(self.y, forKey: "y")
-        coder.encodeObject(self.chest, forKey: "chest")
+        coder.encode(self.x, forKey: "x")
+        coder.encode(self.y, forKey: "y")
+        coder.encode(self.chest, forKey: "chest")
     }
     
     init(xCoor: Int, yCoor: Int)
@@ -364,16 +317,12 @@ class Coordinate: NSObject, NSCoding {
         return (x, y)
     }
     
-    func equals(other: Coordinate) -> Bool
+    func equals(_ other: Coordinate) -> Bool
     {
-        if(x == other.x && y == other.y)
-        {
-            return true
-        }
-        return false
+        return x == other.x && y == other.y
     }
     
-    func nextTo(other: Coordinate) -> Bool
+    func nextTo(_ other: Coordinate) -> Bool
     {
         if(abs(x - other.x) == 0 && abs(y - other.y) == 1 || abs(x - other.x) == 1 && abs(y - other.y) == 0)
         {

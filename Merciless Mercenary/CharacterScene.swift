@@ -48,9 +48,9 @@ class CharacterScene: SKScene {
     var skillBG = SKSpriteNode()
     var skillTitle = SKSpriteNode()
 
-    let backgroundMusic = SKAudioNode(fileNamed: "adventurous theme.mp3")
+    var backgroundMusic = SKAudioNode()
     
-    override func didMoveToView(view: SKView) {
+    override func didMove(to view: SKView) {
         
         if let settings = Settings.loadSaved()
         {
@@ -63,9 +63,6 @@ class CharacterScene: SKScene {
             self.settings = settings
         }
         
-        backgroundMusic.autoplayLooped = true
-        addChild(backgroundMusic)
-        
         scene!.backgroundColor = UIColor(red: 121/255, green: 60/255, blue: 0/255, alpha: 1.0)
         titleLabel.texture = slotsText
         titleLabel.position = CGPoint(x: view.frame.width * 0.5, y: view.frame.height * 0.925)
@@ -73,33 +70,42 @@ class CharacterScene: SKScene {
         addChild(titleLabel)
 
         resetScreen()
+        
+        let bg = SKAudioNode(fileNamed: "adventurousTheme.mp3")
+        bg.autoplayLooped = true
+        addChild(bg)
     }
     
-    func prepSlot(num: Int, charPresent: Bool)
+    func prepSlot(_ num: Int, charPresent: Bool)
     {
+        let characterSlotSize = CGSize(width: size.width * 0.1, height: size.height * 0.3)
+        let playCharacterButtonSize = CGSize(width: size.width * 0.15, height: size.height * 0.075)
+        let deleteCharacterButtonSize = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+        let characterSkillIconSize = CGSize(width: size.width * 0.1, height: size.height * 0.15)
+        
         if(num == 1)    //First slot
         {
             characterOne.name = "characterOne"
             characterOne.position = CGPoint(x: size.width * 0.175, y: size.height * 0.55)
-            characterOne.size = CGSize(width: size.width * 0.1, height: size.height * 0.3)
+            characterOne.size = characterSlotSize
             if(charPresent)     //Yes character
             {
                 playCharOne.name = "playCharOne"
                 playCharOne.texture = playText
                 playCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y - size.height * 0.425)
-                playCharOne.size = CGSize(width: size.width * 0.15, height: size.height * 0.075)
+                playCharOne.size = playCharacterButtonSize
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
                 
                 charOneSkill.texture = findTexture(settings.characters[0].equippedWeapon)
                 charOneSkill.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y - size.height * 0.275)
-                charOneSkill.size = CGSize(width: size.width * 0.1, height: size.height * 0.15)
+                charOneSkill.size = characterSkillIconSize
                 addChild(charOneSkill)
                 
                 deleteCharOne.name = "deleteOne"
                 deleteCharOne.texture = deleteText
                 deleteCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y + size.height * 0.225)
-                deleteCharOne.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                deleteCharOne.size = deleteCharacterButtonSize
                 deleteCharOne.zPosition = 1
                 addChild(deleteCharOne)
             }
@@ -108,7 +114,7 @@ class CharacterScene: SKScene {
                 playCharOne.name = "createCharOne"
                 playCharOne.texture = createText
                 playCharOne.position = CGPoint(x: characterOne.position.x, y: characterOne.position.y - size.height * 0.275)
-                playCharOne.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                playCharOne.size = playCharacterButtonSize
                 playCharOne.zPosition = 1
                 addChild(playCharOne)
             }
@@ -118,24 +124,24 @@ class CharacterScene: SKScene {
         {
             characterTwo.name = "characterTwo"
             characterTwo.position = CGPoint(x: size.width * 0.5, y: size.height * 0.55)
-            characterTwo.size = CGSize(width: size.width * 0.1, height: size.height * 0.3)
+            characterTwo.size = characterSlotSize
             if(charPresent)     //Yes character
             {
                 playCharTwo.name = "playCharTwo"
                 playCharTwo.texture = playText
                 playCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y - size.height * 0.425)
-                playCharTwo.size = CGSize(width: size.width * 0.15, height: size.height * 0.075)
+                playCharTwo.size = playCharacterButtonSize
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
                 
                 charTwoSkill.texture = findTexture(settings.characters[1].equippedWeapon)
                 charTwoSkill.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y - size.height * 0.275)
-                charTwoSkill.size = CGSize(width: size.width * 0.1, height: size.height * 0.15)
+                charTwoSkill.size = characterSkillIconSize
                 addChild(charTwoSkill)
                 
                 deleteCharTwo.name = "deleteTwo"
                 deleteCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y + size.height * 0.225)
-                deleteCharTwo.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                deleteCharTwo.size = deleteCharacterButtonSize
                 deleteCharTwo.texture = deleteText
                 deleteCharTwo.zPosition = 1
                 addChild(deleteCharTwo)
@@ -145,7 +151,7 @@ class CharacterScene: SKScene {
                 playCharTwo.name = "createCharTwo"
                 playCharTwo.texture = createText
                 playCharTwo.position = CGPoint(x: characterTwo.position.x, y: characterTwo.position.y - size.height * 0.275)
-                playCharTwo.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                playCharTwo.size = playCharacterButtonSize
                 playCharTwo.zPosition = 1
                 addChild(playCharTwo)
             }
@@ -155,24 +161,24 @@ class CharacterScene: SKScene {
         {
             characterThree.name = "characterThree"
             characterThree.position = CGPoint(x: size.width * 0.825, y: size.height * 0.55)
-            characterThree.size = CGSize(width: size.width * 0.1, height: size.height * 0.3)
+            characterThree.size = characterSlotSize
             if(charPresent)     //Yes character
             {
                 playCharThree.name = "playCharThree"
                 playCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y - size.height * 0.425)
-                playCharThree.size = CGSize(width: size.width * 0.15, height: size.height * 0.075)
+                playCharThree.size = playCharacterButtonSize
                 playCharThree.texture = playText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
                 
                 charThreeSkill.texture = findTexture(settings.characters[2].equippedWeapon)
                 charThreeSkill.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y - size.height * 0.275)
-                charThreeSkill.size = CGSize(width: size.width * 0.1, height: size.height * 0.15)
+                charThreeSkill.size = characterSkillIconSize
                 addChild(charThreeSkill)
                 
                 deleteCharThree.name = "deleteThree"
                 deleteCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y + size.height * 0.225)
-                deleteCharThree.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                deleteCharThree.size = deleteCharacterButtonSize
                 deleteCharThree.texture = deleteText
                 deleteCharThree.zPosition = 1
                 addChild(deleteCharThree)
@@ -181,7 +187,7 @@ class CharacterScene: SKScene {
             {
                 playCharThree.name = "createCharThree"
                 playCharThree.position = CGPoint(x: characterThree.position.x, y: characterThree.position.y - size.height * 0.275)
-                playCharThree.size = CGSize(width: size.width * 0.18, height: size.height * 0.075)
+                playCharThree.size = playCharacterButtonSize
                 playCharThree.texture = createText
                 playCharThree.zPosition = 1
                 addChild(playCharThree)
@@ -190,9 +196,9 @@ class CharacterScene: SKScene {
         }
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        let positionInScene = touches.first?.locationInNode(self)
-        let touchedNode = self.nodeAtPoint(positionInScene!)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let positionInScene = touches.first?.location(in: self)
+        let touchedNode = self.atPoint(positionInScene!)
         
         if(touchedNode.name == "playCharOne")
         {
@@ -254,7 +260,7 @@ class CharacterScene: SKScene {
         scene?.removeFromParent()
     }
     
-    func findTexture(skill: String) -> SKTexture?
+    func findTexture(_ skill: String) -> SKTexture?
     {
         if skill == "Melee"
         {
@@ -278,42 +284,48 @@ class CharacterScene: SKScene {
         }
     }
     
-    func pickCharacterType(num: Int)
+    func pickCharacterType(_ num: Int)
     {
+        let chooseSkillIconSize = CGSize(width: size.width * 0.2, height: size.height * 0.2)
+
         settings.selectedPlayer = num
         skillBG.texture = bGText
         skillBG.position = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
         skillBG.size = CGSize(width: size.width * 0.9, height: size.height * 0.9)
         skillBG.zPosition = 2
         addChild(skillBG)
+        
         skillTitle.texture = titleText
         skillTitle.position = CGPoint(x: size.width * 0.5, y: size.height * 0.825)
         skillTitle.size = CGSize(width: size.width * 0.5, height: size.height * 0.1)
         skillTitle.zPosition = 3
         addChild(skillTitle)
-        skillTitle.texture = titleText
+        
         pickMelee.name = "pickMelee"
         pickMelee.texture = meleeText
         pickMelee.position = CGPoint(x: size.width * 0.35, y: size.height * 0.6)
-        pickMelee.size = CGSize(width: size.width * 0.2, height: size.height * 0.2)
+        pickMelee.size = chooseSkillIconSize
         pickMelee.zPosition = 3
         addChild(pickMelee)
+        
         pickShortRanged.name = "pickShortRanged"
         pickShortRanged.texture = shortRangedText
         pickShortRanged.position = CGPoint(x: size.width * 0.65, y: size.height * 0.6)
-        pickShortRanged.size = CGSize(width: size.width * 0.2, height: size.height * 0.2)
+        pickShortRanged.size = chooseSkillIconSize
         pickShortRanged.zPosition = 3
         addChild(pickShortRanged)
+        
         pickMagic.name = "pickMagic"
         pickMagic.texture = magicText
         pickMagic.position = CGPoint(x: size.width * 0.35, y: size.height * 0.3)
-        pickMagic.size = CGSize(width: size.width * 0.2, height: size.height * 0.2)
+        pickMagic.size = chooseSkillIconSize
         pickMagic.zPosition = 3
         addChild(pickMagic)
+        
         pickLongRanged.name = "pickLongRanged"
         pickLongRanged.texture = longRangedText
         pickLongRanged.position = CGPoint(x: size.width * 0.65, y: size.height * 0.3)
-        pickLongRanged.size = CGSize(width: size.width * 0.2, height: size.height * 0.2)
+        pickLongRanged.size = chooseSkillIconSize
         pickLongRanged.zPosition = 3
         addChild(pickLongRanged)
     }
@@ -365,13 +377,13 @@ class CharacterScene: SKScene {
     
     func deleteP2()
     {
-        settings.characters.removeAtIndex(1)
+        settings.characters.remove(at: 1)
         resetScreen()
     }
     
     func deleteP3()
     {
-        settings.characters.removeAtIndex(2)
+        settings.characters.remove(at: 2)
         resetScreen()
     }
     
@@ -381,38 +393,20 @@ class CharacterScene: SKScene {
         charOneSkill.removeFromParent()
         deleteCharOne.removeFromParent()
         characterOne.removeFromParent()
+        
         playCharTwo.removeFromParent()
         charTwoSkill.removeFromParent()
         deleteCharTwo.removeFromParent()
         characterTwo.removeFromParent()
+        
         playCharThree.removeFromParent()
         charThreeSkill.removeFromParent()
         deleteCharThree.removeFromParent()
         characterThree.removeFromParent()
+        
         let numChar: Int = settings.howManyCharacters()
-        if numChar == 0
-        {
-            prepSlot(1, charPresent: false)
-            prepSlot(2, charPresent: false)
-            prepSlot(3, charPresent: false)
-        }
-        else if numChar == 1
-        {
-            prepSlot(1, charPresent: true)
-            prepSlot(2, charPresent: false)
-            prepSlot(3, charPresent: false)
-        }
-        else if numChar == 2
-        {
-            prepSlot(1, charPresent: true)
-            prepSlot(2, charPresent: true)
-            prepSlot(3, charPresent: false)
-        }
-        else
-        {
-            prepSlot(1, charPresent: true)
-            prepSlot(2, charPresent: true)
-            prepSlot(3, charPresent: true)
+        for i in 0...2 {
+            prepSlot(i + 1, charPresent: i < numChar)
         }
     }
     
@@ -424,7 +418,7 @@ class CharacterScene: SKScene {
         }
         save()
         let scene = GameScene(size: view!.bounds.size)
-        scene.scaleMode = .ResizeFill
+        scene.scaleMode = .resizeFill
         view!.presentScene(scene)
     }
 }
